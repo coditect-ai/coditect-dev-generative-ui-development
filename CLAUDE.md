@@ -503,10 +503,132 @@ When contributing to this master repository:
 4. Update master docs with progress
 5. Request reviews at phase gates
 6. Maintain context in MEMORY-CONTEXT/
+7. **Create checkpoint after completing work** (see below)
 
 ---
 
-**Last Updated:** November 15, 2025
+## Checkpoint Automation System
+
+### Overview
+
+CODITECT includes an automated checkpoint creation system that:
+- ✅ Standardizes checkpoint format (ISO-DATETIME stamped)
+- ✅ Captures git status, submodule states, completed tasks
+- ✅ Updates README.md with checkpoint reference
+- ✅ Creates MEMORY-CONTEXT session export
+- ✅ Enables zero catastrophic forgetting between sessions
+- ✅ Saves tokens through reusable checkpoint template
+
+### When to Create Checkpoints
+
+Create checkpoints after:
+- Completing a sprint (Phase 0, Sprint +1, Sprint +2, etc.)
+- Major architectural changes
+- Completing multiple submodule updates
+- Finishing documentation sprints
+- Phase gate completions
+- End of development session (for context continuity)
+
+### How to Create Checkpoints
+
+**Single Command:**
+```bash
+python3 .coditect/scripts/create-checkpoint.py "Sprint description" --auto-commit
+```
+
+**Examples:**
+```bash
+# After architecture sprint
+python3 .coditect/scripts/create-checkpoint.py "Architecture Documentation Sprint Complete" --auto-commit
+
+# After MEMORY-CONTEXT implementation
+python3 .coditect/scripts/create-checkpoint.py "Sprint +1 MEMORY-CONTEXT Implementation Complete" --auto-commit
+
+# After updating TASKLISTs
+python3 .coditect/scripts/create-checkpoint.py "TASKLISTs Updated Across All Submodules" --auto-commit
+
+# Manual commit (without --auto-commit)
+python3 .coditect/scripts/create-checkpoint.py "Sprint description"
+# Then manually review and commit
+```
+
+### What the Script Does
+
+1. **Generates Checkpoint Document** (`CHECKPOINTS/YYYY-MM-DDTHH-MM-SSZ-description.md`)
+   - Git status and recent commits
+   - Submodule status and latest commits
+   - Completed tasks from all TASKLISTs
+   - Changed files summary
+   - Next steps and Sprint +1 preparation
+
+2. **Updates README.md**
+   - Adds checkpoint to "Recent Checkpoints" section
+   - Links to checkpoint document
+   - Maintains chronological order
+
+3. **Creates MEMORY-CONTEXT Export** (`MEMORY-CONTEXT/sessions/YYYY-MM-DD-description.md`)
+   - Session summary
+   - Objectives completed
+   - Key decisions
+   - Work completed reference
+   - Next session preparation
+
+4. **Commits Changes** (if --auto-commit flag used)
+   - Commits checkpoint, README.md, and MEMORY-CONTEXT export
+   - Standardized commit message with metadata
+
+### Benefits for AI Agents
+
+**Context Continuity:**
+- Next session starts with complete checkpoint context
+- Zero catastrophic forgetting via MEMORY-CONTEXT export
+- Clear understanding of what was completed
+
+**Token Efficiency:**
+- Reusable checkpoint template (don't recreate format each time)
+- Standardized structure saves tokens
+- Links to detailed TASKLISTs instead of duplicating
+
+**Informed Decision Making:**
+- Historical checkpoints show progression
+- Pattern recognition across sprints
+- Dependencies and blockers tracked
+
+### Claude Code Integration
+
+When working in this repository:
+
+1. **Start of Session:** Read most recent checkpoint
+   ```bash
+   # Find most recent checkpoint
+   ls -t CHECKPOINTS/ | head -1
+   ```
+
+2. **During Work:** Track progress in TASKLISTs
+   - Mark completed tasks with `[x]`
+   - Add new tasks as discovered
+   - Update WIP status
+
+3. **End of Session:** Create checkpoint
+   ```bash
+   python3 .coditect/scripts/create-checkpoint.py "Session description" --auto-commit
+   ```
+
+4. **Next Session:** Load checkpoint context
+   - Read most recent checkpoint document
+   - Review MEMORY-CONTEXT session export
+   - Continue from where previous session ended
+
+### Script Location and Documentation
+
+- **Script:** `.coditect/scripts/create-checkpoint.py` (part of core CODITECT framework)
+- **Documentation:** See script header for detailed usage
+- **Help:** `python3 .coditect/scripts/create-checkpoint.py --help`
+- **Framework Repo:** https://github.com/coditect-ai/coditect-project-dot-claude
+
+---
+
+**Last Updated:** November 16, 2025
 **Current Phase:** Pre-Beta (Planning Complete)
 **Next Milestone:** Phase 1 Beta Development Kickoff
 **Repository:** https://github.com/coditect-ai/coditect-rollout-master

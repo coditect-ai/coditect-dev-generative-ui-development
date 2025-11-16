@@ -105,6 +105,30 @@ git commit -m "Update submodule pointers to latest"
 git push
 ```
 
+### 4. Create Checkpoint (After Completing Work)
+
+```bash
+# Create automated checkpoint with session export (via .coditect framework)
+python3 .coditect/scripts/create-checkpoint.py "Sprint description" --auto-commit
+
+# Example:
+python3 .coditect/scripts/create-checkpoint.py "Architecture Documentation Sprint Complete" --auto-commit
+```
+
+**What the checkpoint script does:**
+1. Generates ISO-DATETIME stamped checkpoint document in `CHECKPOINTS/`
+2. Captures git status, submodule states, and completed tasks
+3. Updates README.md with checkpoint reference
+4. Creates MEMORY-CONTEXT session export for next session
+5. Commits all changes to git (if --auto-commit flag used)
+
+**Benefits:**
+- ✅ **Standardized Checkpoints:** Consistent format across all sprints
+- ✅ **Context Continuity:** Next session starts with complete context
+- ✅ **Token Efficiency:** Reusable checkpoint template saves tokens
+- ✅ **Informed Sessions:** MEMORY-CONTEXT export enables zero catastrophic forgetting
+- ✅ **Automation:** Single command replaces multi-step manual process
+
 ---
 
 ## Directory Structure
@@ -246,6 +270,21 @@ coditect-rollout-master/
 - 📋 [Master Plan](./CODITECT-ROLLOUT-MASTER-PLAN.md) - Detailed implementation roadmap
 - 🎓 [Training System](.coditect/user-training/README.md) - CODITECT Operator certification
 - 🤖 [AI Agent Config](./CLAUDE.md) - AI agent coordination guidelines
+
+---
+
+## Recent Checkpoints
+
+Checkpoints capture sprint completion and provide context for next sessions:
+
+- **[2025-11-16T09-05-16Z]** [Checkpoint Automation System Implementation Complete](CHECKPOINTS/2025-11-16T09-05-16Z-Checkpoint-Automation-System-Implementation-Complete.md)
+- **[2025-11-16T08:34:53Z]** [Phase 0 Architecture Documentation Complete](CHECKPOINTS/2025-11-16T08-34-53Z-DISTRIBUTED-INTELLIGENCE-ARCHITECTURE-COMPLETE.md)
+- **[2025-11-16]** [TASKLISTs Updated Across All Submodules](docs/PROJECT-PLAN-UPDATE-2025-11-16-ARCHITECTURE-SPRINT.md)
+
+**Create new checkpoint:**
+```bash
+python3 .coditect/scripts/create-checkpoint.py "Your sprint description" --auto-commit
+```
 
 ---
 
