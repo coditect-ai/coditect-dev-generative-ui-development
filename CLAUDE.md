@@ -16,6 +16,7 @@ Before working on this project, understand the architecture:
 - 📖 **[WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-project-dot-claude/blob/main/WHAT-IS-CODITECT.md)** - Distributed intelligence architecture
 - 🎓 **[Training System](https://github.com/coditect-ai/coditect-project-dot-claude/blob/main/user-training/README.md)** - CODITECT Operator training
 - 📘 **[AZ1.AI-CODITECT-VISION-AND-STRATEGY.md](AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete vision
+- 🚀 **[1-2-3-SLASH-COMMAND-QUICK-START.md](.coditect/1-2-3-SLASH-COMMAND-QUICK-START.md)** (NEW!) - Master all 72 commands in 3 steps
 
 ---
 
