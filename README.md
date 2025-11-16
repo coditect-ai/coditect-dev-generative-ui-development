@@ -17,6 +17,8 @@ This repository serves as the **MASTER PLAN** orchestration point for the comple
 
 **Essential Reading:**
 - 📖 **[WHAT-IS-CODITECT.md](.coditect/WHAT-IS-CODITECT.md)** - Understanding the distributed intelligence nervous system
+- 📊 **[Visual Architecture Guide](.coditect/diagrams/distributed-intelligence-architecture.md)** - 5 Mermaid diagrams showing complete system
+- 🧠 **[MEMORY-CONTEXT Architecture](https://github.com/coditect-ai/NESTED-LEARNING-GOOGLE/blob/main/MEMORY-CONTEXT-ARCHITECTURE.md)** - Eliminates catastrophic forgetting
 - 📘 **[Vision & Strategy](./AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete ecosystem vision and market strategy
 - 🎓 **[Training System](.coditect/user-training/README.md)** - CODITECT Operator certification program
 
@@ -238,6 +240,8 @@ coditect-rollout-master/
 
 ### Key Documents
 - 📖 [WHAT-IS-CODITECT.md](.coditect/WHAT-IS-CODITECT.md) - Distributed intelligence architecture
+- 📊 [Visual Architecture](.coditect/diagrams/distributed-intelligence-architecture.md) - 5 comprehensive Mermaid diagrams
+- 🧠 [MEMORY-CONTEXT](https://github.com/coditect-ai/NESTED-LEARNING-GOOGLE/blob/main/MEMORY-CONTEXT-ARCHITECTURE.md) - Experiential intelligence layer
 - 📘 [Vision & Strategy](./AZ1.AI-CODITECT-VISION-AND-STRATEGY.md) - Complete ecosystem vision and market strategy
 - 📋 [Master Plan](./CODITECT-ROLLOUT-MASTER-PLAN.md) - Detailed implementation roadmap
 - 🎓 [Training System](.coditect/user-training/README.md) - CODITECT Operator certification
