@@ -2,39 +2,61 @@
 
 ## Project Overview
 
-**CODITECT Rollout Master** is the master orchestration repository for the complete AZ1.AI CODITECT platform rollout, coordinating 10 sub-projects through git submodules for autonomous AI-first development.
+**CODITECT Rollout Master** is the master orchestration repository for the complete AZ1.AI CODITECT platform rollout, coordinating 19 sub-projects through git submodules using distributed intelligence architecture.
 
 ### Purpose
-- Centralized orchestration for all CODITECT platform components
-- Automated coordination of multi-repo development
-- AI-first autonomous development with human-in-the-loop guidance
-- Beta → Pilot → Full GTM rollout management
+- **Distributed Intelligence:** `.coditect` symlink chain enables autonomous operation at every submodule level
+- **Centralized Orchestration:** Single source of truth for all CODITECT platform components
+- **Automated Coordination:** Multi-repo development with intelligent agents at every node
+- **AI-First Development:** Autonomous agent orchestration with human-in-the-loop guidance
+- **Phased Rollout:** Beta → Pilot → Full GTM with training and certification
+
+### Essential Reading
+Before working on this project, understand the architecture:
+- 📖 **[.coditect/WHAT-IS-CODITECT.md](.coditect/WHAT-IS-CODITECT.md)** - Distributed intelligence architecture
+- 🎓 **[.coditect/user-training/README.md](.coditect/user-training/README.md)** - CODITECT Operator training
+- 📘 **[AZ1.AI-CODITECT-VISION-AND-STRATEGY.md](AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete vision
 
 ---
 
 ## Architecture
 
-### Master Repository Structure
+### Master Repository Structure (Distributed Intelligence)
 
 ```
 coditect-rollout-master/
+├── .coditect/                      # CODITECT brain (git submodule)
+│   ├── agents/                     # 50 specialized AI agents
+│   ├── skills/                     # 189 reusable skills
+│   ├── commands/                   # 72 slash commands
+│   ├── user-training/              # Training materials (240K+ words)
+│   ├── WHAT-IS-CODITECT.md        # Architecture documentation
+│   ├── README.md                   # Framework documentation
+│   └── CLAUDE.md                   # Framework context
+│
+├── .claude -> .coditect            # Claude Code compatibility symlink
+│
 ├── docs/                           # Master planning documents
 │   ├── CODITECT-MASTER-ORCHESTRATION-PLAN.md
 │   ├── CODITECT-CLOUD-PLATFORM-PROJECT-PLAN.md
 │   ├── CODITECT-REUSABLE-TOOLS-ARCHITECTURE.md
 │   ├── CODITECT-INTEGRATED-ECOSYSTEM-VISION.md
 │   └── CODITECT-ROLLOUT-MASTER-PLAN.md
-├── submodules/                     # 10 sub-projects as git submodules
+│
+├── submodules/                     # 19 sub-projects (intelligent nodes)
 │   ├── coditect-cloud-backend/     # FastAPI backend (P0, 12 weeks)
+│   │   ├── .coditect -> ../../.coditect   # Intelligent node
+│   │   ├── .claude -> .coditect           # Claude Code access
+│   │   └── src/
 │   ├── coditect-cloud-frontend/    # React frontend (P0, 10 weeks)
+│   │   ├── .coditect -> ../../.coditect
+│   │   ├── .claude -> .coditect
+│   │   └── src/
 │   ├── coditect-cli/               # Python CLI tools (P0, 8 weeks)
-│   ├── coditect-docs/              # Docusaurus docs (P0, 6 weeks)
-│   ├── coditect-agent-marketplace/ # Next.js marketplace (P1, 10 weeks)
-│   ├── coditect-analytics/         # ClickHouse analytics (P1, 6 weeks)
-│   ├── coditect-infrastructure/    # Terraform IaC (P0, 8 weeks)
-│   ├── coditect-legal/             # Legal documents (P0, 4 weeks)
-│   ├── coditect-framework/         # Core framework (P0, Ongoing)
-│   └── coditect-automation/        # AI orchestration (P1, 8 weeks)
+│   │   ├── .coditect -> ../../.coditect
+│   │   └── .claude -> .coditect
+│   └── ... (all submodules follow same pattern)
+│
 ├── scripts/                        # Automation scripts
 ├── templates/                      # Project templates
 ├── workflows/                      # GitHub Actions workflows
@@ -43,6 +65,8 @@ coditect-rollout-master/
 ├── README.md                       # User-facing documentation
 └── CLAUDE.md                       # This file - AI agent configuration
 ```
+
+**Key Pattern:** Every submodule has `.coditect -> ../../.coditect` symlink enabling intelligent autonomous operation at every level. See [WHAT-IS-CODITECT.md](.coditect/WHAT-IS-CODITECT.md) for complete architecture details.
 
 ---
 

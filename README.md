@@ -9,12 +9,16 @@
 This repository serves as the **MASTER PLAN** orchestration point for the complete AZ1.AI CODITECT platform rollout from beta through pilot to full Go-to-Market (GTM).
 
 **Key Capabilities:**
+- **Distributed Intelligence Architecture:** `.coditect` symlink chain enables intelligence at every submodule level
 - **Centralized Orchestration:** Single source of truth for all sub-projects
 - **Automated Coordination:** Git submodules for seamless multi-repo management
 - **Autonomous AI-First:** Designed for AI agents to coordinate development
 - **Human-in-the-Loop:** Strategic guidance and approvals at phase gates
 
-📘 **[Read the Complete Vision & Strategy](./AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Comprehensive overview of the CODITECT ecosystem, market strategy, AI risk management framework, and long-term vision for enterprise AI transformation.
+**Essential Reading:**
+- 📖 **[WHAT-IS-CODITECT.md](.coditect/WHAT-IS-CODITECT.md)** - Understanding the distributed intelligence nervous system
+- 📘 **[Vision & Strategy](./AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete ecosystem vision and market strategy
+- 🎓 **[Training System](.coditect/user-training/README.md)** - CODITECT Operator certification program
 
 ---
 
@@ -182,13 +186,43 @@ Humans provide:
 
 ## CODITECT Framework Integration
 
-This master project **IS** the CODITECT framework in action:
+This master project **IS** the CODITECT framework in action, demonstrating distributed intelligence architecture:
 
+### Distributed Intelligence at Every Level
+
+```
+coditect-rollout-master/
+├── .coditect/                        # Master CODITECT brain (git submodule)
+│   ├── agents/                       # 50 specialized AI agents
+│   ├── skills/                       # 189 reusable skills
+│   ├── commands/                     # 72 slash commands
+│   ├── user-training/                # Training materials
+│   ├── WHAT-IS-CODITECT.md          # Architecture documentation
+│   └── ...
+├── .claude -> .coditect              # Claude Code compatibility
+│
+├── submodules/
+│   ├── coditect-cloud-backend/
+│   │   ├── .coditect -> ../../.coditect    # Intelligent node
+│   │   ├── .claude -> .coditect            # Claude Code access
+│   │   └── src/
+│   ├── coditect-cloud-frontend/
+│   │   ├── .coditect -> ../../.coditect    # Intelligent node
+│   │   ├── .claude -> .coditect            # Claude Code access
+│   │   └── src/
+│   └── ...
+```
+
+**Key Features:**
+- ✅ Intelligence at every submodule (distributed nervous system)
 - ✅ Master project orchestrates sub-projects (core CODITECT capability)
 - ✅ Git submodules for multi-repo coordination
 - ✅ Automated session management with MEMORY-CONTEXT
 - ✅ AI-first development with human oversight
 - ✅ Reusable templates and automation scripts
+- ✅ Comprehensive training system for operators
+
+**📖 Learn More:** [WHAT-IS-CODITECT.md](.coditect/WHAT-IS-CODITECT.md) - Complete architecture guide
 
 **This pattern can be abstracted and reused by any CODITECT user** to manage their own complex multi-repo projects.
 
@@ -203,8 +237,10 @@ This master project **IS** the CODITECT framework in action:
 **Status:** Planning Complete, Ready for Beta Phase
 
 ### Key Documents
+- 📖 [WHAT-IS-CODITECT.md](.coditect/WHAT-IS-CODITECT.md) - Distributed intelligence architecture
 - 📘 [Vision & Strategy](./AZ1.AI-CODITECT-VISION-AND-STRATEGY.md) - Complete ecosystem vision and market strategy
 - 📋 [Master Plan](./CODITECT-ROLLOUT-MASTER-PLAN.md) - Detailed implementation roadmap
+- 🎓 [Training System](.coditect/user-training/README.md) - CODITECT Operator certification
 - 🤖 [AI Agent Config](./CLAUDE.md) - AI agent coordination guidelines
 
 ---
