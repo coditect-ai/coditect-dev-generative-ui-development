@@ -13,8 +13,8 @@
 
 ### Essential Reading
 Before working on this project, understand the architecture:
-- 📖 **[WHAT-IS-CODITECT.md](submodules/coditect-project-dot-claude/WHAT-IS-CODITECT.md)** - Distributed intelligence architecture
-- 🎓 **[Training System](submodules/coditect-project-dot-claude/user-training/README.md)** - CODITECT Operator training
+- 📖 **[WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-project-dot-claude/blob/main/WHAT-IS-CODITECT.md)** - Distributed intelligence architecture
+- 🎓 **[Training System](https://github.com/coditect-ai/coditect-project-dot-claude/blob/main/user-training/README.md)** - CODITECT Operator training
 - 📘 **[AZ1.AI-CODITECT-VISION-AND-STRATEGY.md](AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete vision
 
 ---
@@ -66,7 +66,7 @@ coditect-rollout-master/
 └── CLAUDE.md                       # This file - AI agent configuration
 ```
 
-**Key Pattern:** Every submodule has `.coditect -> ../../.coditect` symlink enabling intelligent autonomous operation at every level. See [WHAT-IS-CODITECT.md](submodules/coditect-project-dot-claude/WHAT-IS-CODITECT.md) for complete architecture details.
+**Key Pattern:** Every submodule has `.coditect -> ../../.coditect` symlink enabling intelligent autonomous operation at every level. See [WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-project-dot-claude/blob/main/WHAT-IS-CODITECT.md) for complete architecture details.
 
 ---
 
