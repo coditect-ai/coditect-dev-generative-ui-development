@@ -83,76 +83,86 @@
 
 ### Sprint +1: MEMORY-CONTEXT Implementation (📋 PLANNED - 2 weeks, $45K)
 
-#### Backend Development
+**Primary Repository:** [coditect-project-dot-claude](https://github.com/coditect-ai/coditect-project-dot-claude)
+**Detailed Plan:** [SPRINT-1-MEMORY-CONTEXT-PROJECT-PLAN.md](https://github.com/coditect-ai/coditect-project-dot-claude/blob/main/SPRINT-1-MEMORY-CONTEXT-PROJECT-PLAN.md)
+**Task Checklist:** [SPRINT-1-MEMORY-CONTEXT-TASKLIST.md](https://github.com/coditect-ai/coditect-project-dot-claude/blob/main/SPRINT-1-MEMORY-CONTEXT-TASKLIST.md)
 
-- [ ] **Session Export Automation**
-  - [ ] Build automatic export on session end
-  - [ ] Implement session summary template
-  - [ ] Create ADR (Architecture Decision Record) generator
-  - [ ] Develop business/technical context updater
-  - [ ] Build export validation and error handling
-  - [ ] Write unit tests (80%+ coverage)
+**Summary:** Build MEMORY-CONTEXT system with session export automation, NESTED LEARNING pattern extraction, 4-level privacy controls, and cross-session context continuity. Available to all 19 submodules via distributed intelligence architecture.
 
-- [ ] **NESTED LEARNING Pattern Extraction**
-  - [ ] Implement basic pattern recognition from exports
-  - [ ] Build pattern storage and indexing
-  - [ ] Create pattern confidence scoring
-  - [ ] Develop pattern similarity detection
-  - [ ] Implement pattern extraction API
-  - [ ] Write integration tests
+#### Week 1: Core Infrastructure (Days 1-5)
 
-- [ ] **Privacy Control API**
-  - [ ] Implement 4-level privacy model (private/team/org/platform)
-  - [ ] Build privacy setting management
-  - [ ] Create opt-in/opt-out workflows
-  - [ ] Develop privacy level validation
-  - [ ] Implement privacy audit logging
-  - [ ] Write security tests
+- [ ] **Day 1: Session Export Engine** (8h)
+  - [ ] Create session_export.py with conversation extraction
+  - [ ] Add metadata generation and file change tracking
+  - [ ] Implement decision logging
+  - [ ] Write unit tests
 
-- [ ] **Knowledge Graph Foundation**
-  - [ ] Design graph schema (nodes: sessions/decisions/patterns/code)
-  - [ ] Implement graph database integration
-  - [ ] Build graph construction from exports
-  - [ ] Create relationship mapping (decision→session→code)
-  - [ ] Develop graph query API
-  - [ ] Write performance tests
+- [ ] **Day 2: Privacy Control Manager** (8h)
+  - [ ] Create privacy_control.py with 4-level model
+  - [ ] Implement PII detection using spaCy
+  - [ ] Add automatic redaction
+  - [ ] Create privacy tagging and access control
 
-- [ ] **Contextual Retrieval System**
-  - [ ] Implement relevance scoring algorithm
-  - [ ] Build context loading on session start
-  - [ ] Create smart context selection (avoid token budget explosion)
-  - [ ] Develop context presentation formatting
-  - [ ] Implement cache for frequently accessed context
-  - [ ] Write end-to-end tests
+- [ ] **Day 3: Database Schema & Setup** (8h)
+  - [ ] Design SQLite schema for context storage
+  - [ ] Setup ChromaDB for vector storage
+  - [ ] Implement database migrations
+  - [ ] Add backup/restore utilities
 
-#### Testing & Validation
+- [ ] **Day 4: NESTED LEARNING Processor (Part 1)** (8h)
+  - [ ] Create nested_learning.py framework
+  - [ ] Implement workflow pattern recognition
+  - [ ] Add decision pattern extraction
+  - [ ] Create knowledge graph schema
 
-- [ ] **Zero Catastrophic Forgetting Validation**
-  - [ ] Test 10-session continuity (simple project)
-  - [ ] Test 30-session continuity (medium project)
-  - [ ] Test 60-session continuity (complex project)
-  - [ ] Verify context accuracy across sessions
-  - [ ] Measure context retention rate (target: 100%)
+- [ ] **Day 5: Week 1 Integration & Testing** (8h)
+  - [ ] Integrate session export with checkpoint script
+  - [ ] End-to-end test: checkpoint → export → database
+  - [ ] Add privacy controls to session export
+  - [ ] Write MEMORY-CONTEXT-ARCHITECTURE.md
+  - [ ] Week 1 checkpoint
 
-- [ ] **Performance Testing**
-  - [ ] Export latency (target: <1s per session)
-  - [ ] Pattern extraction time (target: <5s per 10 exports)
-  - [ ] Context retrieval speed (target: <2s per session start)
-  - [ ] Knowledge graph query performance (target: <500ms)
+#### Week 2: Intelligence & Optimization (Days 6-10)
 
-- [ ] **Security & Privacy Testing**
-  - [ ] Privacy level enforcement validation
-  - [ ] Opt-out data deletion verification
-  - [ ] Audit log completeness check
-  - [ ] Cross-tenant isolation testing
+- [ ] **Day 6: NESTED LEARNING Processor (Part 2)** (8h)
+  - [ ] Implement code pattern extraction
+  - [ ] Add pattern library management
+  - [ ] Create incremental learning pipeline
+  - [ ] Implement pattern versioning
 
-#### Documentation
+- [ ] **Day 7: Context Loader** (8h)
+  - [ ] Create context_loader.py with relevance scoring
+  - [ ] Implement similarity search via ChromaDB
+  - [ ] Create token budget manager
+  - [ ] Implement progressive context loading
 
-- [ ] API documentation for MEMORY-CONTEXT
-- [ ] Integration guide for developers
-- [ ] Privacy model documentation for legal
-- [ ] Performance tuning guide
-- [ ] Troubleshooting guide
+- [ ] **Day 8: Token Optimizer** (8h)
+  - [ ] Create token_optimizer.py with semantic compression
+  - [ ] Implement redundancy elimination
+  - [ ] Add priority-based selection
+  - [ ] Create cost tracking system
+
+- [ ] **Day 9: Integration & Polish** (8h)
+  - [ ] Full system integration test
+  - [ ] Performance benchmarking
+  - [ ] CLI integration (coditect memory commands)
+  - [ ] Write user documentation
+
+- [ ] **Day 10: Final Testing & Documentation** (8h)
+  - [ ] End-to-end user acceptance testing
+  - [ ] Performance validation (< 5s load, 40%+ token reduction)
+  - [ ] Create user guides and API documentation
+  - [ ] Sprint +1 completion checkpoint
+  - [ ] Deploy to all 19 submodules
+
+#### Success Metrics
+
+- [ ] Session export time < 10s
+- [ ] Context load time < 5s
+- [ ] Token reduction > 40%
+- [ ] PII detection accuracy > 99%
+- [ ] Test coverage > 80%
+- [ ] Working in 3+ submodules (backend, frontend, CLI)
 
 ---
 
