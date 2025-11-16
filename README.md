@@ -16,11 +16,11 @@ This repository serves as the **MASTER PLAN** orchestration point for the comple
 - **Human-in-the-Loop:** Strategic guidance and approvals at phase gates
 
 **Essential Reading:**
-- 📖 **[WHAT-IS-CODITECT.md](.coditect/WHAT-IS-CODITECT.md)** - Understanding the distributed intelligence nervous system
-- 📊 **[Visual Architecture Guide](.coditect/diagrams/distributed-intelligence-architecture.md)** - 5 Mermaid diagrams showing complete system
+- 📖 **[WHAT-IS-CODITECT.md](submodules/coditect-project-dot-claude/WHAT-IS-CODITECT.md)** - Understanding the distributed intelligence nervous system
+- 📊 **[Visual Architecture Guide](submodules/coditect-project-dot-claude/diagrams/distributed-intelligence-architecture.md)** - 5 Mermaid diagrams showing complete system
 - 🧠 **[MEMORY-CONTEXT Architecture](https://github.com/coditect-ai/NESTED-LEARNING-GOOGLE/blob/main/MEMORY-CONTEXT-ARCHITECTURE.md)** - Eliminates catastrophic forgetting
 - 📘 **[Vision & Strategy](./AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete ecosystem vision and market strategy
-- 🎓 **[Training System](.coditect/user-training/README.md)** - CODITECT Operator certification program
+- 🎓 **[Training System](submodules/coditect-project-dot-claude/user-training/README.md)** - CODITECT Operator certification program
 
 ---
 
@@ -248,7 +248,7 @@ coditect-rollout-master/
 - ✅ Reusable templates and automation scripts
 - ✅ Comprehensive training system for operators
 
-**📖 Learn More:** [WHAT-IS-CODITECT.md](.coditect/WHAT-IS-CODITECT.md) - Complete architecture guide
+**📖 Learn More:** [WHAT-IS-CODITECT.md](submodules/coditect-project-dot-claude/WHAT-IS-CODITECT.md) - Complete architecture guide
 
 **This pattern can be abstracted and reused by any CODITECT user** to manage their own complex multi-repo projects.
 
@@ -263,12 +263,12 @@ coditect-rollout-master/
 **Status:** Planning Complete, Ready for Beta Phase
 
 ### Key Documents
-- 📖 [WHAT-IS-CODITECT.md](.coditect/WHAT-IS-CODITECT.md) - Distributed intelligence architecture
-- 📊 [Visual Architecture](.coditect/diagrams/distributed-intelligence-architecture.md) - 5 comprehensive Mermaid diagrams
+- 📖 [WHAT-IS-CODITECT.md](submodules/coditect-project-dot-claude/WHAT-IS-CODITECT.md) - Distributed intelligence architecture
+- 📊 [Visual Architecture](submodules/coditect-project-dot-claude/diagrams/distributed-intelligence-architecture.md) - 5 comprehensive Mermaid diagrams
 - 🧠 [MEMORY-CONTEXT](https://github.com/coditect-ai/NESTED-LEARNING-GOOGLE/blob/main/MEMORY-CONTEXT-ARCHITECTURE.md) - Experiential intelligence layer
 - 📘 [Vision & Strategy](./AZ1.AI-CODITECT-VISION-AND-STRATEGY.md) - Complete ecosystem vision and market strategy
 - 📋 [Master Plan](./CODITECT-ROLLOUT-MASTER-PLAN.md) - Detailed implementation roadmap
-- 🎓 [Training System](.coditect/user-training/README.md) - CODITECT Operator certification
+- 🎓 [Training System](submodules/coditect-project-dot-claude/user-training/README.md) - CODITECT Operator certification
 - 🤖 [AI Agent Config](./CLAUDE.md) - AI agent coordination guidelines
 
 ---
