@@ -22,6 +22,7 @@ This repository serves as the **MASTER PLAN** orchestration point for the comple
 - 📘 **[Vision & Strategy](./AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete ecosystem vision and market strategy
 - 🎓 **[Training System](https://github.com/coditect-ai/coditect-project-dot-claude/blob/main/user-training/README.md)** - CODITECT Operator certification program
 - 🚀 **[Slash Command Quick Start](.coditect/1-2-3-SLASH-COMMAND-QUICK-START.md)** (NEW!) - Master all 72 commands in 3 steps
+- 🤖 **AI Command Router** - Type `coditect-router "your request"` for instant command suggestions (never memorize again!)
 
 ---
 
