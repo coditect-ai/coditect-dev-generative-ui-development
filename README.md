@@ -14,24 +14,47 @@ This repository serves as the **MASTER PLAN** orchestration point for the comple
 - **Autonomous AI-First:** Designed for AI agents to coordinate development
 - **Human-in-the-Loop:** Strategic guidance and approvals at phase gates
 
+📘 **[Read the Complete Vision & Strategy](./AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Comprehensive overview of the CODITECT ecosystem, market strategy, AI risk management framework, and long-term vision for enterprise AI transformation.
+
 ---
 
 ## Architecture
 
-This master project uses **git submodules** to coordinate 10 sub-projects:
+This master project uses **git submodules** to coordinate 19 sub-projects across the CODITECT ecosystem:
+
+### Core Platform Projects (P0 - Beta Phase)
 
 | Project | Description | Type | Priority | Timeline |
 |---------|-------------|------|----------|----------|
-| [coditect-cloud-backend](submodules/coditect-cloud-backend) | FastAPI backend for CODITECT Cloud Platform with user manage... | backend | P0 | 12 weeks |
-| [coditect-cloud-frontend](submodules/coditect-cloud-frontend) | React TypeScript frontend for CODITECT Cloud Platform with u... | frontend | P0 | 10 weeks |
-| [coditect-cli](submodules/coditect-cli) | Python CLI tools for CODITECT setup, git automation, and ses... | cli | P0 | 8 weeks |
-| [coditect-docs](submodules/coditect-docs) | Docusaurus documentation site for CODITECT with tutorials, A... | documentation | P0 | 6 weeks |
-| [coditect-agent-marketplace](submodules/coditect-agent-marketplace) | Next.js marketplace for AI agents with discovery, ratings, a... | frontend | P1 | 10 weeks |
-| [coditect-analytics](submodules/coditect-analytics) | ClickHouse analytics platform for usage tracking and insight... | backend | P1 | 6 weeks |
-| [coditect-infrastructure](submodules/coditect-infrastructure) | Terraform infrastructure as code for GCP deployment with Doc... | infrastructure | P0 | 8 weeks |
-| [coditect-legal](submodules/coditect-legal) | Legal documents repository with EULA, NDA, Terms of Service,... | documentation | P0 | 4 weeks |
-| [coditect-framework](submodules/coditect-framework) | Core CODITECT framework with .claude directory, agents, skil... | framework | P0 | Ongoing |
-| [coditect-automation](submodules/coditect-automation) | Autonomous AI-first orchestration with multi-agent coordinat... | backend | P1 | 8 weeks |
+| [coditect-framework](submodules/coditect-framework) | Core CODITECT framework with .claude directory, agents, skills | framework | P0 | ✅ Operational |
+| [coditect-cloud-backend](submodules/coditect-cloud-backend) | FastAPI backend for CODITECT Cloud Platform | backend | P0 | 12 weeks |
+| [coditect-cloud-frontend](submodules/coditect-cloud-frontend) | React TypeScript frontend for CODITECT Cloud Platform | frontend | P0 | 10 weeks |
+| [coditect-cli](submodules/coditect-cli) | Python CLI tools for CODITECT setup and automation | cli | P0 | 8 weeks |
+| [coditect-docs](submodules/coditect-docs) | Docusaurus documentation site for CODITECT | documentation | P0 | 6 weeks |
+| [coditect-infrastructure](submodules/coditect-infrastructure) | Terraform infrastructure as code for GCP deployment | infrastructure | P0 | 8 weeks |
+| [coditect-legal](submodules/coditect-legal) | Legal documents (EULA, Terms, Privacy, DPA) | documentation | P0 | 4 weeks |
+
+### Marketplace & Analytics (P1 - Pilot Phase)
+
+| Project | Description | Type | Priority | Timeline |
+|---------|-------------|------|----------|----------|
+| [coditect-agent-marketplace](submodules/coditect-agent-marketplace) | Next.js marketplace for AI agents with discovery and ratings | frontend | P1 | 10 weeks |
+| [coditect-analytics](submodules/coditect-analytics) | ClickHouse analytics platform for usage tracking | backend | P1 | 6 weeks |
+| [coditect-automation](submodules/coditect-automation) | Autonomous AI-first orchestration with multi-agent coordination | backend | P1 | 8 weeks |
+
+### Additional Ecosystem Projects
+
+| Project | Description | Type | Status |
+|---------|-------------|------|--------|
+| [coditect-project-dot-claude](submodules/coditect-project-dot-claude) | Core .claude framework for AI agents | framework | ✅ Active |
+| [az1.ai-coditect-ai-screenshot-automator](submodules/az1.ai-coditect-ai-screenshot-automator) | Screenshot automation and documentation tool | tool | ✅ Active |
+| [az1.ai-coditect-agent-new-standard-development](submodules/az1.ai-coditect-agent-new-standard-development) | New agent development standards and patterns | standards | ✅ Active |
+| [NESTED-LEARNING-GOOGLE](submodules/NESTED-LEARNING-GOOGLE) | Educational technology research | research | ✅ Active |
+| [coditect-interactive-workflow-analyzer](submodules/coditect-interactive-workflow-analyzer) | Workflow analysis and optimization tool | tool | ✅ Active |
+| [coditect-blog-application](submodules/coditect-blog-application) | Blog and content management system | application | ✅ Active |
+| [az1.ai-CODITECT.AI-GTM](submodules/az1.ai-CODITECT.AI-GTM) | Go-to-market strategy and execution | strategy | ✅ Active |
+| [Coditect-v5-multiple-LLM-IDE](submodules/Coditect-v5-multiple-LLM-IDE) | Multi-vendor LLM integration IDE | tool | ✅ Active |
+| [coditect-activity-data-model-ui](submodules/coditect-activity-data-model-ui) | Activity feed data model and UI components | frontend | ✅ Active |
 
 
 ---
@@ -174,10 +197,15 @@ This master project **IS** the CODITECT framework in action:
 ## Status
 
 **Session Started:** 2025-11-15 14:57:16
-**Total Sub-Projects:** 10
+**Total Sub-Projects:** 19 (10 core + 9 ecosystem)
 **Timeline:** 10 months (Development → GTM)
-**Budget:** $2.566M
-**Status:** In Setup
+**Budget:** $2.566M (core platform)
+**Status:** Planning Complete, Ready for Beta Phase
+
+### Key Documents
+- 📘 [Vision & Strategy](./AZ1.AI-CODITECT-VISION-AND-STRATEGY.md) - Complete ecosystem vision and market strategy
+- 📋 [Master Plan](./CODITECT-ROLLOUT-MASTER-PLAN.md) - Detailed implementation roadmap
+- 🤖 [AI Agent Config](./CLAUDE.md) - AI agent coordination guidelines
 
 ---
 
