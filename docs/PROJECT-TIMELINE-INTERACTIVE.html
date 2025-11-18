@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CODITECT Development Timeline - Interactive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 1em;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .filter-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .timeline {
+            padding: 40px;
+        }
+
+        .year-section {
+            margin-bottom: 60px;
+        }
+
+        .year-header {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .month-section {
+            margin-bottom: 40px;
+            margin-left: 20px;
+        }
+
+        .month-header {
+            font-size: 1.5em;
+            color: #764ba2;
+            margin-bottom: 15px;
+        }
+
+        .week-section {
+            margin-left: 20px;
+            margin-bottom: 30px;
+        }
+
+        .week-header {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .day-section {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .day-header {
+            font-size: 1.1em;
+            color: #888;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .checkpoint-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            margin-left: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .checkpoint-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            border-color: #667eea;
+        }
+
+        .checkpoint-card.hidden {
+            display: none;
+        }
+
+        .checkpoint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .checkpoint-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+        }
+
+        .checkpoint-badges {
+            display: flex;
+            gap: 8px;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .badge-focus {
+            background: #e7f5ff;
+            color: #1864ab;
+        }
+
+        .badge-messages {
+            background: #f3f0ff;
+            color: #5f3dc4;
+        }
+
+        .badge-tasks {
+            background: #d3f9d8;
+            color: #2b8a3e;
+        }
+
+        .checkpoint-meta {
+            display: flex;
+            gap: 20px;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .checkpoint-source {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #999;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .tasks-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .tasks-header {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .task-list {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .task-list.expanded {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            padding: 6px 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .task-item::before {
+            content: "✓ ";
+            color: #2b8a3e;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .toggle-tasks {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 0.9em;
+            padding: 5px 0;
+            text-decoration: underline;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+            font-size: 1.2em;
+        }
+
+        .empty {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .timeline {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 CODITECT Development Timeline</h1>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">1,601</div>
+                    <div class="stat-label">Unique Messages</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">49</div>
+                    <div class="stat-label">Checkpoints</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">242</div>
+                    <div class="stat-label">Tasks Completed</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Search checkpoints, tasks, or focus areas...">
+            </div>
+            <div class="filter-group" id="filterButtons">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <div class="timeline" id="timeline">
+            <!-- Dynamically populated -->
+        </div>
+
+        <div class="no-results empty" id="noResults">
+            No results found. Try adjusting your search or filters.
+        </div>
+    </div>
+
+    <script>
+        const calendarData = {
+  "2025": {
+    "November": {
+      "47": {
+        "17": [
+          {
+            "name": "2025-11-17-Week 1 Day 2 - Deduplication System Complete",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "",
+            "message_count": 134,
+            "type": "session",
+            "focus": "Memory Context",
+            "phase": "Week 1",
+            "day": 2,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "2025-11-17-incremental-test",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "",
+            "message_count": 13,
+            "type": "session",
+            "focus": "Testing",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "2025-11-17-MASTER3-incremental-test",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "",
+            "message_count": 35,
+            "type": "session",
+            "focus": "Testing",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-11-17-EXPORT-PROJECTS-coditect-rollout-master",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "",
+            "message_count": 13,
+            "type": "export",
+            "focus": "Memory Context",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-11-17-EXPORT-PROJECTS-coditect-rollout-master-2",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "",
+            "message_count": 82,
+            "type": "export",
+            "focus": "Memory Context",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-11-17-EXPORT-MEMORY-CONTEXT-DOT-CODITECT",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "MEMORY-CONTEXT/2025-11-17-EXPORT-MEMORY-CONTEXT-DOT-CODITECT.txt",
+            "message_count": 5,
+            "type": "export",
+            "focus": "Memory Context",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-11-17-EXPORT-ROLLOUT-MASTER",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "MEMORY-CONTEXT/exports/2025-11-17-EXPORT-ROLLOUT-MASTER.txt",
+            "message_count": 2,
+            "type": "export",
+            "focus": "Memory Context",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "checkpoint-2025-11-17T10-21-00Z-Week-1-Phase-1-Complete",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "CHECKPOINTS/2025-11-17T10-21-00Z-Week-1-Phase-1-Complete.md",
+            "message_count": 13,
+            "type": "checkpoint",
+            "focus": "General",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "checkpoint-2025-11-17T09-30-00Z-CONVERSATION-DEDUP-WEEK1-DAY1-COMPLETE",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "CHECKPOINTS/2025-11-17T09-30-00Z-CONVERSATION-DEDUP-WEEK1-DAY1-COMPLETE.md",
+            "message_count": 16,
+            "type": "checkpoint",
+            "focus": "Memory Context",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "checkpoint-2025-11-17T15-30-00Z-Week-1-Phase-2.1-Cloud-SQL-Deployed",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "CHECKPOINTS/2025-11-17T15-30-00Z-Week-1-Phase-2.1-Cloud-SQL-Deployed.md",
+            "message_count": 19,
+            "type": "checkpoint",
+            "focus": "Cloud",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "checkpoint-2025-11-17T23-00-00Z-Week-1-Backend-Implementation-Complete",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "CHECKPOINTS/2025-11-17T23-00-00Z-Week-1-Backend-Implementation-Complete.md",
+            "message_count": 21,
+            "type": "checkpoint",
+            "focus": "Backend",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-11-17-EXPORT-MASTER",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "MEMORY-CONTEXT/2025-11-17-EXPORT-MASTER.txt",
+            "message_count": 85,
+            "type": "export",
+            "focus": "Memory Context",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-11-17-EXPORT-MASTER2",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "MEMORY-CONTEXT/2025-11-17-EXPORT-MASTER2.txt",
+            "message_count": 9,
+            "type": "export",
+            "focus": "Memory Context",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-11-17-EXPORT-MASTER3",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "MEMORY-CONTEXT/2025-11-17-EXPORT-MASTER3.txt",
+            "message_count": 17,
+            "type": "export",
+            "focus": "Memory Context",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-11-17-EXPORT-PROJECTS-coditect-rollout-master-2117ET",
+            "date": "2025-11-17T00:00:00",
+            "date_obj": "2025-11-17 00:00:00",
+            "source_file": "2025-11-17-EXPORT-PROJECTS-coditect-rollout-master-2117ET.txt",
+            "message_count": 17,
+            "type": "export",
+            "focus": "Memory Context",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ]
+      },
+      "46": {
+        "15": [
+          {
+            "name": "export-2025-10=20-EXPORT-SPRINT-2",
+            "date": "2025-11-15T19:07:19.163306",
+            "date_obj": "2025-11-15 19:07:19.163306",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10=20-EXPORT-SPRINT-2.txt",
+            "message_count": 18,
+            "type": "export",
+            "focus": "Testing",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ],
+        "16": [
+          {
+            "name": "export-2025-11-16T20:08:18Z-EXPORT-DAY6-NESTED-LEARNINGS",
+            "date": "2025-11-16T00:00:00",
+            "date_obj": "2025-11-16 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-11-16T20:08:18Z-EXPORT-DAY6-NESTED-LEARNINGS.txt",
+            "message_count": 2,
+            "type": "export",
+            "focus": "Testing",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-11-16-EXPORT-CODITECT-INSTALLER",
+            "date": "2025-11-16T00:00:00",
+            "date_obj": "2025-11-16 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-11-16-EXPORT-CODITECT-INSTALLER.txt",
+            "message_count": 1,
+            "type": "export",
+            "focus": "Testing",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "checkpoint-2025-11-16T03-54-36Z-SPRINT-COMPLETE-ONBOARDING-SYSTEM",
+            "date": "2025-11-16T00:00:00",
+            "date_obj": "2025-11-16 00:00:00",
+            "source_file": "CHECKPOINTS/2025-11-16T03-54-36Z-SPRINT-COMPLETE-ONBOARDING-SYSTEM.md",
+            "message_count": 16,
+            "type": "checkpoint",
+            "focus": "General",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "checkpoint-2025-11-16T08-34-53Z-DISTRIBUTED-INTELLIGENCE-ARCHITECTURE-COMPLETE",
+            "date": "2025-11-16T00:00:00",
+            "date_obj": "2025-11-16 00:00:00",
+            "source_file": "CHECKPOINTS/2025-11-16T08-34-53Z-DISTRIBUTED-INTELLIGENCE-ARCHITECTURE-COMPLETE.md",
+            "message_count": 17,
+            "type": "checkpoint",
+            "focus": "Architecture",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "checkpoint-2025-11-16T09-05-16Z-Checkpoint-Automation-System-Implementation-Complete",
+            "date": "2025-11-16T00:00:00",
+            "date_obj": "2025-11-16 00:00:00",
+            "source_file": "CHECKPOINTS/2025-11-16T09-05-16Z-Checkpoint-Automation-System-Implementation-Complete.md",
+            "message_count": 12,
+            "type": "checkpoint",
+            "focus": "Automation",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "checkpoint-2025-11-16T09-26-41Z-TASKLISTs-Updated-and-Checkpoint-Automation-System-Complete",
+            "date": "2025-11-16T00:00:00",
+            "date_obj": "2025-11-16 00:00:00",
+            "source_file": "CHECKPOINTS/2025-11-16T09-26-41Z-TASKLISTs-Updated-and-Checkpoint-Automation-System-Complete.md",
+            "message_count": 4,
+            "type": "checkpoint",
+            "focus": "Automation",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "checkpoint-2025-11-16T09-56-08Z-Distributed-Intelligence-Architecture-Complete---All-Symlinks-Configured",
+            "date": "2025-11-16T00:00:00",
+            "date_obj": "2025-11-16 00:00:00",
+            "source_file": "CHECKPOINTS/2025-11-16T09-56-08Z-Distributed-Intelligence-Architecture-Complete---All-Symlinks-Configured.md",
+            "message_count": 4,
+            "type": "checkpoint",
+            "focus": "Architecture",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-11-16-EXPORT-CHECKPOINT",
+            "date": "2025-11-16T00:00:00",
+            "date_obj": "2025-11-16 00:00:00",
+            "source_file": "MEMORY-CONTEXT/2025-11-16-EXPORT-CHECKPOINT.txt",
+            "message_count": 37,
+            "type": "checkpoint",
+            "focus": "Memory Context",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ]
+      }
+    },
+    "September": {
+      "40": {
+        "29": [
+          {
+            "name": "export-2025-09-29-EXPORT-CLOUD-ARCHITECT-SESSION-2025-09-29-01",
+            "date": "2025-09-29T00:00:00",
+            "date_obj": "2025-09-29 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-09-29-EXPORT-CLOUD-ARCHITECT-SESSION-2025-09-29-01.txt",
+            "message_count": 3,
+            "type": "export",
+            "focus": "Cloud",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-09-29-EXPORT-ORCHESTRATOR-SESSION-2025-09-27",
+            "date": "2025-09-29T00:00:00",
+            "date_obj": "2025-09-29 00:00:00",
+            "source_file": "submodules/Coditect-v5-multiple-LLM-IDE/docs/09-sessions/2025-09-29-EXPORT-ORCHESTRATOR-SESSION-2025-09-27.txt",
+            "message_count": 290,
+            "type": "export",
+            "focus": "Documentation",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ],
+        "30": [
+          {
+            "name": "export-2025-09-30-EXPORT-CLOUD-ARCHITECT-2025-09-30-02",
+            "date": "2025-09-30T00:00:00",
+            "date_obj": "2025-09-30 00:00:00",
+            "source_file": "submodules/Coditect-v5-multiple-LLM-IDE/docs/09-sessions/2025-09-30-EXPORT-CLOUD-ARCHITECT-2025-09-30-02.txt",
+            "message_count": 120,
+            "type": "export",
+            "focus": "Cloud",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-09-30-EXPORT-FILE-MANAGEMENT-ORGANIZER-SESSION-2025-09-30-01",
+            "date": "2025-09-30T00:00:00",
+            "date_obj": "2025-09-30 00:00:00",
+            "source_file": "submodules/Coditect-v5-multiple-LLM-IDE/docs/09-sessions/2025-09-30-EXPORT-FILE-MANAGEMENT-ORGANIZER-SESSION-2025-09-30-01.txt",
+            "message_count": 74,
+            "type": "export",
+            "focus": "Documentation",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ]
+      },
+      "36": {
+        "1": [
+          {
+            "name": "export-2025-09-01-EXPORT-ADRS-session5",
+            "date": "2025-09-01T00:00:00",
+            "date_obj": "2025-09-01 00:00:00",
+            "source_file": "submodules/Coditect-v5-multiple-LLM-IDE/docs/09-sessions/2025-09-01-EXPORT-ADRS-session5.txt",
+            "message_count": 53,
+            "type": "export",
+            "focus": "Architecture",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ],
+        "3": [
+          {
+            "name": "export-2025-09-03-EXPORT-DOCUMENT-DEV-3",
+            "date": "2025-09-03T00:00:00",
+            "date_obj": "2025-09-03 00:00:00",
+            "source_file": "submodules/Coditect-v5-multiple-LLM-IDE/docs/09-sessions/2025-09-03-EXPORT-DOCUMENT-DEV-3.txt",
+            "message_count": 117,
+            "type": "export",
+            "focus": "Documentation",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-09-03-EXPORT-SESSION8-QA-REVIEWER",
+            "date": "2025-09-03T00:00:00",
+            "date_obj": "2025-09-03 00:00:00",
+            "source_file": "submodules/Coditect-v5-multiple-LLM-IDE/docs/09-sessions/2025-09-03-EXPORT-SESSION8-QA-REVIEWER.txt",
+            "message_count": 124,
+            "type": "export",
+            "focus": "Documentation",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ]
+      },
+      "39": {
+        "28": [
+          {
+            "name": "export-2025-09-28-EXPORT-FRONTEND-DEVELOPER-SESSION-2025-09-28-01",
+            "date": "2025-09-28T00:00:00",
+            "date_obj": "2025-09-28 00:00:00",
+            "source_file": "submodules/Coditect-v5-multiple-LLM-IDE/docs/09-sessions/2025-09-28-EXPORT-FRONTEND-DEVELOPER-SESSION-2025-09-28-01.txt",
+            "message_count": 1,
+            "type": "export",
+            "focus": "Frontend",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ]
+      }
+    },
+    "October": {
+      "41": {
+        "6": [
+          {
+            "name": "export-2025-10-06-02-EXPORT-LM-STUDIO-multiple-LLMS",
+            "date": "2025-10-06T00:00:00",
+            "date_obj": "2025-10-06 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10-06-02-EXPORT-LM-STUDIO-multiple-LLMS.txt",
+            "message_count": 1,
+            "type": "export",
+            "focus": "Testing",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ],
+        "7": [
+          {
+            "name": "export-2025-10-07-EXPORT",
+            "date": "2025-10-07T00:00:00",
+            "date_obj": "2025-10-07 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10-07-EXPORT.txt",
+            "message_count": 6,
+            "type": "export",
+            "focus": "Testing",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ],
+        "8": [
+          {
+            "name": "export-2025-10-08-EXPORT-Theia-BRANDING-ISSUES",
+            "date": "2025-10-08T00:00:00",
+            "date_obj": "2025-10-08 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10-08-EXPORT-Theia-BRANDING-ISSUES.txt",
+            "message_count": 2,
+            "type": "export",
+            "focus": "Frontend",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ],
+        "12": [
+          {
+            "name": "export-2025-10-12-EXPORT-DOCKER-BUILD",
+            "date": "2025-10-12T00:00:00",
+            "date_obj": "2025-10-12 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10-12-EXPORT-DOCKER-BUILD.txt",
+            "message_count": 4,
+            "type": "export",
+            "focus": "Frontend",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-10-12-EXPORT-DOT-CLAUDE-UPDATES",
+            "date": "2025-10-12T00:00:00",
+            "date_obj": "2025-10-12 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10-12-EXPORT-DOT-CLAUDE-UPDATES.txt",
+            "message_count": 15,
+            "type": "export",
+            "focus": "Testing",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-10-12-EXPORT-FRONTEND-DOCKER-BUILD",
+            "date": "2025-10-12T00:00:00",
+            "date_obj": "2025-10-12 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10-12-EXPORT-FRONTEND-DOCKER-BUILD.txt",
+            "message_count": 18,
+            "type": "export",
+            "focus": "Frontend",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ],
+        "11": [
+          {
+            "name": "export-2025-10-11-EXPORT-KNOWLEDGEBASE-SESSION",
+            "date": "2025-10-11T00:00:00",
+            "date_obj": "2025-10-11 00:00:00",
+            "source_file": "submodules/Coditect-v5-multiple-LLM-IDE/docs/99-archive/obsolete-directories/theia-kb-extension/2025-10-11-EXPORT-KNOWLEDGEBASE-SESSION.txt",
+            "message_count": 80,
+            "type": "export",
+            "focus": "Frontend",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ]
+      },
+      "42": {
+        "13": [
+          {
+            "name": "export-2025-10-13-EXPORT-DOCKER-V5-CODITECT-WRAPPER-PERSISTENCE",
+            "date": "2025-10-13T00:00:00",
+            "date_obj": "2025-10-13 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10-13-EXPORT-DOCKER-V5-CODITECT-WRAPPER-PERSISTENCE.txt",
+            "message_count": 1,
+            "type": "export",
+            "focus": "Documentation",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ],
+        "14": [
+          {
+            "name": "export-2025-10-14-EXPORT-FOUNDATIONDB-SESSION",
+            "date": "2025-10-14T00:00:00",
+            "date_obj": "2025-10-14 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10-14-EXPORT-FOUNDATIONDB-SESSION.txt",
+            "message_count": 6,
+            "type": "export",
+            "focus": "Database",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-10-14-EXPORT-SESSION-CONTEXT",
+            "date": "2025-10-14T00:00:00",
+            "date_obj": "2025-10-14 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10-14-EXPORT-SESSION-CONTEXT.txt",
+            "message_count": 28,
+            "type": "export",
+            "focus": "Testing",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-10-14-EXPORT-SessionTabManager-FIX",
+            "date": "2025-10-14T00:00:00",
+            "date_obj": "2025-10-14 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10-14-EXPORT-SessionTabManager-FIX.txt",
+            "message_count": 5,
+            "type": "export",
+            "focus": "Testing",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ],
+        "15": [
+          {
+            "name": "export-2025-10-15-EXPORT-BACKEND-BUILD-ERRORS",
+            "date": "2025-10-15T00:00:00",
+            "date_obj": "2025-10-15 00:00:00",
+            "source_file": "submodules/Coditect-v5-multiple-LLM-IDE/docs/09-sessions/2025-10-15-EXPORT-BACKEND-BUILD-ERRORS.txt",
+            "message_count": 28,
+            "type": "export",
+            "focus": "Backend",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ]
+      },
+      "43": {
+        "26": [
+          {
+            "name": "export-2025-10-26-EXPORT-LATEST-CODITECT-YAML-PRE-PRODUCTION-CLOUD-BUILD",
+            "date": "2025-10-26T00:00:00",
+            "date_obj": "2025-10-26 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10-26-EXPORT-LATEST-CODITECT-YAML-PRE-PRODUCTION-CLOUD-BUILD.txt",
+            "message_count": 4,
+            "type": "export",
+            "focus": "Frontend",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-10-26-EXPORT-PRE-PRODUCTION-PREPARATION",
+            "date": "2025-10-26T00:00:00",
+            "date_obj": "2025-10-26 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10-26-EXPORT-PRE-PRODUCTION-PREPARATION.txt",
+            "message_count": 15,
+            "type": "export",
+            "focus": "Testing",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ]
+      },
+      "44": {
+        "27": [
+          {
+            "name": "export-2025-10-27-EXPORT-BUILD17-SESSION1",
+            "date": "2025-10-27T00:00:00",
+            "date_obj": "2025-10-27 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10-27-EXPORT-BUILD17-SESSION1.txt",
+            "message_count": 4,
+            "type": "export",
+            "focus": "Frontend",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          },
+          {
+            "name": "export-2025-10-27-EXPORT-BUILD17-SESSION2",
+            "date": "2025-10-27T00:00:00",
+            "date_obj": "2025-10-27 00:00:00",
+            "source_file": "submodules/Coditect-v5-multiple-LLM-IDE/docs/09-sessions/2025-10-27-EXPORT-BUILD17-SESSION2.txt",
+            "message_count": 7,
+            "type": "export",
+            "focus": "Frontend",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ],
+        "28": [
+          {
+            "name": "export-2025-10-28-EXPORT-CODITECT-BUILD-26",
+            "date": "2025-10-28T00:00:00",
+            "date_obj": "2025-10-28 00:00:00",
+            "source_file": "MEMORY-CONTEXT/test-dataset/exports/2025-10-28-EXPORT-CODITECT-BUILD-26.txt",
+            "message_count": 3,
+            "type": "export",
+            "focus": "Frontend",
+            "phase": "Unknown",
+            "day": null,
+            "tasks": [],
+            "task_count": 0
+          }
+        ]
+      }
+    }
+  }
+};
+
+        // Extract unique focus areas
+        const focusAreas = new Set();
+        Object.values(calendarData).forEach(yearData => {
+            Object.values(yearData).forEach(monthData => {
+                Object.values(monthData).forEach(weekData => {
+                    Object.values(weekData).forEach(dayData => {
+                        dayData.forEach(ckpt => focusAreas.add(ckpt.focus));
+                    });
+                });
+            });
+        });
+
+        // Create filter buttons
+        const filterContainer = document.getElementById('filterButtons');
+        const allFocusAreas = ['All', ...Array.from(focusAreas).sort()];
+        let activeFilter = 'All';
+
+        allFocusAreas.forEach(focus => {
+            const btn = document.createElement('button');
+            btn.className = 'filter-btn' + (focus === 'All' ? ' active' : '');
+            btn.textContent = focus;
+            btn.onclick = () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeFilter = focus;
+                filterCheckpoints();
+            };
+            filterContainer.appendChild(btn);
+        });
+
+        // Render timeline
+        function renderTimeline() {
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '';
+
+            Object.entries(calendarData).sort((a, b) => b[0] - a[0]).forEach(([year, yearData]) => {
+                const yearSection = document.createElement('div');
+                yearSection.className = 'year-section';
+
+                const yearHeader = document.createElement('div');
+                yearHeader.className = 'year-header';
+                yearHeader.textContent = year == 0 ? 'Unknown Dates' : year;
+                yearSection.appendChild(yearHeader);
+
+                Object.entries(yearData).forEach(([month, monthData]) => {
+                    const monthSection = document.createElement('div');
+                    monthSection.className = 'month-section';
+
+                    const monthHeader = document.createElement('div');
+                    monthHeader.className = 'month-header';
+                    monthHeader.textContent = month;
+                    monthSection.appendChild(monthHeader);
+
+                    Object.entries(monthData).sort((a, b) => a[0] - b[0]).forEach(([week, weekData]) => {
+                        const weekSection = document.createElement('div');
+                        weekSection.className = 'week-section';
+
+                        const weekHeader = document.createElement('div');
+                        weekHeader.className = 'week-header';
+                        weekHeader.textContent = `Week ${week}`;
+                        weekSection.appendChild(weekHeader);
+
+                        Object.entries(weekData).sort((a, b) => a[0] - b[0]).forEach(([day, dayCheckpoints]) => {
+                            const daySection = document.createElement('div');
+                            daySection.className = 'day-section';
+
+                            if (dayCheckpoints.length > 0 && dayCheckpoints[0].date_obj) {
+                                const dayHeader = document.createElement('div');
+                                dayHeader.className = 'day-header';
+                                const date = new Date(dayCheckpoints[0].date_obj);
+                                dayHeader.textContent = date.toLocaleDateString('en-US', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                });
+                                daySection.appendChild(dayHeader);
+                            }
+
+                            dayCheckpoints.forEach(ckpt => {
+                                const card = createCheckpointCard(ckpt);
+                                daySection.appendChild(card);
+                            });
+
+                            weekSection.appendChild(daySection);
+                        });
+
+                        monthSection.appendChild(weekSection);
+                    });
+
+                    yearSection.appendChild(monthSection);
+                });
+
+                timeline.appendChild(yearSection);
+            });
+        }
+
+        function createCheckpointCard(ckpt) {
+            const card = document.createElement('div');
+            card.className = 'checkpoint-card';
+            card.dataset.focus = ckpt.focus;
+            card.dataset.name = ckpt.name.toLowerCase();
+            card.dataset.phase = ckpt.phase.toLowerCase();
+            card.dataset.source = ckpt.source_file.toLowerCase();
+
+            const header = document.createElement('div');
+            header.className = 'checkpoint-header';
+
+            const name = document.createElement('div');
+            name.className = 'checkpoint-name';
+            name.textContent = ckpt.name;
+            header.appendChild(name);
+
+            const badges = document.createElement('div');
+            badges.className = 'checkpoint-badges';
+
+            const focusBadge = document.createElement('span');
+            focusBadge.className = 'badge badge-focus';
+            focusBadge.textContent = ckpt.focus;
+            badges.appendChild(focusBadge);
+
+            const messagesBadge = document.createElement('span');
+            messagesBadge.className = 'badge badge-messages';
+            messagesBadge.textContent = `${ckpt.message_count.toLocaleString()} msgs`;
+            badges.appendChild(messagesBadge);
+
+            if (ckpt.task_count > 0) {
+                const tasksBadge = document.createElement('span');
+                tasksBadge.className = 'badge badge-tasks';
+                tasksBadge.textContent = `${ckpt.task_count} tasks`;
+                badges.appendChild(tasksBadge);
+            }
+
+            header.appendChild(badges);
+            card.appendChild(header);
+
+            const meta = document.createElement('div');
+            meta.className = 'checkpoint-meta';
+            meta.innerHTML = `
+                <span><strong>Phase:</strong> ${ckpt.phase}</span>
+                <span><strong>Type:</strong> ${ckpt.type}</span>
+            `;
+            card.appendChild(meta);
+
+            const source = document.createElement('div');
+            source.className = 'checkpoint-source';
+            source.textContent = ckpt.source_file;
+            card.appendChild(source);
+
+            if (ckpt.tasks && ckpt.tasks.length > 0) {
+                const tasksSection = document.createElement('div');
+                tasksSection.className = 'tasks-section';
+
+                const tasksHeader = document.createElement('div');
+                tasksHeader.className = 'tasks-header';
+                tasksHeader.textContent = `✓ ${ckpt.tasks.length} Tasks Completed`;
+                tasksSection.appendChild(tasksHeader);
+
+                const toggleBtn = document.createElement('button');
+                toggleBtn.className = 'toggle-tasks';
+                toggleBtn.textContent = 'Show tasks';
+                toggleBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    taskList.classList.toggle('expanded');
+                    toggleBtn.textContent = taskList.classList.contains('expanded') ? 'Hide tasks' : 'Show tasks';
+                };
+                tasksSection.appendChild(toggleBtn);
+
+                const taskList = document.createElement('div');
+                taskList.className = 'task-list';
+                ckpt.tasks.slice(0, 20).forEach(task => {
+                    const taskItem = document.createElement('div');
+                    taskItem.className = 'task-item';
+                    taskItem.textContent = task.text;
+                    taskList.appendChild(taskItem);
+                });
+                if (ckpt.tasks.length > 20) {
+                    const more = document.createElement('div');
+                    more.className = 'task-item';
+                    more.textContent = `... and ${ckpt.tasks.length - 20} more tasks`;
+                    taskList.appendChild(more);
+                }
+                tasksSection.appendChild(taskList);
+
+                card.appendChild(tasksSection);
+
+                // Store tasks text for search
+                card.dataset.tasks = ckpt.tasks.map(t => t.text).join(' ').toLowerCase();
+            } else {
+                card.dataset.tasks = '';
+            }
+
+            return card;
+        }
+
+        function filterCheckpoints() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.checkpoint-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const matchesFilter = activeFilter === 'All' || card.dataset.focus === activeFilter;
+                const matchesSearch = searchTerm === '' ||
+                    card.dataset.name.includes(searchTerm) ||
+                    card.dataset.focus.toLowerCase().includes(searchTerm) ||
+                    card.dataset.phase.includes(searchTerm) ||
+                    card.dataset.source.includes(searchTerm) ||
+                    card.dataset.tasks.includes(searchTerm);
+
+                if (matchesFilter && matchesSearch) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            // Show/hide no results message
+            document.getElementById('noResults').classList.toggle('empty', visibleCount > 0);
+        }
+
+        // Search input handler
+        document.getElementById('searchInput').addEventListener('input', filterCheckpoints);
+
+        // Initial render
+        renderTimeline();
+    </script>
+</body>
+</html>
