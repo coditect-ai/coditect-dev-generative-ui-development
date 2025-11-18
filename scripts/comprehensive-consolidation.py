@@ -80,28 +80,45 @@ def load_global_hashes() -> Set[str]:
 
 
 def parse_export_file(file_path: Path) -> List[Dict]:
-    """Parse export file and extract messages (handles regular and compact formats)."""
+    """Parse export file - handles 3 Claude Code export formats."""
     messages = []
 
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             content = f.read()
 
-        # Check if compact format (has ⏺ conversation markers)
+        # Format 1: Compact format with ⏺ markers (newer Claude Code)
         if '⏺' in content:
             import re
             segments = re.split(r'⏺', content)
             for segment in segments:
                 segment = segment.strip()
-                if segment and len(segment) > 50:  # Skip headers
+                if segment and len(segment) > 50:
                     messages.append({
                         'role': 'conversation',
                         'content': segment,
                         'timestamp': None,
-                        'source_type': 'export_compact'
+                        'source_type': 'export_compact_circle'
                     })
-        else:
-            # Regular format
+
+        # Format 2: Compact summary with ● markers (older Claude Code exports)
+        elif '● Compact summary' in content or content.count('●') > 5:
+            import re
+            # Split by ● markers (each represents a conversation exchange)
+            segments = re.split(r'\n●\s+', content)
+            for segment in segments:
+                segment = segment.strip()
+                # Skip header boxes (╭╮) and very short segments
+                if segment and len(segment) > 50 and not segment.startswith('╭'):
+                    messages.append({
+                        'role': 'exchange',
+                        'content': '● ' + segment,  # Preserve marker for context
+                        'timestamp': None,
+                        'source_type': 'export_compact_bullet'
+                    })
+
+        # Format 3: Regular format with ## Message markers
+        elif '## Message' in content or content.count('---') > 3:
             current_message = []
             in_message = False
 
@@ -111,10 +128,10 @@ def parse_export_file(file_path: Path) -> List[Dict]:
                         content_str = '\n'.join(current_message).strip()
                         if content_str:
                             messages.append({
-                                'role': 'unknown',
+                                'role': 'message',
                                 'content': content_str,
                                 'timestamp': None,
-                                'source_type': 'export'
+                                'source_type': 'export_standard'
                             })
                         current_message = []
                     in_message = True
@@ -128,11 +145,20 @@ def parse_export_file(file_path: Path) -> List[Dict]:
                 content_str = '\n'.join(current_message).strip()
                 if content_str:
                     messages.append({
-                        'role': 'unknown',
+                        'role': 'message',
                         'content': content_str,
                         'timestamp': None,
-                        'source_type': 'export'
+                        'source_type': 'export_standard'
                     })
+
+        # Format 4: Raw content (fallback for any remaining data)
+        elif len(content.strip()) > 100:
+            messages.append({
+                'role': 'session',
+                'content': content.strip(),
+                'timestamp': None,
+                'source_type': 'export_raw'
+            })
 
     except Exception as e:
         print(f"⚠️  Error parsing {file_path.name}: {e}")
