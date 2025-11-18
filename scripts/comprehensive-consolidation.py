@@ -80,21 +80,39 @@ def load_global_hashes() -> Set[str]:
 
 
 def parse_export_file(file_path: Path) -> List[Dict]:
-    """Parse export file and extract messages."""
+    """Parse export file and extract messages (handles regular and compact formats)."""
     messages = []
-    current_message = []
-    in_message = False
 
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            for line in f:
+            content = f.read()
+
+        # Check if compact format (has ⏺ conversation markers)
+        if '⏺' in content:
+            import re
+            segments = re.split(r'⏺', content)
+            for segment in segments:
+                segment = segment.strip()
+                if segment and len(segment) > 50:  # Skip headers
+                    messages.append({
+                        'role': 'conversation',
+                        'content': segment,
+                        'timestamp': None,
+                        'source_type': 'export_compact'
+                    })
+        else:
+            # Regular format
+            current_message = []
+            in_message = False
+
+            for line in content.split('\n'):
                 if line.strip().startswith('## Message') or line.strip().startswith('---'):
                     if current_message and in_message:
-                        content = ''.join(current_message).strip()
-                        if content:
+                        content_str = '\n'.join(current_message).strip()
+                        if content_str:
                             messages.append({
                                 'role': 'unknown',
-                                'content': content,
+                                'content': content_str,
                                 'timestamp': None,
                                 'source_type': 'export'
                             })
@@ -107,11 +125,11 @@ def parse_export_file(file_path: Path) -> List[Dict]:
 
             # Last message
             if current_message:
-                content = ''.join(current_message).strip()
-                if content:
+                content_str = '\n'.join(current_message).strip()
+                if content_str:
                     messages.append({
                         'role': 'unknown',
-                        'content': content,
+                        'content': content_str,
                         'timestamp': None,
                         'source_type': 'export'
                     })
