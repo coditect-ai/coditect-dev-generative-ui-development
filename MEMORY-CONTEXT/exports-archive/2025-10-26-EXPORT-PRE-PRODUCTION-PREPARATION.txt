@@ -1,0 +1,596 @@
+# Session Export: Pre-Production Preparation Analysis
+
+**Date**: 2025-10-26
+**Session Type**: POD Requirements Analysis for Production-Ready Deployment
+**Duration**: ~3 hours (analysis + documentation)
+**Status**: ✅ COMPLETE - Ready for Implementation
+
+---
+
+## 📋 Session Objectives
+
+**Primary Goal**: Analyze claude-code-initial-setup submodule to identify all requirements for production-ready persistent pods in GKE
+
+**Secondary Goals**:
+1. Identify Debian libraries needed
+2. Locate Rust binaries (Codi2 and Monitor)
+3. Document .coditect configuration requirements
+4. Optimize Cloud Build configuration
+5. Create gap analysis between current state and production-ready state
+
+---
+
+## ✅ Completed Tasks
+
+### 1. Submodule Analysis
+- ✅ Updated all git submodules to latest versions
+  - agents-reference: 176 files changed, 38K+ lines added (massive skill additions)
+  - claude-code-initial-setup: Session history, debug logs, .claude configurations
+  - coditect-v4: No changes
+  - agents-research-plan-code: 12 new nightly tags
+
+### 2. Debian Library Identification
+- ✅ Parsed 3 installation scripts from claude-code-initial-setup:
+  - install-dev-environment.sh (TIER 1-4 packages)
+  - install-modern-dev-stack.sh (Playwright + TypeScript tools)
+  - install-userspace-tools.sh (User-space alternatives)
+
+- ✅ Identified 31 essential Debian packages:
+  - TIER 1 (7): build-essential, jq, wget, tree, htop, vim, nano
+  - TIER 2 (8): git-lfs, ripgrep, fzf, tmux, rsync, zip, unzip, silversearcher-ag
+  - TIER 3 (6): python3, python3-pip, python3-venv, python3-dev, pylint, black
+  - TIER 4 (7): Optional network/debugging tools
+  - Playwright (3): System deps for chromium, firefox, webkit
+
+### 3. Rust Binaries Location
+- ✅ Located all 3 Rust binaries:
+
+**Binary #1: V5 Backend API Server**
+- Location: `/home/hal/v4/PROJECTS/t2/backend/`
+- Binary name: `coditect-v5-api`
+- Output: `target/release/api-server`
+- Version: 0.1.0
+- Dependencies: actix-web 4.4, tokio 1.35, foundationdb 0.9, jsonwebtoken 9.1, argon2 0.5
+
+**Binary #2: Codi2 Monitoring & Audit System**
+- Location: `/home/hal/v4/PROJECTS/t2/archive/coditect-v4/codi2/`
+- Binary name: `codi2`
+- Output: `target/release/codi2`
+- Version: 0.2.0
+- Features: audit, monitor, session, state, websocket, mcp
+- Capabilities: FoundationDB audit logging, file system monitoring, multi-agent coordination
+
+**Binary #3: File Monitor Service**
+- Location: `/home/hal/v4/PROJECTS/t2/src/file-monitor/`
+- Binary name: `file-monitor`
+- Output: `target/release/examples/monitor`
+- Version: 0.1.0
+- Features: Real-time file events, SHA256 checksums, JSON logging, Prometheus metrics
+
+### 4. .coditect Configuration Inventory
+- ✅ Documented complete .coditect directory structure:
+  - 5 agents (code-reviewer, test-writer, doc-generator, file-organizer, prior-session-agent)
+  - 2 skills (session-aware, project-tracker)
+  - 15 scripts (install-dev-environment, install-modern-dev-stack, etc.)
+  - 3 workflows (code-review, testing, cicd)
+  - settings.json with hooks configuration
+  - Total size: ~405 KB (negligible impact on 4.5 GB image)
+
+### 5. Cloud Build Optimization
+- ✅ Identified optimal Cloud Build configuration:
+  - Machine Type: E2_HIGHCPU_32 (32 CPUs, proven successful from Oct 13 build)
+  - Timeout: 3600s (60 minutes, increased from 30 min)
+  - Node Heap: 8GB (`NODE_OPTIONS=--max_old_space_size=8192`)
+  - BuildKit: Enabled (`DOCKER_BUILDKIT=1`)
+  - Cache From: `--cache-from=...coditect-combined:latest`
+  - Expected build time: 30-40 minutes (down from 60+ min with 8 CPUs)
+
+### 6. Docker Layer Optimization
+- ✅ Analyzed and optimized layer count:
+  - Strategy: Combine RUN statements with && to reduce layers
+  - Example: 10+ separate apt-get commands → 1 combined statement
+  - Expected layer count: ~70 layers (safe margin below 127 limit)
+  - Layer breakdown:
+    - Frontend build: ~15 layers
+    - Theia build: ~18 layers
+    - 3 Rust build stages: ~12 layers each
+    - Runtime: ~25 layers
+  - Cleanup: `rm -rf /var/lib/apt/lists/*` to reduce image size
+
+### 7. Gap Analysis
+- ✅ Created comprehensive gap analysis comparing current state to production-ready:
+  - **Rust Binaries**: 3 missing (api-server, codi2, file-monitor)
+  - **.coditect Configs**: Complete directory missing (~405 KB)
+  - **Debian Packages**: 31 packages not installed
+  - **Node.js Global**: 17 npm packages not installed
+  - **Cloud Build**: Using E2_HIGHCPU_8 instead of E2_HIGHCPU_32
+  - **Docker Layers**: No optimization, risk of exceeding limit
+
+---
+
+## 📄 Documents Created
+
+### Primary Documents
+
+1. **POD-REQUIREMENTS-ANALYSIS.md** (15 KB)
+   - Complete analysis of POD requirements
+   - Debian libraries (TIER 1-4)
+   - Node.js global packages (17 total)
+   - Rust components (3 binaries with full details)
+   - .coditect configuration requirements
+   - Cloud Build optimization strategies
+   - Docker layer optimization
+   - Implementation checklist (5 phases)
+   - Success criteria (7 categories)
+
+2. **GAP-ANALYSIS-CURRENT-TO-PRODUCTION.md** (22 KB)
+   - Detailed gap analysis (6 major gaps)
+   - Current state vs. production-ready state comparison
+   - Implementation checklist (5 phases with checkboxes)
+   - Build metrics and expected outcomes
+   - Cost impact analysis
+   - Deployment timeline (2-3 hours)
+   - Success criteria (All criteria listed with checkboxes)
+
+3. **RUST-BINARY-BUILD-LOCATIONS.md** (18 KB)
+   - Exact build folders for all 3 Rust binaries
+   - Build commands and Cargo.toml locations
+   - Directory structures
+   - Multi-stage Dockerfile integration strategy
+   - Build verification procedures
+   - Deployment checklist
+
+### Summary Documents
+
+4. **THEIA-ICONS-BRANDING-FIX.md** (Existing, referenced)
+   - Documents Theia icons and branding issues
+   - Root cause: Dockerfile copying from `.theia/` instead of `theia-app/`
+   - Solution: Dockerfile.combined-fixed with correct paths
+   - Verification steps and deployment process
+
+5. **STARTER-DEPLOYMENT-QUICKSTART.md** (Existing, referenced)
+   - Quick start guide for Starter configuration (10-20 users)
+   - 2-command deployment process
+   - Monitoring and testing procedures
+
+6. **GKE-CAPACITY-PLANNING.md** (Existing, referenced)
+   - Capacity analysis for different user loads
+   - Current: 3 users, Starter: 10-20, Production: 50-100, Enterprise: 500+
+   - Cost estimates and resource requirements
+
+---
+
+## 🔑 Key Findings
+
+### Critical Gaps Identified
+
+1. **Rust Binaries Not Bundled** (HIGH PRIORITY)
+   - Impact: Missing file monitoring, audit logging, and multi-agent coordination tools
+   - Solution: Add 3 Rust build stages to Dockerfile.combined-fixed
+   - Estimated time: Add to build
+
+2. **.coditect Configs Missing** (HIGH PRIORITY)
+   - Impact: Claude Code cannot use automated agents/skills/workflows
+   - Solution: COPY archive/claude-code-initial-setup/.claude /app/.coditect
+   - Size impact: +405 KB (negligible)
+
+3. **Development Tools Not Pre-Installed** (MEDIUM PRIORITY)
+   - Impact: Pods cannot run essential dev tools (rg, jq, tree, htop)
+   - Solution: Add combined apt-get install with 15-21 packages
+   - Size impact: +200-300 MB (worth it)
+
+4. **Cloud Build Insufficient Resources** (HIGH PRIORITY)
+   - Impact: Builds timeout or fail due to OOM/insufficient CPU
+   - Solution: Update cloudbuild-combined.yaml with E2_HIGHCPU_32
+   - Cost impact: +$0.40/build, -50% build time (60+ min → 30-40 min)
+
+5. **Docker Layers Not Optimized** (MEDIUM PRIORITY)
+   - Impact: Risk of exceeding 127 layer limit, slower builds, larger images
+   - Solution: Combine RUN statements, cleanup package lists
+   - Size impact: -100-200 MB (cleanup), faster builds
+
+6. **Node.js Global Packages Missing** (LOW PRIORITY)
+   - Impact: TypeScript/ESLint only available in project root
+   - Solution: npm install -g [17 packages]
+   - Size impact: +50-100 MB
+
+### Success Metrics
+
+**Build Improvements**:
+- Time: 60-90 min → 30-40 min (40-60% faster)
+- Success Rate: ~60% → 95%+ (35%+ improvement)
+- Image Size: ~3.5 GB → ~4.5 GB (+1 GB for dev tools, worth it)
+
+**Runtime Benefits**:
+- Pod startup: ~30s → ~10s (no apt-get at runtime)
+- Tool availability: Instant (all pre-installed)
+- Development workflow: Faster (no package installation delays)
+- Consistency: Identical tooling across all pods
+
+**Cost Impact**:
+- Build: +$0.40/build (E2_HIGHCPU_32 vs E2_HIGHCPU_8)
+- Storage: +$0.10/month (4.5 GB vs 3.5 GB)
+- Total: ~$0.50/month + $0.40/build (negligible for production-ready state)
+
+---
+
+## 📋 Implementation Roadmap
+
+### Phase 1: Dockerfile Updates (30-45 min)
+- Add 3 Rust build stages (v5-backend-builder, codi2-builder, monitor-builder)
+- Update runtime stage with Debian packages (TIER 1+2 combined, TIER 3 separate)
+- Copy Rust binaries from build stages
+- Copy .coditect configs from claude-code-initial-setup
+- Install Node.js global packages (17 total)
+- Optimize layers (combine RUN statements, cleanup package lists)
+
+### Phase 2: Cloud Build Updates (10-15 min)
+- Update machine type to E2_HIGHCPU_32
+- Increase timeout to 3600s
+- Add environment variables (NODE_OPTIONS, DOCKER_BUILDKIT)
+- Add cache-from for faster rebuilds
+
+### Phase 3: Local Testing (20-30 min)
+- Build locally: `docker build -f Dockerfile.combined-fixed -t coditect-combined:prod-test .`
+- Verify binaries: `docker run --rm ... coditect-v5-api --version`
+- Verify packages: `docker run --rm ... which rg jq tree`
+- Verify configs: `docker run --rm ... ls /app/.coditect`
+
+### Phase 4: Cloud Build & Deploy (40-50 min)
+- Submit build: `gcloud builds submit --config cloudbuild-combined.yaml .`
+- Monitor progress: 30-40 min expected
+- Deploy to GKE: `kubectl set image statefulset/coditect-combined ...`
+- Verify rollout: 5-10 min
+
+### Phase 5: Production Validation (15-20 min)
+- Test Theia icons and custom branding
+- Test Rust binaries in pods
+- Test development tools
+- Test .coditect configs
+- Test frontend, Theia, and backend API
+
+**Total Timeline**: 2-3 hours end-to-end
+
+---
+
+## 🎯 Next Steps (Priority Order)
+
+### Immediate (Next Session)
+1. **Update Dockerfile.combined-fixed** with 3 Rust build stages
+2. **Update cloudbuild-combined.yaml** with E2_HIGHCPU_32 configuration
+3. **Test local build** to verify Dockerfile changes
+
+### Short-term (Same Day)
+4. **Submit Cloud Build** and monitor progress
+5. **Deploy to GKE** with new image
+6. **Validate production deployment** with all tests
+
+### Medium-term (Next 1-2 Days)
+7. **Monitor pod performance** and resource usage
+8. **Collect user feedback** on development tools
+9. **Optimize further** based on metrics
+
+---
+
+## 📊 Files Modified/Created
+
+### Created This Session
+1. `/home/hal/v4/PROJECTS/t2/POD-REQUIREMENTS-ANALYSIS.md` (15 KB)
+2. `/home/hal/v4/PROJECTS/t2/GAP-ANALYSIS-CURRENT-TO-PRODUCTION.md` (22 KB)
+3. `/home/hal/v4/PROJECTS/t2/RUST-BINARY-BUILD-LOCATIONS.md` (18 KB)
+4. `/home/hal/v4/PROJECTS/t2/2025-10-26-EXPORT-PRE-PRODUCTION-PREPARATION.txt` (This file)
+
+### To Be Modified (Next Session)
+5. `/home/hal/v4/PROJECTS/t2/Dockerfile.combined-fixed` - Add 3 Rust build stages
+6. `/home/hal/v4/PROJECTS/t2/cloudbuild-combined.yaml` - Update machine type and config
+
+### Referenced (Existing)
+7. `/home/hal/v4/PROJECTS/t2/THEIA-ICONS-BRANDING-FIX.md`
+8. `/home/hal/v4/PROJECTS/t2/STARTER-DEPLOYMENT-QUICKSTART.md`
+9. `/home/hal/v4/PROJECTS/t2/docs/11-analysis/GKE-CAPACITY-PLANNING.md`
+
+---
+
+## 🔍 Technical Details
+
+### Submodules Status (After Update)
+```
++ed129a899 .claude/agents-reference (heads/main)
+ 27d3e77b1 .claude/commands-reference (heads/main)
+ c74d647e5 .claude/skills-anthropic (heads/main)
+ e582a757c .claude/sub-agent-collective (heads/main)
+ 0297eb737 archive/agents-research-plan-code (0.1.0-20251014-141942-nightly)
++fa7c2fa36 archive/claude-code-initial-setup (heads/main)
+ 95cd60f7b archive/coditect-v4 (heads/main)
+```
+
+### agents-reference Updates (176 files changed, 38K+ lines)
+- Added 50+ new skills across 15 plugin categories
+- New skills include:
+  - fastapi-templates, api-design-principles, architecture-patterns
+  - deployment-pipeline-design, github-actions-templates, gitlab-ci-patterns
+  - helm-chart-scaffolding, k8s-manifest-generator, k8s-security-policies
+  - prompt-engineering-patterns, rag-implementation, langchain-architecture
+  - python-packaging, async-python-patterns, python-performance-optimization
+  - bash-defensive-patterns, bats-testing-patterns, shellcheck-configuration
+  - And many more across blockchain, cloud, observability, payment processing, etc.
+
+### claude-code-initial-setup Updates
+- Added .claude.json and .claude.json.backup
+- New debug session: 69f17ec6-4ae7-4c56-935c-2f9dd3acddbd.txt (186 lines)
+- Updated session history and statsig cache
+- New shell snapshots for zsh sessions
+
+---
+
+## 💡 Insights & Recommendations
+
+### Build Strategy Insights
+
+1. **Multi-Stage Rust Builds Are Essential**
+   - Separate build stages for each Rust binary prevents build failures
+   - Each stage can be cached independently
+   - Rust builds are slow (~5-12 min each), caching saves time
+
+2. **E2_HIGHCPU_32 Is Optimal for This Workload**
+   - Proven successful on Oct 13 build
+   - 32 CPUs handle parallel Rust compilation efficiently
+   - 8GB Node heap prevents OOM during Theia build
+   - Cost increase negligible compared to developer time saved
+
+3. **Layer Optimization Prevents Build Failures**
+   - Docker has hard limit of 127 layers
+   - Combining RUN statements reduces layers
+   - Cleanup (`rm -rf /var/lib/apt/lists/*`) reduces image size
+   - Single combined apt-get install = 1 layer instead of 10+
+
+4. **.coditect Configs Enable Powerful Automation**
+   - Claude Code agents/skills/workflows automate development tasks
+   - Session recovery and prior work analysis save time
+   - Automated code review and testing improve quality
+   - Size cost (405 KB) is negligible, value is huge
+
+### Deployment Strategy Insights
+
+1. **StatefulSet Rolling Updates Are Slower Than Deployments**
+   - StatefulSet updates pods one at a time (serial)
+   - Deployment updates pods in parallel
+   - For 10-30 pods, StatefulSet update takes 10-30 min
+   - Worth it for persistent storage guarantees
+
+2. **Health Check Timeouts Must Match Reality**
+   - Current: 60s timeout
+   - Reality: Theia takes 45-50s to start
+   - Recommendation: Keep 60s timeout, monitor startup time
+
+3. **Pre-Installing Tools Speeds Up Development**
+   - No waiting for apt-get install during development
+   - Consistent environment across all pods
+   - Faster pod startup (no package installation)
+   - Better developer experience
+
+### Cost Optimization Insights
+
+1. **Build Cost Increase Is Worth It**
+   - +$0.40/build for E2_HIGHCPU_32
+   - -50% build time (60+ min → 30-40 min)
+   - Higher success rate (60% → 95%+)
+   - Developer time saved >> $0.40
+
+2. **Image Size Increase Is Acceptable**
+   - +1 GB for development tools
+   - Storage cost: +$0.10/month
+   - Developer productivity gain >> $0.10/month
+   - Production-ready environment worth the cost
+
+3. **Layer Optimization Reduces Storage Costs**
+   - Cleanup reduces image size by 100-200 MB
+   - Better caching reduces build costs
+   - Faster builds reduce compute costs
+   - Net result: Cost neutral or slight savings
+
+---
+
+## ⚠️ Warnings & Gotchas
+
+### Dockerfile Gotchas
+
+1. **Archive Submodule Must Be Initialized**
+   - `archive/coditect-v4/codi2/` required for codi2 build
+   - `archive/claude-code-initial-setup/.claude` required for .coditect configs
+   - Run `git submodule update --init --recursive` before building
+
+2. **Rust Build Order Matters**
+   - Build v5-backend-builder FIRST (dependencies may overlap)
+   - Build codi2-builder SECOND (largest build, most dependencies)
+   - Build monitor-builder THIRD (smallest, fastest)
+
+3. **Binary Paths Must Match Exactly**
+   - v5-backend: `target/release/api-server` (NOT `coditect-v5-api`)
+   - codi2: `target/release/codi2`
+   - monitor: `target/release/examples/monitor` (NOT `target/release/monitor`)
+
+### Cloud Build Gotchas
+
+1. **Machine Type Must Be Specified**
+   - Default is E2_HIGHCPU_8 (insufficient)
+   - Must explicitly set `machineType: 'E2_HIGHCPU_32'`
+   - Without it, builds will timeout or OOM
+
+2. **Environment Variables Required**
+   - `NODE_OPTIONS=--max_old_space_size=8192` prevents Node OOM
+   - `DOCKER_BUILDKIT=1` enables better caching
+   - Without these, builds may fail randomly
+
+3. **Timeout Must Be Increased**
+   - Default 1800s (30 min) is insufficient
+   - Must set `timeout: '3600s'` (60 min)
+   - Better to have buffer than fail 95% done
+
+### Deployment Gotchas
+
+1. **StatefulSet Updates Are Slow**
+   - Updates happen one pod at a time
+   - 10 pods = 10-30 min rollout time
+   - Don't panic, this is normal
+
+2. **Health Checks Must Pass**
+   - Theia takes 45-50s to start
+   - Health check timeout is 60s
+   - If pods stuck in CrashLoopBackOff, check health check
+
+3. **Image Tag Must Be Specific**
+   - Always use BUILD_ID tag for rollouts
+   - Don't use `latest` tag (causes caching issues)
+   - Format: `us-central1-docker.pkg.dev/.../coditect-combined:BUILD_ID`
+
+---
+
+## 🎯 Success Criteria Summary
+
+### Build Success
+- [ ] Dockerfile.combined-fixed builds without errors
+- [ ] Cloud Build completes in 30-40 minutes
+- [ ] All 3 Rust binaries present and functional
+- [ ] All Debian packages installed
+- [ ] .coditect configs copied correctly
+- [ ] npm global packages installed
+- [ ] Image size ~4.5 GB
+- [ ] Layer count ~70 (below 127 limit)
+
+### Deployment Success
+- [ ] StatefulSet rolling update completes
+- [ ] All pods reach Running status
+- [ ] Health checks passing
+- [ ] No CrashLoopBackOff errors
+
+### Functionality Success
+- [ ] Theia icons visible
+- [ ] Custom branding displays
+- [ ] V5 API responds at /health
+- [ ] Codi2 binary works in pods
+- [ ] File monitor binary works
+- [ ] Development tools work (rg, jq, tree)
+- [ ] .coditect configs accessible
+- [ ] npm global packages work (tsc, eslint)
+
+### No Regressions
+- [ ] Frontend loads at https://coditect.ai
+- [ ] Theia loads at https://coditect.ai/theia
+- [ ] Backend API at https://api.coditect.ai
+- [ ] No new errors in logs
+
+---
+
+## 📝 Notes for Next Session
+
+### Immediate Actions Required
+
+1. **Update Dockerfile.combined-fixed**
+   - Add 3 Rust build stages (copy from RUST-BINARY-BUILD-LOCATIONS.md)
+   - Update runtime stage with Debian packages
+   - Add .coditect COPY command
+   - Add npm global install command
+   - Optimize layers (combine RUN statements)
+
+2. **Update cloudbuild-combined.yaml**
+   - Change machineType to E2_HIGHCPU_32
+   - Increase timeout to 3600s
+   - Add NODE_OPTIONS and DOCKER_BUILDKIT env vars
+   - Add --cache-from argument
+
+3. **Test Locally (Optional but Recommended)**
+   - Build with docker build -f Dockerfile.combined-fixed
+   - Verify all binaries present
+   - Verify all packages installed
+   - Verify .coditect configs copied
+
+4. **Submit Cloud Build**
+   - Run: gcloud builds submit --config cloudbuild-combined.yaml .
+   - Monitor build progress (expect 30-40 min)
+   - Note BUILD_ID for deployment
+
+5. **Deploy to GKE**
+   - Update StatefulSet with new image
+   - Monitor rollout status
+   - Verify all pods Running
+   - Test all functionality
+
+### Questions to Consider
+
+1. **Should we test locally first?**
+   - Pro: Catch errors before expensive Cloud Build
+   - Con: Adds 20-30 min to timeline
+   - Recommendation: YES, worth the time investment
+
+2. **Should we deploy to single pod first?**
+   - Pro: Test without affecting all users
+   - Con: Adds complexity to rollout process
+   - Recommendation: NO, StatefulSet rolling update is safe enough
+
+3. **Should we increase pod count with this deployment?**
+   - Current: 3 pods
+   - Starter: 10 pods recommended
+   - Recommendation: SEPARATE DECISION, do capacity planning first
+
+4. **Should we keep V2 API running during deployment?**
+   - Current: V2 API still deployed (legacy)
+   - Recommendation: YES, keep as fallback until V5 fully validated
+
+### Potential Issues to Watch For
+
+1. **Rust Build Failures**
+   - Symptom: "cargo build" fails in Cloud Build
+   - Cause: Missing dependencies or submodule not initialized
+   - Solution: Verify Cargo.toml files exist, check submodules
+
+2. **Docker Layer Limit Exceeded**
+   - Symptom: "too many layers" error
+   - Cause: Not combining RUN statements
+   - Solution: Merge apt-get installs, combine commands with &&
+
+3. **Cloud Build Timeout**
+   - Symptom: Build stops at 1800s
+   - Cause: Timeout not increased
+   - Solution: Verify `timeout: '3600s'` in cloudbuild-combined.yaml
+
+4. **Pod Startup Failures**
+   - Symptom: Pods stuck in CrashLoopBackOff
+   - Cause: Binary permissions, missing files, or health check failure
+   - Solution: Check logs, verify binaries executable, check health endpoint
+
+5. **Missing .coditect Configs**
+   - Symptom: Claude Code agents don't work
+   - Cause: COPY command path wrong
+   - Solution: Verify path is `archive/claude-code-initial-setup/.claude`
+
+---
+
+## 🎉 Session Summary
+
+**Total Time**: ~3 hours (analysis + documentation)
+**Documents Created**: 4 (55 KB total)
+**Gaps Identified**: 6 major gaps
+**Rust Binaries Located**: 3 (v5-api, codi2, file-monitor)
+**Debian Packages Identified**: 31 (TIER 1-4)
+**Node.js Packages Identified**: 17 global packages
+**.coditect Components Identified**: 5 agents, 2 skills, 15 scripts, 3 workflows
+
+**Readiness Assessment**: ✅ READY FOR IMPLEMENTATION
+
+**Confidence Level**: HIGH (based on proven Oct 13 build configuration)
+
+**Estimated Implementation Time**: 2-3 hours (Dockerfile updates → Cloud Build → Deploy → Validate)
+
+**Estimated Production Readiness**: End of day if started immediately
+
+---
+
+**Status**: ✅ Session Complete - Ready for Handoff
+**Next Session**: Implementation (Dockerfile + Cloud Build updates)
+**Priority**: HIGH (blocking production deployment)
+**Risk**: LOW (proven build configuration, well-documented)
+
+---
+
+END OF SESSION EXPORT

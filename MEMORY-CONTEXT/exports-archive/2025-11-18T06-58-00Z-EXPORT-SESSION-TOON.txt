@@ -1,0 +1,136 @@
+
+▗ ▗   ▖ ▖  Claude Code v2.0.42
+           Sonnet 4.5 · Claude Max
+  ▘▘ ▝▝    /Users/halcasteel/PROJECTS/coditect-rollout-master
+══════════════════ Conversation compacted · ctrl+o for history ═════════════════
+
+> /compact 
+  ⎿  Compacted (ctrl+o to see full summary)
+  ⎿  Read .coditect/scripts/export-dedup.py (314 lines)
+  ⎿  Read .coditect/CLAUDE.md (391 lines)
+
+> what were we working on in this session previously? 
+
+⏺ In this session, we were troubleshooting and fixing a bug in the
+  export-dedup.py script.
+
+  The Problem
+
+  The script was failing to find export files even though they existed. You
+  had run /export which created 2024-11-18T14-23-45Z-EXPORT-TOON.txt, but
+  when you ran the export-dedup script, it reported "No export files found!"
+
+  The Root Cause
+
+  The script had a path resolution bug when invoked through the .coditect
+  symlink:
+  - Used Path(__file__) without .resolve()
+  - This caused it to calculate the wrong repository root directory
+  - It was looking in /Users/halcasteel/PROJECTS instead of
+  /Users/halcasteel/PROJECTS/coditect-rollout-master
+
+  The Fix
+
+  I fixed lines 94-95 of export-dedup.py by adding .resolve():
+  # Changed from:
+  repo_root = Path(__file__).parent.parent.parent.parent
+
+  # To:
+  repo_root = Path(__file__).resolve().parent.parent.parent.parent
+
+  The Result
+
+  After the fix, the script ran successfully:
+  - ✅ Found and processed the export file
+  - ✅ Deduplicated 60 new unique messages (4 duplicates filtered)
+  - ✅ Archived export to MEMORY-CONTEXT/exports-archive/
+  - ✅ Created checkpoint:
+  2025-11-18T06-54-48Z-Automated-export-and-deduplication.md
+  - ✅ Committed changes to git
+  - ✅ You then ran /compact as recommended
+
+  The troubleshooting task is now complete!
+
+> and what were we doing prior to this? 
+
+⏺ Prior to troubleshooting the export-dedup script, we were doing a
+  comprehensive TOON format integration analysis.
+
+  Previous Session: TOON Format Analysis
+
+  TOON (Token-Oriented Object Notation) is a format for achieving 30-60%
+  token reduction in LLM prompts.
+
+  What We Completed:
+
+  Created 15 comprehensive documents totaling 250,000+ words analyzing TOON
+  integration:
+
+  Key Documents:
+  - TOON-COMPREHENSIVE-CODE-REVIEW-REPORT.md - Complete code review
+  - TOON-INTEGRATION-SUMMARY.md - Integration analysis
+  - TOON-DUAL-FORMAT-STRATEGY.md - Backward compatibility strategy
+  - Plus 12 other detailed analysis documents
+
+  Key Findings:
+
+  - Token Reduction: 30-60% across different content types
+  - ROI: 650-1,542% with payback in 0.7-1.6 months
+  - Security Issues: 7 critical vulnerabilities found (CVSS 7.3-9.1)
+  - Test Coverage: 0% currently (need 170 tests)
+  - Implementation: 8-phase roadmap created
+
+  What Happened Next:
+
+  1. You ran /export to capture the session → created
+  2024-11-18T14-23-45Z-EXPORT-TOON.txt
+  2. You tried to run export-dedup to process it → script failed to find the
+   file
+  3. This session: We debugged and fixed the path resolution bug
+
+  So we went from TOON analysis → export conversation → fix export-dedup bug
+   → successfully process export → you ran /compact
+
+> iso-datetime 
+
+⏺ ISO-8601 datetime format is the standardized timestamp format used
+  throughout CODITECT:
+
+  Format Structure
+
+  YYYY-MM-DDTHH-MM-SSZ
+
+  Example from our recent work:
+  - Export: 2024-11-18T14-23-45Z-EXPORT-TOON.txt
+  - Checkpoint: 2025-11-18T06-54-48Z-Automated-export-and-deduplication.md
+
+  Breakdown
+
+  - YYYY-MM-DD - Date (2024-11-18)
+  - T - Separator between date and time
+  - HH-MM-SS - Time in 24-hour format (14-23-45)
+  - Z - UTC timezone indicator ("Zulu time")
+
+  Why CODITECT Uses It
+
+  1. Sortable - Alphabetical sorting = chronological sorting
+  2. Unambiguous - No MM/DD vs DD/MM confusion
+  3. Standard - RFC 3339 / ISO 8601 compliant
+  4. Machine-friendly - Easy to parse programmatically
+  5. Human-readable - Still understandable at a glance
+
+  Used In CODITECT For:
+
+  - ✅ Export filenames (*EXPORT*.txt)
+  - ✅ Checkpoint documents
+  - ✅ Session tracking in MEMORY-CONTEXT
+  - ✅ Git commit metadata
+  - ✅ Deduplication state tracking
+
+  Current ISO datetime (UTC): 2025-11-18T06:58:00Z (approximately)
+
+  Is there something specific about ISO datetime formatting you'd like to
+  know or implement?
+
+
+
