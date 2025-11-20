@@ -29,8 +29,8 @@ Before working on this project, understand the architecture:
 ```
 coditect-rollout-master/
 ├── .coditect -> submodules/core/coditect-core    # CODITECT brain
-│   ├── agents/                     # 50 specialized AI agents
-│   ├── skills/                     # 24 reusable skills
+│   ├── agents/                     # 49 specialized AI agents
+│   ├── skills/                     # 18 production skills
 │   ├── commands/                   # 72 slash commands
 │   ├── user-training/              # Training materials (240K+ words)
 │   └── WHAT-IS-CODITECT.md         # Architecture documentation

@@ -19,7 +19,7 @@ This repository serves as the **MASTER PLAN** orchestration point for the comple
 - 📖 **[WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core/blob/main/WHAT-IS-CODITECT.md)** - Understanding the distributed intelligence nervous system
 - 📊 **[Visual Architecture Guide](https://github.com/coditect-ai/coditect-core/blob/main/diagrams/distributed-intelligence-architecture.md)** - 5 Mermaid diagrams showing complete system
 - 🧠 **[MEMORY-CONTEXT Architecture](https://github.com/coditect-ai/coditect-labs-learning/blob/main/MEMORY-CONTEXT-ARCHITECTURE.md)** - Eliminates catastrophic forgetting
-- 📘 **[Vision & Strategy](./AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete ecosystem vision and market strategy
+- 📘 **[Vision & Strategy](./docs/AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete ecosystem vision and market strategy
 - 📂 **[Naming Convention](./docs/REPO-NAMING-CONVENTION.md)** - Repository naming rules for 8 categories
 - 🎓 **[Training System](https://github.com/coditect-ai/coditect-core/blob/main/user-training/README.md)** - CODITECT Operator certification program
 - 🚀 **[Slash Command Quick Start](.coditect/1-2-3-SLASH-COMMAND-QUICK-START.md)** - Master all 72 commands in 3 steps
@@ -29,11 +29,11 @@ This repository serves as the **MASTER PLAN** orchestration point for the comple
 
 ## Architecture
 
-This master project uses **git submodules** to coordinate **42 sub-projects** across the CODITECT ecosystem, organized into **8 category folders**.
+This master project uses **git submodules** to coordinate **41 sub-projects** across the CODITECT ecosystem, organized into **8 category folders**.
 
 See [docs/REPO-NAMING-CONVENTION.md](docs/REPO-NAMING-CONVENTION.md) for the complete naming convention and rules.
 
-### Repository Categories (8 Folders, 42 Submodules)
+### Repository Categories (8 Folders, 41 Submodules)
 
 #### core/ - Core Framework (3 repos)
 | Repository | Description | Status |
@@ -114,7 +114,7 @@ See [docs/REPO-NAMING-CONVENTION.md](docs/REPO-NAMING-CONVENTION.md) for the com
 
 ## 📁 Repository Tree Structure
 
-Complete view of the CODITECT ecosystem with 42 submodules organized into 8 categories:
+Complete view of the CODITECT ecosystem with 41 submodules organized into 8 categories:
 
 ```
 coditect-rollout-master/
@@ -139,14 +139,14 @@ coditect-rollout-master/
 │   ├── dedup_state/                              # Message deduplication
 │   └── exports-archive/                          # Archived exports
 │
-└── submodules/                                   # 42 submodules in 8 categories
+└── submodules/                                   # 41 submodules in 8 categories
     │
     ├── core/                                     # [3 repos] Core Framework - The CODITECT Brain
     │   ├── coditect-core/                        # ⭐ PRIMARY PRODUCT
-    │   │   ├── agents/                           # 50 specialized AI agents
+    │   │   ├── agents/                           # 49 specialized AI agents
     │   │   ├── commands/                         # 72 slash commands
-    │   │   ├── skills/                           # 24 reusable skills
-    │   │   ├── scripts/                          # 21+ automation scripts
+    │   │   ├── skills/                           # 18 production skills
+    │   │   ├── scripts/                          # 21 core automation scripts
     │   │   ├── user-training/                    # 240K+ words training materials
     │   │   ├── MEMORY-CONTEXT/                   # Experiential intelligence layer
     │   │   ├── diagrams/                         # Architecture visualizations
@@ -222,10 +222,10 @@ coditect-rollout-master/
 The foundational intelligence layer and AZ1.AI INC's **first commercial product**. This is the `.coditect` framework that powers distributed autonomous development across every repository.
 
 **What it contains:**
-- **50 specialized AI agents** across 8 domains (research, development, architecture, testing, security, DevOps, documentation, business)
+- **49 specialized AI agents** across 8 domains (research, development, architecture, testing, security, DevOps, documentation, business)
 - **72 slash commands** for autonomous workflows (/deliberation, /implement, /analyze, /strategy, etc.)
-- **24 reusable skills** for common development patterns
-- **21+ Python scripts** for automation (checkpointing, deduplication, git workflows, installer creation)
+- **18 production skills** for common development patterns
+- **21 core automation scripts** for checkpointing, deduplication, git workflows, installer creation
 - **240,000+ words** of training materials (CODITECT Operator certification program)
 - **MEMORY-CONTEXT system** for zero catastrophic forgetting across sessions
 - **Universal Agents v2.0** - Next-generation cross-platform agent framework (in development)
@@ -584,9 +584,9 @@ CODITECT Core is delivered as a **locally-installed framework** that runs on the
 ```
 ~/.coditect/                              # Installation directory
 ├── core/                                 # Framework core
-│   ├── agents/                           # 50 AI agents
+│   ├── agents/                           # 49 AI agents
 │   ├── commands/                         # 72 slash commands
-│   ├── skills/                           # 24 skills
+│   ├── skills/                           # 18 production skills
 │   ├── scripts/                          # Automation scripts
 │   └── templates/                        # Project templates
 ├── config/                               # User configuration
@@ -698,9 +698,9 @@ CODITECT Core is **optimized for Claude Code** (Anthropic's official CLI):
 **Starter Plan - $29/month**
 - 1 user
 - Local installation
-- 50 AI agents
+- 49 AI agents
 - 72 slash commands
-- 24 skills
+- 18 production skills
 - Community support
 - Basic MEMORY-CONTEXT (30-day retention)
 
@@ -891,7 +891,7 @@ coditect-rollout-master/
 ├── scripts/                   # Orchestration automation scripts
 ├── templates/                 # Reusable templates
 ├── MEMORY-CONTEXT/            # Session exports and context
-└── submodules/                # 42 submodules in 8 category folders
+└── submodules/                # 41 submodules in 8 category folders
     ├── core/                  # 3 repos - Core framework
     │   ├── coditect-core/
     │   ├── coditect-core-framework/
@@ -921,7 +921,7 @@ This master project enforces phase gates with quality criteria:
 2. **Beta → Pilot** (Month 7)
 3. **Pilot → GTM** (Month 9)
 
-See [docs/MASTER-ORCHESTRATION-PLAN.md](docs/MASTER-ORCHESTRATION-PLAN.md) for complete phase gate criteria.
+See [docs/CODITECT-MASTER-ORCHESTRATION-PLAN.md](docs/CODITECT-MASTER-ORCHESTRATION-PLAN.md) for complete phase gate criteria.
 
 ### Decision Authority
 
@@ -961,8 +961,8 @@ This master project **IS** the CODITECT framework in action, demonstrating distr
 ```
 coditect-rollout-master/
 ├── .coditect -> submodules/core/coditect-core    # Master brain
-│   ├── agents/                       # 50 specialized AI agents
-│   ├── skills/                       # 24 reusable skills
+│   ├── agents/                       # 49 specialized AI agents
+│   ├── skills/                       # 18 production skills
 │   ├── commands/                     # 72 slash commands
 │   └── user-training/                # Training materials
 ├── .claude -> .coditect              # Claude Code compatibility
@@ -998,7 +998,7 @@ coditect-rollout-master/
 ## Status
 
 **Session Started:** 2025-11-15 14:57:16
-**Total Sub-Projects:** 42 submodules across 8 categories
+**Total Sub-Projects:** 41 submodules across 8 categories
 **Timeline:** 10 months (Development -> GTM)
 **Budget:** $2.566M (core platform)
 **Status:** Repository Reorganization Complete, Ready for Beta Phase
@@ -1007,8 +1007,8 @@ coditect-rollout-master/
 - 📖 [WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core/blob/main/WHAT-IS-CODITECT.md) - Distributed intelligence architecture
 - 📊 [Visual Architecture](https://github.com/coditect-ai/coditect-core/blob/main/diagrams/distributed-intelligence-architecture.md) - 5 comprehensive Mermaid diagrams
 - 🧠 [MEMORY-CONTEXT](https://github.com/coditect-ai/coditect-labs-learning/blob/main/MEMORY-CONTEXT-ARCHITECTURE.md) - Experiential intelligence layer
-- 📘 [Vision & Strategy](./AZ1.AI-CODITECT-VISION-AND-STRATEGY.md) - Complete ecosystem vision and market strategy
-- 📋 [Master Plan](./CODITECT-ROLLOUT-MASTER-PLAN.md) - Detailed implementation roadmap
+- 📘 [Vision & Strategy](./docs/AZ1.AI-CODITECT-VISION-AND-STRATEGY.md) - Complete ecosystem vision and market strategy
+- 📋 [Master Plan](./docs/CODITECT-ROLLOUT-MASTER-PLAN.md) - Detailed implementation roadmap
 - 📂 [Naming Convention](./docs/REPO-NAMING-CONVENTION.md) - Repository naming rules
 - 🎓 [Training System](https://github.com/coditect-ai/coditect-core/blob/main/user-training/README.md) - CODITECT Operator certification
 - 🤖 [AI Agent Config](./CLAUDE.md) - AI agent coordination guidelines
