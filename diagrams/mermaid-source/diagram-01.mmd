@@ -1,0 +1,20 @@
+graph TB
+    subgraph "External Systems"
+        User[Developer<br/>Local Machine]
+        Claude[Anthropic Claude API]
+        GitHub[GitHub Repository]
+    end
+
+    subgraph "CODITECT Phase 1"
+        CoditectFramework[CODITECT Framework<br/>.coditect/.claude]
+    end
+
+    User -->|Uses agents, skills, commands| CoditectFramework
+    CoditectFramework -->|API calls for agent execution| Claude
+    CoditectFramework -->|Git submodule| GitHub
+    User -->|Manual git operations| GitHub
+
+    style CoditectFramework fill:#4A90E2,stroke:#333,stroke-width:4px,color:#fff
+    style User fill:#50E3C2,stroke:#333,stroke-width:2px
+    style Claude fill:#F5A623,stroke:#333,stroke-width:2px
+    style GitHub fill:#7ED321,stroke:#333,stroke-width:2px

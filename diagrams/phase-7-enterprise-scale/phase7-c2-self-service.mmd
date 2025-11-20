@@ -1,0 +1,48 @@
+graph TB
+    subgraph "Self-Service Portal"
+        subgraph "Onboarding Flow"
+            SignupForm[Signup Form<br/>Email, OAuth, SSO]
+            EmailVerification[Email Verification]
+            ProfileSetup[Profile Setup<br/>Name, company, role]
+            TierSelection[Tier Selection<br/>Free, Team, Enterprise]
+            PaymentSetup[Payment Setup<br/>Stripe, invoicing]
+            Provisioning[Auto Provisioning<br/>Resources, limits]
+        end
+
+        subgraph "Account Management"
+            BillingPortal[Billing Portal<br/>Invoices, usage]
+            TeamManagement[Team Management<br/>Invite, remove, roles]
+            SettingsPanel[Settings Panel<br/>Preferences, integrations]
+        end
+
+        subgraph "Offboarding Flow"
+            CancellationForm[Cancellation Form<br/>Feedback collection]
+            DataExport[Data Export<br/>Projects, settings]
+            ResourceCleanup[Resource Cleanup<br/>Deprovisioning]
+            FinalConfirmation[Final Confirmation]
+        end
+    end
+
+    subgraph "Backend Services"
+        ProvisioningService[Provisioning Service<br/>Auto-provision resources]
+        BillingService[Billing Service<br/>Stripe integration]
+        NotificationService[Notification Service<br/>Email, in-app]
+    end
+
+    SignupForm -->|Submit| EmailVerification
+    EmailVerification -->|Verified| ProfileSetup
+    ProfileSetup -->|Complete| TierSelection
+    TierSelection -->|Select tier| PaymentSetup
+    PaymentSetup -->|Process| ProvisioningService
+    ProvisioningService -->|Create resources| Provisioning
+
+    BillingPortal -->|Fetch data| BillingService
+    TeamManagement -->|Update| ProvisioningService
+
+    CancellationForm -->|Request| DataExport
+    DataExport -->|Export complete| ResourceCleanup
+    ResourceCleanup -->|Cleanup done| FinalConfirmation
+    FinalConfirmation -->|Send| NotificationService
+
+    style ProvisioningService fill:#F5A623,stroke:#333,stroke-width:3px,color:#fff
+    style DataExport fill:#50E3C2,stroke:#333,stroke-width:2px

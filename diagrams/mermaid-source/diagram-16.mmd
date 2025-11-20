@@ -1,0 +1,32 @@
+graph TB
+    subgraph "Agent Marketplace"
+        subgraph "Frontend"
+            MarketplaceUI[Next.js Frontend<br/>Browse, search, ratings]
+        end
+
+        subgraph "Backend"
+            MarketplaceAPI[Marketplace API<br/>NestJS]
+            AgentRegistry[Agent Registry<br/>Package metadata]
+            ReviewService[Review Service<br/>Ratings, comments]
+            InstallService[Install Service<br/>One-click install]
+            PaymentService[Payment Service<br/>Stripe integration]
+        end
+
+        subgraph "Data"
+            MarketplaceDB[(Marketplace DB<br/>PostgreSQL)]
+            AgentPackages[(Agent Packages<br/>GCS)]
+        end
+    end
+
+    MarketplaceUI -->|Search, filter| AgentRegistry
+    MarketplaceUI -->|Rate, review| ReviewService
+    MarketplaceUI -->|Install| InstallService
+    MarketplaceUI -->|Purchase| PaymentService
+
+    AgentRegistry -->|Store metadata| MarketplaceDB
+    ReviewService -->|Store reviews| MarketplaceDB
+    InstallService -->|Download from| AgentPackages
+    PaymentService -->|Process payment| Stripe
+
+    style AgentRegistry fill:#4A90E2,stroke:#333,stroke-width:3px,color:#fff
+    style InstallService fill:#50E3C2,stroke:#333,stroke-width:2px

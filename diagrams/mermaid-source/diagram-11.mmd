@@ -1,0 +1,47 @@
+graph TB
+    subgraph "CODITECT Cloud Platform (app.coditect.ai)"
+        subgraph "Frontend (React)"
+            Dashboard[User Dashboard<br/>React + TypeScript]
+            AdminPanel[Admin Panel<br/>User/license mgmt]
+        end
+
+        subgraph "Backend API (FastAPI)"
+            AuthService[Authentication Service<br/>JWT + OAuth2]
+            UserService[User Service<br/>CRUD, profiles]
+            LicenseService[License Service<br/>Tiers, limits, billing]
+            SessionService[Session Service<br/>Cross-system state]
+            ProjectService[Project Service<br/>Project management]
+        end
+
+        subgraph "Databases"
+            PostgreSQL3[PostgreSQL<br/>Users, licenses, projects]
+            Redis3[Redis<br/>Sessions, cache]
+            FDB2[FoundationDB<br/>Distributed state]
+        end
+    end
+
+    subgraph "Integrated Services"
+        IDE4[IDE Service]
+        Workflow4[Workflow Service]
+    end
+
+    Dashboard -->|API calls| AuthService
+    Dashboard -->|API calls| UserService
+    Dashboard -->|API calls| LicenseService
+    AdminPanel -->|Manage| UserService
+    AdminPanel -->|Manage| LicenseService
+
+    AuthService -->|Store tokens| Redis3
+    AuthService -->|Verify| PostgreSQL3
+    UserService -->|CRUD| PostgreSQL3
+    LicenseService -->|Track usage| PostgreSQL3
+    SessionService -->|Distributed state| FDB2
+
+    IDE4 -->|Authenticate| AuthService
+    Workflow4 -->|Authenticate| AuthService
+    IDE4 -->|Session sync| SessionService
+    Workflow4 -->|Session sync| SessionService
+
+    style AuthService fill:#F5A623,stroke:#333,stroke-width:3px,color:#fff
+    style LicenseService fill:#BD10E0,stroke:#333,stroke-width:3px,color:#fff
+    style SessionService fill:#50E3C2,stroke:#333,stroke-width:3px,color:#fff

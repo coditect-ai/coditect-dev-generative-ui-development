@@ -1,0 +1,51 @@
+graph TB
+    subgraph "Agent A (Orchestrator)"
+        A_Input[Receive complex task]
+        A_Decompose[Decompose into subtasks]
+        A_Dispatch[Dispatch to specialist agents]
+    end
+
+    subgraph "Message Bus (RabbitMQ)"
+        Exchange[Task Exchange]
+        QueueB[Agent B Queue]
+        QueueC[Agent C Queue]
+    end
+
+    subgraph "Agent B (Specialist)"
+        B_Receive[Receive subtask]
+        B_Execute[Execute task]
+        B_Result[Send result]
+    end
+
+    subgraph "Agent C (Specialist)"
+        C_Receive[Receive subtask]
+        C_Execute[Execute task]
+        C_Result[Send result]
+    end
+
+    subgraph "Result Aggregator"
+        Aggregate[Combine results]
+        FinalResult[Return to user]
+    end
+
+    A_Input -->|Analyze| A_Decompose
+    A_Decompose -->|Create messages| A_Dispatch
+    A_Dispatch -->|Publish| Exchange
+    Exchange -->|Route| QueueB
+    Exchange -->|Route| QueueC
+
+    QueueB -->|Consume| B_Receive
+    B_Receive -->|Process| B_Execute
+    B_Execute -->|Complete| B_Result
+    B_Result -->|Publish| Exchange
+
+    QueueC -->|Consume| C_Receive
+    C_Receive -->|Process| C_Execute
+    C_Execute -->|Complete| C_Result
+    C_Result -->|Publish| Exchange
+
+    Exchange -->|Results| Aggregate
+    Aggregate -->|Synthesize| FinalResult
+
+    style Exchange fill:#F5A623,stroke:#333,stroke-width:3px,color:#fff
+    style Aggregate fill:#50E3C2,stroke:#333,stroke-width:2px

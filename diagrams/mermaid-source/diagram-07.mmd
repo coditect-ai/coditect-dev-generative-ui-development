@@ -1,0 +1,26 @@
+graph TB
+    subgraph "Users"
+        BusinessUser[Business User<br/>Workflow analysis]
+        Developer2[Developer<br/>Automation discovery]
+    end
+
+    subgraph "CODITECT Phase 3"
+        WorkflowAnalyzer[Workflow Analyzer<br/>workflow.coditect.ai]
+        IDE2[CODITECT IDE<br/>coditect.ai]
+    end
+
+    subgraph "External Systems"
+        ClaudeAPI2[Anthropic Claude API<br/>8 specialized agents]
+        ExportTools[Diagram Export<br/>Mermaid, PlantUML]
+    end
+
+    BusinessUser -->|Submit workflow description| WorkflowAnalyzer
+    Developer2 -->|Use both tools| WorkflowAnalyzer
+    Developer2 -->|Code implementation| IDE2
+
+    WorkflowAnalyzer -->|AI analysis| ClaudeAPI2
+    WorkflowAnalyzer -->|Generate diagrams| ExportTools
+    WorkflowAnalyzer -.->|Future: Send tasks to| IDE2
+
+    style WorkflowAnalyzer fill:#4A90E2,stroke:#333,stroke-width:4px,color:#fff
+    style IDE2 fill:#50E3C2,stroke:#333,stroke-width:3px,color:#fff

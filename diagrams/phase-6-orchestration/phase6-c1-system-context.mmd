@@ -1,0 +1,31 @@
+graph TB
+    subgraph "Users"
+        Developer6[Developer<br/>Defines workflows]
+    end
+
+    subgraph "CODITECT Phase 6"
+        Platform6[CODITECT Platform<br/>All services]
+        Orchestrator6[Agent Orchestrator<br/>Autonomous coordination]
+    end
+
+    subgraph "AI Agents"
+        Agent1[Agent A<br/>Task execution]
+        Agent2[Agent B<br/>Task execution]
+        Agent3[Agent C<br/>Task execution]
+    end
+
+    Developer6 -->|Define task| Platform6
+    Platform6 -->|Decompose & route| Orchestrator6
+    Orchestrator6 -.->|Autonomous dispatch| Agent1
+    Orchestrator6 -.->|Autonomous dispatch| Agent2
+    Orchestrator6 -.->|Autonomous dispatch| Agent3
+
+    Agent1 -.->|Send subtask| Agent2
+    Agent2 -.->|Send result| Agent3
+    Agent3 -.->|Complete| Orchestrator6
+    Orchestrator6 -->|Final result| Developer6
+
+    style Orchestrator6 fill:#F5A623,stroke:#333,stroke-width:4px,color:#fff
+    style Agent1 fill:#4A90E2,stroke:#333,stroke-width:2px,color:#fff
+    style Agent2 fill:#4A90E2,stroke:#333,stroke-width:2px,color:#fff
+    style Agent3 fill:#4A90E2,stroke:#333,stroke-width:2px,color:#fff

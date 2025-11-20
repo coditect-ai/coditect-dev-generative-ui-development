@@ -1,0 +1,38 @@
+graph TB
+    subgraph "User Types"
+        Individual[Individual Developer]
+        Team[Team (5-50 devs)]
+        Enterprise[Enterprise (50-1000+ devs)]
+    end
+
+    subgraph "CODITECT Enterprise Platform"
+        SelfService[Self-Service Portal<br/>app.coditect.ai]
+        PlatformServices[All Platform Services<br/>IDE, Workflow, Agents, etc.]
+    end
+
+    subgraph "Enterprise Features"
+        SSO[Enterprise SSO<br/>SAML, OIDC]
+        AuditLog[Audit Logging<br/>SOC2 compliant]
+        DataResidency[Data Residency<br/>Regional deployments]
+        SLA[SLA Monitoring<br/>99.99% uptime]
+    end
+
+    subgraph "External"
+        Identity[Identity Provider<br/>Okta, Azure AD]
+        ComplianceTools[Compliance Tools<br/>Vanta, Drata]
+    end
+
+    Individual -->|Self-service signup| SelfService
+    Team -->|Team signup| SelfService
+    Enterprise -->|Enterprise contract| SelfService
+
+    SelfService -->|Provision access| PlatformServices
+    Enterprise -->|Federate auth| SSO
+    SSO -->|Integrate| Identity
+
+    PlatformServices -->|Generate logs| AuditLog
+    AuditLog -->|Export| ComplianceTools
+
+    style SelfService fill:#4A90E2,stroke:#333,stroke-width:4px,color:#fff
+    style SSO fill:#BD10E0,stroke:#333,stroke-width:3px,color:#fff
+    style AuditLog fill:#F5A623,stroke:#333,stroke-width:3px,color:#fff

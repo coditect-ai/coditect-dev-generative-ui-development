@@ -1,0 +1,42 @@
+graph TB
+    subgraph "Agent Execution Flow"
+        TaskProxy[Task Tool Proxy]
+        AgentDispatcher[Agent Dispatcher]
+
+        subgraph "Agent Types (50 Total)"
+            Orchestrator[Orchestrator Agent]
+            Analyzer[Analysis Specialists<br/>codebase-analyzer, etc.]
+            Locator[Locator Specialists<br/>codebase-locator, pattern-finder]
+            Developer[Development Specialists<br/>rust-expert, frontend-react]
+            Research[Research Analysts<br/>web-search, competitive-market]
+            Business[Business Analysts<br/>business-intelligence, VC]
+            CloudDev[Cloud/DevOps<br/>cloud-architect, devops-engineer]
+            Quality[Quality Specialists<br/>testing, qa-reviewer, security]
+        end
+
+        PromptBuilder[Prompt Builder]
+        ResponseParser[Response Parser]
+    end
+
+    subgraph "External"
+        ClaudeAPI[Claude API<br/>Sonnet 4.5]
+    end
+
+    TaskProxy -->|"Use agent-X subagent..."| AgentDispatcher
+    AgentDispatcher -->|selects| Orchestrator
+    AgentDispatcher -->|selects| Analyzer
+    AgentDispatcher -->|selects| Locator
+    AgentDispatcher -->|selects| Developer
+    AgentDispatcher -->|selects| Research
+    AgentDispatcher -->|selects| Business
+    AgentDispatcher -->|selects| CloudDev
+    AgentDispatcher -->|selects| Quality
+
+    Orchestrator -->|builds prompt| PromptBuilder
+    PromptBuilder -->|sends request| ClaudeAPI
+    ClaudeAPI -->|response| ResponseParser
+    ResponseParser -->|structured output| TaskProxy
+
+    style TaskProxy fill:#4A90E2,stroke:#333,stroke-width:3px,color:#fff
+    style AgentDispatcher fill:#50E3C2,stroke:#333,stroke-width:2px
+    style Orchestrator fill:#F5A623,stroke:#333,stroke-width:2px

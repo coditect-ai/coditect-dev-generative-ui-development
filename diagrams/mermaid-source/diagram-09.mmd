@@ -1,0 +1,27 @@
+graph TB
+    subgraph "Orchestrator Service"
+        WorkflowRouter[Workflow Router]
+        AgentCoordinator[Agent Coordinator]
+        ResultAggregator[Result Aggregator]
+
+        subgraph "Agent Execution Pipeline"
+            Phase1[Phase 1: Analysis<br/>Workflow Analyzer]
+            Phase2[Phase 2: Decomposition<br/>Task Decomposer, Actor ID]
+            Phase3[Phase 3: Assessment<br/>Automation, Requirements]
+            Phase4[Phase 4: Design<br/>Process, Quality, Technical]
+        end
+
+        ArtifactGen[Artifact Generator]
+    end
+
+    WorkflowRouter -->|Route by domain| AgentCoordinator
+    AgentCoordinator -->|Execute| Phase1
+    Phase1 -->|Results| Phase2
+    Phase2 -->|Results| Phase3
+    Phase3 -->|Results| Phase4
+    Phase4 -->|All results| ResultAggregator
+    ResultAggregator -->|Generate| ArtifactGen
+    ArtifactGen -->|Markdown docs<br/>Diagrams<br/>Templates| WorkflowRouter
+
+    style AgentCoordinator fill:#F5A623,stroke:#333,stroke-width:3px,color:#fff
+    style ArtifactGen fill:#50E3C2,stroke:#333,stroke-width:2px

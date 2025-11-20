@@ -1,0 +1,30 @@
+graph TB
+    subgraph "Developer Local Machine"
+        subgraph ".coditect Directory (Git Submodule)"
+            Agents[agents/<br/>46 AI Agents]
+            Skills[skills/<br/>Automation Patterns]
+            Commands[commands/<br/>Slash Commands]
+            Templates[templates/<br/>Project Templates]
+        end
+
+        ClaudeSymlink[.claude<br/>Symlink to .coditect]
+
+        LocalProject[User's Project Code]
+    end
+
+    subgraph "External Services"
+        AnthropicAPI[Anthropic Claude API<br/>claude-sonnet-4]
+    end
+
+    LocalProject -.->|includes| ClaudeSymlink
+    ClaudeSymlink -.->|points to| Agents
+    ClaudeSymlink -.->|points to| Skills
+    ClaudeSymlink -.->|points to| Commands
+
+    Agents -->|API calls via user's key| AnthropicAPI
+
+    style Agents fill:#4A90E2,stroke:#333,stroke-width:3px,color:#fff
+    style Skills fill:#4A90E2,stroke:#333,stroke-width:3px,color:#fff
+    style Commands fill:#4A90E2,stroke:#333,stroke-width:3px,color:#fff
+    style Templates fill:#4A90E2,stroke:#333,stroke-width:3px,color:#fff
+    style ClaudeSymlink fill:#BD10E0,stroke:#333,stroke-width:2px,color:#fff

@@ -1,0 +1,50 @@
+graph TB
+    subgraph "Google Kubernetes Engine (GKE)"
+        subgraph "Ingress Layer"
+            LB[Cloud Load Balancer<br/>34.8.51.57<br/>coditect.ai]
+        end
+
+        subgraph "Application Pods (StatefulSet)"
+            Pod1[coditect-combined-hybrid-0]
+            Pod2[coditect-combined-hybrid-1]
+            Pod3[coditect-combined-hybrid-2]
+        end
+
+        subgraph "Pod Components (Each Pod)"
+            ReactFE[React 18 Frontend<br/>Vite build<br/>28 pages/routes]
+            TheiaIDE[Eclipse Theia 1.65<br/>Monaco Editor<br/>20+ VS Code extensions]
+            NGINX[NGINX Reverse Proxy<br/>Routing & Load Balancing]
+        end
+
+        subgraph "Persistent Storage (Per Pod)"
+            PVC1[Workspace PVC<br/>10 GB per pod]
+            PVC2[Config PVC<br/>5 GB per pod]
+        end
+
+        subgraph "Backend API (Separate Deployment)"
+            RustAPI[Rust API v5<br/>Actix-web + JWT<br/>3 pods]
+        end
+
+        subgraph "Databases"
+            FDB[FoundationDB<br/>3 coordinators + 2 proxies<br/>Session storage]
+        end
+    end
+
+    LB -->|Route /| ReactFE
+    LB -->|Route /theia| TheiaIDE
+    LB -->|Route /api| RustAPI
+
+    ReactFE --> TheiaIDE
+    TheiaIDE --> PVC1
+    TheiaIDE --> PVC2
+    RustAPI --> FDB
+
+    Pod1 -.->|contains| ReactFE
+    Pod1 -.->|contains| TheiaIDE
+    Pod1 -.->|contains| NGINX
+
+    style LB fill:#F5A623,stroke:#333,stroke-width:3px,color:#fff
+    style ReactFE fill:#4A90E2,stroke:#333,stroke-width:3px,color:#fff
+    style TheiaIDE fill:#4A90E2,stroke:#333,stroke-width:3px,color:#fff
+    style RustAPI fill:#50E3C2,stroke:#333,stroke-width:3px,color:#fff
+    style FDB fill:#BD10E0,stroke:#333,stroke-width:3px,color:#fff

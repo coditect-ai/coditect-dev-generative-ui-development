@@ -1,0 +1,36 @@
+graph TB
+    subgraph "Offboarding Service"
+        CancellationRequest[Cancellation Request]
+
+        subgraph "Data Handling"
+            ExportProjects[Export Projects<br/>Zip archive]
+            ExportSettings[Export Settings<br/>JSON]
+            ExportAgents[Export Custom Agents]
+            RetentionPeriod[30-day Retention<br/>Soft delete]
+        end
+
+        subgraph "Resource Cleanup"
+            RevokeAccess[Revoke Access<br/>Disable login]
+            CleanupNamespace[Cleanup Namespace<br/>GKE resources]
+            PurgeDatabase[Purge Database<br/>After retention]
+            DeleteStorage[Delete Storage<br/>After retention]
+        end
+
+        FinalNotification[Send Final Email<br/>Export link]
+    end
+
+    CancellationRequest -->|Initiate| ExportProjects
+    ExportProjects -->|Include| ExportSettings
+    ExportSettings -->|Include| ExportAgents
+    ExportAgents -->|Complete| FinalNotification
+
+    CancellationRequest -->|Immediately| RevokeAccess
+    FinalNotification -->|After 30 days| CleanupNamespace
+    CleanupNamespace -->|Cleanup| PurgeDatabase
+    PurgeDatabase -->|Cleanup| DeleteStorage
+
+    ExportProjects -.->|Store temporarily| RetentionPeriod
+
+    style CancellationRequest fill:#F5A623,stroke:#333,stroke-width:3px,color:#fff
+    style RetentionPeriod fill:#BD10E0,stroke:#333,stroke-width:2px,color:#fff
+    style FinalNotification fill:#50E3C2,stroke:#333,stroke-width:2px

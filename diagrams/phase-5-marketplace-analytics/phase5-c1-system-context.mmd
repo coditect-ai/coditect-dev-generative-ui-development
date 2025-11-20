@@ -1,0 +1,29 @@
+graph TB
+    subgraph "Users"
+        Consumer[Agent Consumer<br/>Discover & install]
+        Publisher[Agent Publisher<br/>Submit agents]
+        Analyst[Data Analyst<br/>Usage insights]
+    end
+
+    subgraph "CODITECT Phase 5"
+        Marketplace[Agent Marketplace<br/>marketplace.coditect.ai]
+        Analytics[Analytics Dashboard<br/>analytics.coditect.ai]
+        Platform5[CODITECT Platform<br/>IDE, Workflow, Dashboard]
+    end
+
+    subgraph "External"
+        StripeAPI[Stripe<br/>Paid agents]
+        CDN[CDN<br/>Agent packages]
+    end
+
+    Consumer -->|Browse, search| Marketplace
+    Publisher -->|Submit agents| Marketplace
+    Analyst -->|View metrics| Analytics
+
+    Marketplace -->|Install to| Platform5
+    Platform5 -->|Usage data| Analytics
+    Marketplace -->|Payment| StripeAPI
+    Marketplace -->|Serve packages| CDN
+
+    style Marketplace fill:#4A90E2,stroke:#333,stroke-width:4px,color:#fff
+    style Analytics fill:#50E3C2,stroke:#333,stroke-width:4px,color:#fff

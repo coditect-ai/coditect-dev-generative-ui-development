@@ -1,0 +1,39 @@
+graph TB
+    subgraph "Agent Orchestration Infrastructure"
+        subgraph "Message Bus"
+            RabbitMQ[RabbitMQ<br/>Message broker]
+            TaskQueue[Task Queues<br/>Priority-based]
+        end
+
+        subgraph "Agent Discovery"
+            Registry[Agent Registry<br/>Redis]
+            LoadBalancer6[Agent Load Balancer]
+        end
+
+        subgraph "Orchestration Services"
+            Dispatcher[Task Dispatcher]
+            Coordinator[Agent Coordinator]
+            StateManager[Distributed State Manager<br/>FoundationDB]
+        end
+
+        subgraph "Resilience"
+            CircuitBreaker[Circuit Breaker<br/>PyBreaker]
+            RetryEngine[Retry Engine<br/>Exponential backoff]
+            DeadLetterQueue[Dead Letter Queue]
+        end
+    end
+
+    Dispatcher -->|Publish tasks| RabbitMQ
+    RabbitMQ -->|Consume tasks| TaskQueue
+    TaskQueue -->|Discover agent| Registry
+    Registry -->|Route to| LoadBalancer6
+    LoadBalancer6 -->|Execute on| Coordinator
+
+    Coordinator -->|Update state| StateManager
+    Coordinator -->|Track execution| CircuitBreaker
+    CircuitBreaker -->|Failed task| RetryEngine
+    RetryEngine -->|Max retries| DeadLetterQueue
+
+    style RabbitMQ fill:#F5A623,stroke:#333,stroke-width:3px,color:#fff
+    style StateManager fill:#BD10E0,stroke:#333,stroke-width:3px,color:#fff
+    style CircuitBreaker fill:#50E3C2,stroke:#333,stroke-width:2px

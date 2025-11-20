@@ -1,0 +1,36 @@
+graph TB
+    subgraph "Session Service"
+        SessionCoordinator[Session Coordinator]
+        StateSync[State Synchronizer]
+        EventBus[Event Bus]
+
+        subgraph "Session Types"
+            IDESession[IDE Session<br/>File state, editor]
+            WorkflowSession[Workflow Session<br/>Analysis state]
+            DashboardSession[Dashboard Session<br/>UI preferences]
+        end
+
+        ConflictResolver[Conflict Resolver<br/>CRDT-based]
+    end
+
+    subgraph "Storage"
+        FDB3[FoundationDB<br/>Distributed state]
+        Redis4[Redis<br/>Active sessions]
+    end
+
+    SessionCoordinator -->|Manage| IDESession
+    SessionCoordinator -->|Manage| WorkflowSession
+    SessionCoordinator -->|Manage| DashboardSession
+
+    IDESession -->|State changes| StateSync
+    WorkflowSession -->|State changes| StateSync
+    DashboardSession -->|State changes| StateSync
+
+    StateSync -->|Publish| EventBus
+    StateSync -->|Persist| FDB3
+    StateSync -->|Cache| Redis4
+    StateSync -->|Resolve conflicts| ConflictResolver
+
+    style SessionCoordinator fill:#F5A623,stroke:#333,stroke-width:3px,color:#fff
+    style StateSync fill:#50E3C2,stroke:#333,stroke-width:2px
+    style ConflictResolver fill:#BD10E0,stroke:#333,stroke-width:2px,color:#fff

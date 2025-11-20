@@ -1,0 +1,36 @@
+graph TB
+    subgraph "Authentication Service"
+        LoginEndpoint[Login Endpoint<br/>POST /auth/login]
+        OAuthCallback[OAuth Callback<br/>GET /auth/oauth/callback]
+        TokenIssuer[JWT Token Issuer]
+        TokenVerifier[JWT Token Verifier]
+        MFAService[MFA Service<br/>TOTP, SMS, Email]
+
+        subgraph "OAuth Providers"
+            GoogleOAuth[Google OAuth2]
+            GitHubOAuth[GitHub OAuth2]
+            LinkedInOAuth[LinkedIn OAuth2]
+        end
+    end
+
+    subgraph "Data Stores"
+        UserDB[(User Database<br/>PostgreSQL)]
+        SessionCache[(Session Cache<br/>Redis)]
+    end
+
+    LoginEndpoint -->|Verify credentials| UserDB
+    LoginEndpoint -->|Generate| TokenIssuer
+    LoginEndpoint -->|Check MFA| MFAService
+
+    OAuthCallback -->|Exchange code| GoogleOAuth
+    OAuthCallback -->|Exchange code| GitHubOAuth
+    OAuthCallback -->|Exchange code| LinkedInOAuth
+    OAuthCallback -->|Create/update user| UserDB
+    OAuthCallback -->|Generate| TokenIssuer
+
+    TokenIssuer -->|Store session| SessionCache
+    TokenVerifier -->|Validate| SessionCache
+    TokenVerifier -->|Check user| UserDB
+
+    style TokenIssuer fill:#F5A623,stroke:#333,stroke-width:3px,color:#fff
+    style MFAService fill:#BD10E0,stroke:#333,stroke-width:2px,color:#fff

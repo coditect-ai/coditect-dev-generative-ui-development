@@ -1,0 +1,33 @@
+graph TB
+    subgraph "License Service"
+        TierManager[Tier Manager<br/>Free, Team, Enterprise]
+        UsageTracker[Usage Tracker<br/>API calls, tokens, storage]
+        QuotaEnforcer[Quota Enforcer<br/>Rate limiting]
+        BillingIntegration[Billing Integration<br/>Stripe webhooks]
+
+        subgraph "License Tiers"
+            Free[Free Tier<br/>10 projects, 1M tokens/mo]
+            Team[Team Tier<br/>Unlimited projects, 10M tokens/mo]
+            Enterprise[Enterprise Tier<br/>Custom limits, SLA]
+        end
+    end
+
+    subgraph "Data"
+        LicenseDB[(License Database)]
+        UsageMetrics[(Usage Metrics<br/>ClickHouse)]
+    end
+
+    TierManager -->|Define limits| Free
+    TierManager -->|Define limits| Team
+    TierManager -->|Define limits| Enterprise
+
+    UsageTracker -->|Record usage| UsageMetrics
+    UsageTracker -->|Check against| TierManager
+    QuotaEnforcer -->|Enforce| TierManager
+    QuotaEnforcer -->|Block if exceeded| UsageTracker
+
+    BillingIntegration -->|Upgrade/downgrade| TierManager
+    BillingIntegration -->|Payment events| LicenseDB
+
+    style QuotaEnforcer fill:#F5A623,stroke:#333,stroke-width:3px,color:#fff
+    style UsageTracker fill:#50E3C2,stroke:#333,stroke-width:2px

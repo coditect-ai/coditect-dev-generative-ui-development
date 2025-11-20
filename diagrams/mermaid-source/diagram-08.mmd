@@ -1,0 +1,44 @@
+graph TB
+    subgraph "Workflow Analyzer (FastAPI + React)"
+        subgraph "Frontend"
+            ReactUI[React Frontend<br/>Workflow forms]
+        end
+
+        subgraph "Backend (Python FastAPI)"
+            API[REST API<br/>FastAPI]
+
+            subgraph "8 Specialized Agents"
+                WA[Workflow Analyzer]
+                TD[Task Decomposer]
+                AI[Actor Identifier]
+                AA[Automation Assessor]
+                RE[Requirements Extractor]
+                PD[Process Designer]
+                QA[Quality Analyzer]
+                TA[Technical Analyzer]
+            end
+
+            Orchestrator2[Orchestrator Service]
+            DiagramEngine[Diagram Export Engine<br/>9 formats]
+        end
+
+        subgraph "Data"
+            PostgreSQL2[PostgreSQL<br/>Workflows, results]
+            Redis2[Redis<br/>Cache, sessions]
+        end
+    end
+
+    ReactUI -->|Submit workflow| API
+    API -->|Coordinate analysis| Orchestrator2
+    Orchestrator2 -->|Dispatch to| WA
+    Orchestrator2 -->|Dispatch to| TD
+    Orchestrator2 -->|Dispatch to| AI
+    Orchestrator2 -->|Dispatch to| AA
+
+    Orchestrator2 -->|Store results| PostgreSQL2
+    Orchestrator2 -->|Cache| Redis2
+    Orchestrator2 -->|Generate diagrams| DiagramEngine
+
+    style Orchestrator2 fill:#F5A623,stroke:#333,stroke-width:3px,color:#fff
+    style WA fill:#4A90E2,stroke:#333,stroke-width:2px,color:#fff
+    style DiagramEngine fill:#50E3C2,stroke:#333,stroke-width:2px

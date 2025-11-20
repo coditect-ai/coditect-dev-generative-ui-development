@@ -1,0 +1,36 @@
+graph TB
+    subgraph "Theia IDE Container"
+        subgraph "Frontend (Browser)"
+            MonacoEditor[Monaco Editor 0.45<br/>Code editing<br/>100+ languages]
+            Terminal[xterm.js 5.3<br/>Terminal emulation]
+            FileExplorer[File Explorer<br/>Workspace tree view]
+            Extensions[Extension Host<br/>20+ VS Code extensions]
+        end
+
+        subgraph "Theia Backend (Node.js)"
+            FileService[File Service<br/>CRUD operations]
+            GitService[Git Service<br/>Clone, commit, push]
+            WorkspaceService[Workspace Service<br/>Project management]
+            ExtensionManager[Extension Manager<br/>Plugin lifecycle]
+            TerminalService[Terminal Service<br/>Shell spawning]
+        end
+
+        subgraph "Storage (Persistent Volumes)"
+            WorkspacePVC[Workspace PVC<br/>/home/theia/workspace<br/>10 GB SSD]
+            ConfigPVC[Config PVC<br/>/home/theia/.theia<br/>5 GB SSD]
+        end
+    end
+
+    MonacoEditor -->|file operations| FileService
+    Terminal -->|shell commands| TerminalService
+    FileExplorer -->|browse files| FileService
+    Extensions -->|extension API| ExtensionManager
+
+    FileService -->|read/write| WorkspacePVC
+    WorkspaceService -->|settings| ConfigPVC
+    GitService -->|.git operations| WorkspacePVC
+    TerminalService -->|workspace access| WorkspacePVC
+
+    style MonacoEditor fill:#4A90E2,stroke:#333,stroke-width:2px,color:#fff
+    style FileService fill:#50E3C2,stroke:#333,stroke-width:2px
+    style WorkspacePVC fill:#BD10E0,stroke:#333,stroke-width:3px,color:#fff
