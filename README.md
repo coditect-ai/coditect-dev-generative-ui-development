@@ -286,7 +286,7 @@ This master project **IS** the CODITECT framework in action, demonstrating distr
 coditect-rollout-master/
 ├── .coditect -> submodules/core/coditect-core-dotclaude    # Master brain
 │   ├── agents/                       # 50 specialized AI agents
-│   ├── skills/                       # 189 reusable skills
+│   ├── skills/                       # 24 reusable skills
 │   ├── commands/                     # 72 slash commands
 │   └── user-training/                # Training materials
 ├── .claude -> .coditect              # Claude Code compatibility

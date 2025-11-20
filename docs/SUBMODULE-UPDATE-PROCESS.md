@@ -74,7 +74,7 @@ Add distributed intelligence symlinks
 - .claude → .coditect (Claude Code compatibility)
 
 Enables:
-✅ Access to 50 agents, 189 skills, 72 commands
+✅ Access to 50 agents, 24 skills, 72 commands
 ✅ Distributed intelligence architecture
 ✅ Consistent development experience across all projects
 

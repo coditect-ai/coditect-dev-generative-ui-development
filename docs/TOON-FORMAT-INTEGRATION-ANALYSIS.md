@@ -77,7 +77,7 @@ employees[3]{id,name,salary,dept}:
 
 ### Current Token-Heavy Areas
 
-Based on analysis of the CODITECT rollout master repository with **19 submodules**, **50 agents**, **72 commands**, and **189 skills**, the following areas consume significant tokens:
+Based on analysis of the CODITECT rollout master repository with **19 submodules**, **50 agents**, **72 commands**, and **24 skills**, the following areas consume significant tokens:
 
 #### 1. **TASKLISTs (High Impact)**
 - **Current:** 10+ TASKLIST.md files across submodules

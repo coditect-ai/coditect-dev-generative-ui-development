@@ -31,7 +31,7 @@
 
 **Current CODITECT Capabilities:**
 - ✅ 50 AI agents for specialized development tasks
-- ✅ 189 reusable skills and workflows
+- ✅ 24 reusable skills and workflows
 - ✅ Git automation and session management
 - ✅ MEMORY-CONTEXT for persistent AI context
 - ✅ Multi-project orchestration via submodules

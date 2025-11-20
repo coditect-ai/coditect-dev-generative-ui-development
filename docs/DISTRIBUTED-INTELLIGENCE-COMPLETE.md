@@ -64,7 +64,7 @@ Master repository has:
 
 Every submodule now has access to:
 - **50 Specialized Agents** - Full agent framework
-- **189 Reusable Skills** - Complete skill library
+- **24 Reusable Skills** - Complete skill library
 - **72 Slash Commands** - Workflow automation
 - **21 Python Scripts** - Core automation tools
 

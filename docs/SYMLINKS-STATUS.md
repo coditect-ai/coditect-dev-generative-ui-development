@@ -37,7 +37,7 @@ The following submodules have symlinks created locally but not committed to thei
 ## Impact
 
 ✅ **Local Development:** All symlinks work perfectly for local development  
-✅ **Framework Access:** 50 agents, 189 skills, 72 commands accessible everywhere  
+✅ **Framework Access:** 50 agents, 24 skills, 72 commands accessible everywhere  
 ✅ **Claude Code:** All submodules work with Claude Code via .claude symlink  
 ⚠️  **Team Sharing:** Symlinks are local-only unless committed to individual repos  
 

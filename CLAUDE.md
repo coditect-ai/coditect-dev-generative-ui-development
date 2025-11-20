@@ -30,7 +30,7 @@ Before working on this project, understand the architecture:
 coditect-rollout-master/
 ├── .coditect -> submodules/core/coditect-core-dotclaude    # CODITECT brain
 │   ├── agents/                     # 50 specialized AI agents
-│   ├── skills/                     # 189 reusable skills
+│   ├── skills/                     # 24 reusable skills
 │   ├── commands/                   # 72 slash commands
 │   ├── user-training/              # Training materials (240K+ words)
 │   └── WHAT-IS-CODITECT.md         # Architecture documentation
