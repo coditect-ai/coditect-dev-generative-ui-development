@@ -24,7 +24,7 @@ Essential framework components that form the foundation of CODITECT.
 
 | Repository | Description |
 |------------|-------------|
-| coditect-core-dotclaude | Core .claude framework with agents, skills, commands |
+| coditect-core | Core .claude framework with agents, skills, commands |
 | coditect-core-framework | CODITECT framework utilities and shared code |
 | coditect-core-architecture | Architecture documentation and decisions |
 
@@ -172,7 +172,7 @@ In the master repository, submodules are organized by category:
 coditect-rollout-master/
 ├── submodules/
 │   ├── core/           # 3 repos
-│   │   ├── coditect-core-dotclaude/
+│   │   ├── coditect-core/
 │   │   ├── coditect-core-framework/
 │   │   └── coditect-core-architecture/
 │   ├── cloud/          # 4 repos

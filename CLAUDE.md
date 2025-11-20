@@ -13,8 +13,8 @@
 
 ### Essential Reading
 Before working on this project, understand the architecture:
-- 📖 **[WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core-dotclaude/blob/main/WHAT-IS-CODITECT.md)** - Distributed intelligence architecture
-- 🎓 **[Training System](https://github.com/coditect-ai/coditect-core-dotclaude/blob/main/user-training/README.md)** - CODITECT Operator training
+- 📖 **[WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core/blob/main/WHAT-IS-CODITECT.md)** - Distributed intelligence architecture
+- 🎓 **[Training System](https://github.com/coditect-ai/coditect-core/blob/main/user-training/README.md)** - CODITECT Operator training
 - 📘 **[AZ1.AI-CODITECT-VISION-AND-STRATEGY.md](AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete vision
 - 📂 **[REPO-NAMING-CONVENTION.md](docs/REPO-NAMING-CONVENTION.md)** - Repository naming rules for 8 categories
 - 🚀 **[1-2-3-SLASH-COMMAND-QUICK-START.md](.coditect/1-2-3-SLASH-COMMAND-QUICK-START.md)** - Master all 72 commands in 3 steps
@@ -28,7 +28,7 @@ Before working on this project, understand the architecture:
 
 ```
 coditect-rollout-master/
-├── .coditect -> submodules/core/coditect-core-dotclaude    # CODITECT brain
+├── .coditect -> submodules/core/coditect-core    # CODITECT brain
 │   ├── agents/                     # 50 specialized AI agents
 │   ├── skills/                     # 24 reusable skills
 │   ├── commands/                   # 72 slash commands
@@ -45,7 +45,7 @@ coditect-rollout-master/
 │
 ├── submodules/                     # 42 sub-projects in 8 category folders
 │   ├── core/                       # 3 repos - Core framework
-│   │   ├── coditect-core-dotclaude/
+│   │   ├── coditect-core/
 │   │   ├── coditect-core-framework/
 │   │   └── coditect-core-architecture/
 │   ├── cloud/                      # 4 repos - Cloud platform
@@ -70,7 +70,7 @@ coditect-rollout-master/
 └── CLAUDE.md                       # This file - AI agent configuration
 ```
 
-**Key Pattern:** Every submodule has `.coditect -> ../../../.coditect` symlink enabling intelligent autonomous operation at every level. See [WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core-dotclaude/blob/main/WHAT-IS-CODITECT.md) for complete architecture details.
+**Key Pattern:** Every submodule has `.coditect -> ../../../.coditect` symlink enabling intelligent autonomous operation at every level. See [WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core/blob/main/WHAT-IS-CODITECT.md) for complete architecture details.
 
 **Repository Naming:** All repos follow `coditect-{category}-{name}` convention. See [docs/REPO-NAMING-CONVENTION.md](docs/REPO-NAMING-CONVENTION.md) for rules.
 

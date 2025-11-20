@@ -16,12 +16,12 @@ This repository serves as the **MASTER PLAN** orchestration point for the comple
 - **Human-in-the-Loop:** Strategic guidance and approvals at phase gates
 
 **Essential Reading:**
-- 📖 **[WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core-dotclaude/blob/main/WHAT-IS-CODITECT.md)** - Understanding the distributed intelligence nervous system
-- 📊 **[Visual Architecture Guide](https://github.com/coditect-ai/coditect-core-dotclaude/blob/main/diagrams/distributed-intelligence-architecture.md)** - 5 Mermaid diagrams showing complete system
+- 📖 **[WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core/blob/main/WHAT-IS-CODITECT.md)** - Understanding the distributed intelligence nervous system
+- 📊 **[Visual Architecture Guide](https://github.com/coditect-ai/coditect-core/blob/main/diagrams/distributed-intelligence-architecture.md)** - 5 Mermaid diagrams showing complete system
 - 🧠 **[MEMORY-CONTEXT Architecture](https://github.com/coditect-ai/coditect-labs-learning/blob/main/MEMORY-CONTEXT-ARCHITECTURE.md)** - Eliminates catastrophic forgetting
 - 📘 **[Vision & Strategy](./AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete ecosystem vision and market strategy
 - 📂 **[Naming Convention](./docs/REPO-NAMING-CONVENTION.md)** - Repository naming rules for 8 categories
-- 🎓 **[Training System](https://github.com/coditect-ai/coditect-core-dotclaude/blob/main/user-training/README.md)** - CODITECT Operator certification program
+- 🎓 **[Training System](https://github.com/coditect-ai/coditect-core/blob/main/user-training/README.md)** - CODITECT Operator certification program
 - 🚀 **[Slash Command Quick Start](.coditect/1-2-3-SLASH-COMMAND-QUICK-START.md)** - Master all 72 commands in 3 steps
 - 🤖 **AI Command Router** - Type `coditect-router "your request"` for instant command suggestions (never memorize again!)
 
@@ -38,7 +38,7 @@ See [docs/REPO-NAMING-CONVENTION.md](docs/REPO-NAMING-CONVENTION.md) for the com
 #### core/ - Core Framework (3 repos)
 | Repository | Description | Status |
 |------------|-------------|--------|
-| [coditect-core-dotclaude](submodules/core/coditect-core-dotclaude) | Core .claude framework with agents, skills, commands | Active |
+| [coditect-core](submodules/core/coditect-core) | Core .claude framework with agents, skills, commands | Active |
 | [coditect-core-framework](submodules/core/coditect-core-framework) | Framework utilities and shared code | Active |
 | [coditect-core-architecture](submodules/core/coditect-core-architecture) | Architecture documentation and decisions | Active |
 
@@ -205,7 +205,7 @@ python3 .coditect/scripts/create-checkpoint.py "Architecture Documentation Sprin
 
 ```
 coditect-rollout-master/
-├── .coditect/                 # Symlink to core/coditect-core-dotclaude (brain)
+├── .coditect/                 # Symlink to core/coditect-core (brain)
 ├── .claude -> .coditect       # Claude Code compatibility
 ├── docs/                      # Master project documentation
 │   ├── REPO-NAMING-CONVENTION.md    # Repository naming rules
@@ -217,7 +217,7 @@ coditect-rollout-master/
 ├── MEMORY-CONTEXT/            # Session exports and context
 └── submodules/                # 42 submodules in 8 category folders
     ├── core/                  # 3 repos - Core framework
-    │   ├── coditect-core-dotclaude/
+    │   ├── coditect-core/
     │   ├── coditect-core-framework/
     │   └── coditect-core-architecture/
     ├── cloud/                 # 4 repos - Cloud platform
@@ -284,7 +284,7 @@ This master project **IS** the CODITECT framework in action, demonstrating distr
 
 ```
 coditect-rollout-master/
-├── .coditect -> submodules/core/coditect-core-dotclaude    # Master brain
+├── .coditect -> submodules/core/coditect-core    # Master brain
 │   ├── agents/                       # 50 specialized AI agents
 │   ├── skills/                       # 24 reusable skills
 │   ├── commands/                     # 72 slash commands
@@ -313,7 +313,7 @@ coditect-rollout-master/
 - ✅ Reusable templates and automation scripts
 - ✅ Comprehensive training system for operators
 
-**📖 Learn More:** [WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core-dotclaude/blob/main/WHAT-IS-CODITECT.md) - Complete architecture guide
+**📖 Learn More:** [WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core/blob/main/WHAT-IS-CODITECT.md) - Complete architecture guide
 
 **This pattern can be abstracted and reused by any CODITECT user** to manage their own complex multi-repo projects.
 
@@ -328,13 +328,13 @@ coditect-rollout-master/
 **Status:** Repository Reorganization Complete, Ready for Beta Phase
 
 ### Key Documents
-- 📖 [WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core-dotclaude/blob/main/WHAT-IS-CODITECT.md) - Distributed intelligence architecture
-- 📊 [Visual Architecture](https://github.com/coditect-ai/coditect-core-dotclaude/blob/main/diagrams/distributed-intelligence-architecture.md) - 5 comprehensive Mermaid diagrams
+- 📖 [WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core/blob/main/WHAT-IS-CODITECT.md) - Distributed intelligence architecture
+- 📊 [Visual Architecture](https://github.com/coditect-ai/coditect-core/blob/main/diagrams/distributed-intelligence-architecture.md) - 5 comprehensive Mermaid diagrams
 - 🧠 [MEMORY-CONTEXT](https://github.com/coditect-ai/coditect-labs-learning/blob/main/MEMORY-CONTEXT-ARCHITECTURE.md) - Experiential intelligence layer
 - 📘 [Vision & Strategy](./AZ1.AI-CODITECT-VISION-AND-STRATEGY.md) - Complete ecosystem vision and market strategy
 - 📋 [Master Plan](./CODITECT-ROLLOUT-MASTER-PLAN.md) - Detailed implementation roadmap
 - 📂 [Naming Convention](./docs/REPO-NAMING-CONVENTION.md) - Repository naming rules
-- 🎓 [Training System](https://github.com/coditect-ai/coditect-core-dotclaude/blob/main/user-training/README.md) - CODITECT Operator certification
+- 🎓 [Training System](https://github.com/coditect-ai/coditect-core/blob/main/user-training/README.md) - CODITECT Operator certification
 - 🤖 [AI Agent Config](./CLAUDE.md) - AI agent coordination guidelines
 
 ---

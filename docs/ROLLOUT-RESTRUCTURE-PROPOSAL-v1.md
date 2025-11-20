@@ -7,7 +7,7 @@
 | Current | Proposed Name | Notes |
 |---------|---------------|-------|
 | **CORE** | | |
-| coditect-project-dot-claude | coditect-core-dotclaude | The brain - agents, skills, commands |
+| coditect-project-dot-claude | coditect-core | The brain - agents, skills, commands |
 | coditect-framework | coditect-core-framework | Framework utilities |
 | coditect-distributed-architecture | coditect-core-architecture | Architecture docs |
 | **CLOUD PLATFORM** | | |
@@ -86,7 +86,7 @@
 | coditect-installer | coditect-ops-distribution | Same purpose |
 | coditect-license-server | coditect-ops-license | Related functionality |
 | az1.ai-coditect-AI-IDE-competitive-market-research | coditect-gtm-competition | Same domain |
-| Coditect-MCP-RAG-Claude-Code-AUTH | coditect-core-dotclaude | MCP integration |
+| Coditect-MCP-RAG-Claude-Code-AUTH | coditect-core | MCP integration |
 | Coditect-Multi-Agent-RAG-Pipeline | coditect-labs-agents-research | R&D |
 
 ### Remove from Rollout (Keep as Standalone)
@@ -105,7 +105,7 @@
 coditect-ops-master/
 ├── submodules/
 │   ├── core/                    # Foundation (3)
-│   │   ├── coditect-core-dotclaude
+│   │   ├── coditect-core
 │   │   ├── coditect-core-framework
 │   │   └── coditect-core-architecture
 │   │
@@ -184,7 +184,7 @@ Execute all renames on GitHub:
 
 ```bash
 # Core
-gh repo rename coditect-ai/coditect-project-dot-claude coditect-core-dotclaude
+gh repo rename coditect-ai/coditect-project-dot-claude coditect-core
 gh repo rename coditect-ai/coditect-framework coditect-core-framework
 gh repo rename coditect-ai/coditect-distributed-architecture coditect-core-architecture
 

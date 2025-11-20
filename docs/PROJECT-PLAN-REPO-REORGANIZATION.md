@@ -86,7 +86,7 @@ Task(subagent_type="codi-devops-engineer",
 **Rename Script**:
 ```bash
 # Core (3)
-gh repo rename coditect-ai/coditect-project-dot-claude coditect-core-dotclaude
+gh repo rename coditect-ai/coditect-project-dot-claude coditect-core
 gh repo rename coditect-ai/coditect-framework coditect-core-framework
 gh repo rename coditect-ai/coditect-distributed-architecture coditect-core-architecture
 

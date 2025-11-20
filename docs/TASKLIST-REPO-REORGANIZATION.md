@@ -116,7 +116,7 @@
 **Duration**: 10 min
 **Dependencies**: Phase 2 complete
 
-- [ ] `gh repo rename coditect-ai/coditect-project-dot-claude coditect-core-dotclaude`
+- [ ] `gh repo rename coditect-ai/coditect-project-dot-claude coditect-core`
 - [ ] `gh repo rename coditect-ai/coditect-framework coditect-core-framework`
 - [ ] `gh repo rename coditect-ai/coditect-distributed-architecture coditect-core-architecture`
 
@@ -304,7 +304,7 @@
 **Duration**: 10 min
 **Dependencies**: 5.2
 
-- [ ] `git submodule add https://github.com/coditect-ai/coditect-core-dotclaude submodules/core/coditect-core-dotclaude`
+- [ ] `git submodule add https://github.com/coditect-ai/coditect-core submodules/core/coditect-core`
 - [ ] `git submodule add https://github.com/coditect-ai/coditect-core-framework submodules/core/coditect-core-framework`
 - [ ] `git submodule add https://github.com/coditect-ai/coditect-core-architecture submodules/core/coditect-core-architecture`
 
