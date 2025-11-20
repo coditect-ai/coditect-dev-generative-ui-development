@@ -13,10 +13,11 @@
 
 ### Essential Reading
 Before working on this project, understand the architecture:
-- 📖 **[WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-project-dot-claude/blob/main/WHAT-IS-CODITECT.md)** - Distributed intelligence architecture
-- 🎓 **[Training System](https://github.com/coditect-ai/coditect-project-dot-claude/blob/main/user-training/README.md)** - CODITECT Operator training
+- 📖 **[WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core-dotclaude/blob/main/WHAT-IS-CODITECT.md)** - Distributed intelligence architecture
+- 🎓 **[Training System](https://github.com/coditect-ai/coditect-core-dotclaude/blob/main/user-training/README.md)** - CODITECT Operator training
 - 📘 **[AZ1.AI-CODITECT-VISION-AND-STRATEGY.md](AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete vision
-- 🚀 **[1-2-3-SLASH-COMMAND-QUICK-START.md](.coditect/1-2-3-SLASH-COMMAND-QUICK-START.md)** (NEW!) - Master all 72 commands in 3 steps
+- 📂 **[REPO-NAMING-CONVENTION.md](docs/REPO-NAMING-CONVENTION.md)** - Repository naming rules for 8 categories
+- 🚀 **[1-2-3-SLASH-COMMAND-QUICK-START.md](.coditect/1-2-3-SLASH-COMMAND-QUICK-START.md)** - Master all 72 commands in 3 steps
 - 🤖 **AI Command Router** (`coditect-router`) - Never memorize commands, just describe what you want in plain English!
 
 ---
@@ -27,48 +28,51 @@ Before working on this project, understand the architecture:
 
 ```
 coditect-rollout-master/
-├── .coditect/                      # CODITECT brain (git submodule)
+├── .coditect -> submodules/core/coditect-core-dotclaude    # CODITECT brain
 │   ├── agents/                     # 50 specialized AI agents
 │   ├── skills/                     # 189 reusable skills
 │   ├── commands/                   # 72 slash commands
 │   ├── user-training/              # Training materials (240K+ words)
-│   ├── WHAT-IS-CODITECT.md        # Architecture documentation
-│   ├── README.md                   # Framework documentation
-│   └── CLAUDE.md                   # Framework context
+│   └── WHAT-IS-CODITECT.md         # Architecture documentation
 │
 ├── .claude -> .coditect            # Claude Code compatibility symlink
 │
 ├── docs/                           # Master planning documents
+│   ├── REPO-NAMING-CONVENTION.md   # Repository naming rules
 │   ├── CODITECT-MASTER-ORCHESTRATION-PLAN.md
 │   ├── CODITECT-CLOUD-PLATFORM-PROJECT-PLAN.md
-│   ├── CODITECT-REUSABLE-TOOLS-ARCHITECTURE.md
-│   ├── CODITECT-INTEGRATED-ECOSYSTEM-VISION.md
-│   └── CODITECT-ROLLOUT-MASTER-PLAN.md
+│   └── ... (60+ planning documents)
 │
-├── submodules/                     # 19 sub-projects (intelligent nodes)
-│   ├── coditect-cloud-backend/     # FastAPI backend (P0, 12 weeks)
-│   │   ├── .coditect -> ../../.coditect   # Intelligent node
-│   │   ├── .claude -> .coditect           # Claude Code access
-│   │   └── src/
-│   ├── coditect-cloud-frontend/    # React frontend (P0, 10 weeks)
-│   │   ├── .coditect -> ../../.coditect
-│   │   ├── .claude -> .coditect
-│   │   └── src/
-│   ├── coditect-cli/               # Python CLI tools (P0, 8 weeks)
-│   │   ├── .coditect -> ../../.coditect
-│   │   └── .claude -> .coditect
-│   └── ... (all submodules follow same pattern)
+├── submodules/                     # 42 sub-projects in 8 category folders
+│   ├── core/                       # 3 repos - Core framework
+│   │   ├── coditect-core-dotclaude/
+│   │   ├── coditect-core-framework/
+│   │   └── coditect-core-architecture/
+│   ├── cloud/                      # 4 repos - Cloud platform
+│   │   ├── coditect-cloud-backend/
+│   │   │   ├── .coditect -> ../../../.coditect   # Intelligent node
+│   │   │   └── .claude -> .coditect              # Claude Code access
+│   │   ├── coditect-cloud-frontend/
+│   │   ├── coditect-cloud-ide/
+│   │   └── coditect-cloud-infra/
+│   ├── dev/                        # 9 repos - Developer tools
+│   ├── market/                     # 2 repos - Marketplace
+│   ├── docs/                       # 5 repos - Documentation
+│   ├── ops/                        # 3 repos - Operations
+│   ├── gtm/                        # 6 repos - Go-to-market
+│   └── labs/                       # 11 repos - Research
 │
 ├── scripts/                        # Automation scripts
 ├── templates/                      # Project templates
-├── workflows/                      # GitHub Actions workflows
 ├── MEMORY-CONTEXT/                 # Persistent context for AI agents
 ├── .gitmodules                     # Submodule configuration
 ├── README.md                       # User-facing documentation
 └── CLAUDE.md                       # This file - AI agent configuration
 ```
 
-**Key Pattern:** Every submodule has `.coditect -> ../../.coditect` symlink enabling intelligent autonomous operation at every level. See [WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-project-dot-claude/blob/main/WHAT-IS-CODITECT.md) for complete architecture details.
+**Key Pattern:** Every submodule has `.coditect -> ../../../.coditect` symlink enabling intelligent autonomous operation at every level. See [WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core-dotclaude/blob/main/WHAT-IS-CODITECT.md) for complete architecture details.
+
+**Repository Naming:** All repos follow `coditect-{category}-{name}` convention. See [docs/REPO-NAMING-CONVENTION.md](docs/REPO-NAMING-CONVENTION.md) for rules.
 
 ---
 
