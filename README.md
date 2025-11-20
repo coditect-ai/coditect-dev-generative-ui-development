@@ -147,7 +147,7 @@ coditect-rollout-master/
     │   │   ├── commands/                         # 72 slash commands
     │   │   ├── skills/                           # 18 production skills
     │   │   ├── scripts/                          # 21 core automation scripts
-    │   │   ├── user-training/                    # 240K+ words training materials
+    │   │   ├── user-training/                    # 55K+ words training materials
     │   │   ├── MEMORY-CONTEXT/                   # Experiential intelligence layer
     │   │   ├── diagrams/                         # Architecture visualizations
     │   │   ├── templates/                        # Project templates
@@ -226,7 +226,7 @@ The foundational intelligence layer and AZ1.AI INC's **first commercial product*
 - **72 slash commands** for autonomous workflows (/deliberation, /implement, /analyze, /strategy, etc.)
 - **18 production skills** for common development patterns
 - **21 core automation scripts** for checkpointing, deduplication, git workflows, installer creation
-- **240,000+ words** of training materials (CODITECT Operator certification program)
+- **55,000+ words** of training materials + **456,000+ words** comprehensive framework documentation
 - **MEMORY-CONTEXT system** for zero catastrophic forgetting across sessions
 - **Universal Agents v2.0** - Next-generation cross-platform agent framework (in development)
 
@@ -555,11 +555,11 @@ Domain-specific capabilities packaged as skills:
 - And 18 more...
 
 #### 6. **Comprehensive Training System**
-240,000+ words of training materials:
+55,000+ words of training materials + 456,000+ words framework documentation:
 
 - **30-minute Quick Start** - Immediate productivity
 - **4-6 hour Comprehensive Training** - Full certification
-- **10 Core Documents** - Complete curriculum
+- **13 Training Documents** - Complete curriculum
 - **Live Demo Scripts** - Step-by-step walkthroughs
 - **Sample Templates** - Production-quality examples
 - **Assessments** - Skill verification
@@ -783,8 +783,8 @@ CODITECT Core is **optimized for Claude Code** (Anthropic's official CLI):
 **Beta Launch:** Q1 2025
 **General Availability:** Q2 2025
 **Installer Status:** Production-ready (38/40 quality score)
-**Documentation:** Comprehensive (240K+ words)
-**Training:** Complete certification program ready
+**Documentation:** Comprehensive (456K+ words across 411 documents)
+**Training:** Complete certification program ready (55K+ words, 13 documents)
 
 ---
 

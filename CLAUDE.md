@@ -32,7 +32,7 @@ coditect-rollout-master/
 │   ├── agents/                     # 49 specialized AI agents
 │   ├── skills/                     # 18 production skills
 │   ├── commands/                   # 72 slash commands
-│   ├── user-training/              # Training materials (240K+ words)
+│   ├── user-training/              # Training materials (55K+ words)
 │   └── WHAT-IS-CODITECT.md         # Architecture documentation
 │
 ├── .claude -> .coditect            # Claude Code compatibility symlink
