@@ -191,7 +191,7 @@ coditect-rollout-master/
 │   └── labs/           # 11 repos
 ```
 
-**Total: 42 submodules across 8 categories**
+**Total: 41 submodules across 8 categories**
 
 ---
 
