@@ -1,9 +1,9 @@
 # CODITECT Rollout Master - Documentation Index
 
-**Last Updated:** 2025-11-20
-**Total Documents:** 81
-**Categories:** 9
-**Documentation Health Score:** 70/100
+**Last Updated:** 2025-11-22
+**Total Documents:** 81 (root) + 8 subdirectory READMEs
+**Categories:** 9 + 4 fully documented subdirectories
+**Documentation Health Score:** 85/100 (improved with subdirectory docs)
 
 ---
 
@@ -62,6 +62,12 @@ This documentation serves as the **single source of truth** for the CODITECT Rol
 ---
 
 ## Quick Navigation
+
+### By Directory (Subdirectories with Full Documentation)
+- [📋 project-management/](project-management/) - Master planning and task tracking (PROJECT-PLAN.md, TASKLIST.md)
+- [🎯 adrs/](adrs/) - Architecture Decision Records (8 ADRs for Project Intelligence Platform)
+- [🔒 security/](security/) - Security advisories and GCP compliance documentation
+- [⚙️ ../scripts/](../scripts/) - Automation scripts (25 scripts for submodule management)
 
 ### By Document Type
 - [📋 Vision & Strategy](#vision--strategy-9-documents) (9 docs)
