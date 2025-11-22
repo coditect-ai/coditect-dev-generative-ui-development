@@ -29,7 +29,7 @@ This repository serves as the **MASTER PLAN** orchestration point for the comple
 
 ## Architecture
 
-This master project uses **git submodules** to coordinate **41 sub-projects** across the CODITECT ecosystem, organized into **8 category folders**.
+This master project uses **git submodules** to coordinate **42 sub-projects** across the CODITECT ecosystem, organized into **8 category folders**.
 
 See [docs/REPO-NAMING-CONVENTION.md](docs/REPO-NAMING-CONVENTION.md) for the complete naming convention and rules.
 
@@ -114,7 +114,7 @@ See [docs/REPO-NAMING-CONVENTION.md](docs/REPO-NAMING-CONVENTION.md) for the com
 | [coditect-gtm-personas](submodules/gtm/coditect-gtm-personas) | User personas | Active |
 | [coditect-gtm-customer-clipora](submodules/gtm/coditect-gtm-customer-clipora) | Customer success | Active |
 
-#### labs/ - Research & Experiments (11 repos)
+#### labs/ - Research & Next-Generation (12 repos)
 | Repository | Description | Status |
 |------------|-------------|--------|
 | [coditect-labs-agent-standards](submodules/labs/coditect-labs-agent-standards) | Agent dev standards | Active |
@@ -128,13 +128,14 @@ See [docs/REPO-NAMING-CONVENTION.md](docs/REPO-NAMING-CONVENTION.md) for the com
 | [coditect-labs-first-principles](submodules/labs/coditect-labs-first-principles) | First principles | Active |
 | [coditect-labs-learning](submodules/labs/coditect-labs-learning) | Learning experiments | Active |
 | [coditect-labs-mcp-auth](submodules/labs/coditect-labs-mcp-auth) | MCP authentication | Active |
+| **[coditect-next-generation](submodules/labs/coditect-next-generation)** | **Autonomous Platform (Next-Gen)** | **⭐ NEW Nov 22** |
 
 
 ---
 
 ## 📁 Repository Tree Structure
 
-Complete view of the CODITECT ecosystem with 41 submodules organized into 8 categories:
+Complete view of the CODITECT ecosystem with 42 submodules organized into 8 categories:
 
 ```
 coditect-rollout-master/
