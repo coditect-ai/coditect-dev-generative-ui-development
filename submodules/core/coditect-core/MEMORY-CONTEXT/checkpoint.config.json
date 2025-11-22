@@ -1,0 +1,68 @@
+{
+  "version": "1.0",
+  "description": "MEMORY-CONTEXT checkpoint and archive configuration",
+  "last_updated": "2025-11-16T08:45:00Z",
+
+  "checkpoints": {
+    "directory": "MEMORY-CONTEXT/checkpoints",
+    "keep_recent": 10,
+    "auto_archive": true,
+    "archive_after_days": 30,
+    "naming_format": "YYYY-MM-DDTHH-MM-SSZ-description.md"
+  },
+
+  "sessions": {
+    "directory": "MEMORY-CONTEXT/sessions",
+    "keep_recent": 20,
+    "auto_archive": true,
+    "archive_after_days": 60,
+    "export_format": ["markdown", "json"]
+  },
+
+  "exports": {
+    "directory": "MEMORY-CONTEXT/exports",
+    "keep_recent": 15,
+    "auto_archive": true,
+    "archive_after_days": 90,
+    "file_format": "txt"
+  },
+
+  "archive": {
+    "base_directory": "MEMORY-CONTEXT/archive",
+    "checkpoints_dir": "MEMORY-CONTEXT/archive/checkpoints",
+    "sessions_dir": "MEMORY-CONTEXT/archive/sessions",
+    "exports_dir": "MEMORY-CONTEXT/archive/exports",
+    "organize_by_year": true,
+    "compress_after_days": 180,
+    "never_delete": true,
+    "audit_trail": true
+  },
+
+  "git": {
+    "auto_commit": true,
+    "auto_push": true,
+    "update_readme": true,
+    "update_master_if_submodule": true,
+    "commit_message_template": "Checkpoint: {description}\n\n- Session: {session_path}\n- Checkpoint: {checkpoint_path}\n\n🤖 Claude Code | Co-Authored-By: Claude <noreply@anthropic.com>"
+  },
+
+  "audit": {
+    "enabled": true,
+    "log_file": "MEMORY-CONTEXT/archive/audit.log",
+    "log_operations": [
+      "checkpoint_created",
+      "session_exported",
+      "file_archived",
+      "file_accessed",
+      "config_changed"
+    ],
+    "retention_policy": "never_delete"
+  },
+
+  "readme": {
+    "auto_update": true,
+    "section_name": "Recent Checkpoints",
+    "list_recent": 5,
+    "link_format": "relative"
+  }
+}

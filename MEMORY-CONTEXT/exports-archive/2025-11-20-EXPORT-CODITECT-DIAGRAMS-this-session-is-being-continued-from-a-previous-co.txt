@@ -1,0 +1,578 @@
+
+ ▐▛███▜▌   Claude Code v2.0.46
+▝▜█████▛▘  Sonnet 4.5 · Claude Max
+  ▘▘ ▝▝    /Users/halcasteel/PROJECTS/coditect-rollout-master
+══════════════════ Conversation compacted · ctrl+o for history ═════════════════
+
+> /compact 
+  ⎿  Compacted (ctrl+o to see full summary)
+
+> cr /analyze coditect-rollout-mastar/diagrams I do not see any diagrams in 
+the subdirectories in the diagram/mermaid-source folder: ANALYZE create 
+diagrams, orgnize explain and update crosscheck CHECKPOINT 
+
+⏺ I'll analyze the diagrams folder structure and create any missing
+  diagrams, organize them, and add documentation.
+
+  Let me start by exploring the diagrams directory:
+
+⏺ Bash(find diagrams -type f -name "*.mmd" -o -name "*.md" -o -name "*.png" -o
+      -name "*.svg" | head -50)
+  ⎿  (No content)
+
+⏺ Bash(ls -la diagrams/)
+  ⎿  total 24                                               
+     drwxr-xr-x@ 11 halcasteel  staff    352 Nov 17 11:30 .
+     drwxr-xr-x@ 24 halcasteel  staff    768 Nov 20 03:58 ..
+     … +15 lines (ctrl+o to expand)
+
+⏺ Bash(find diagrams/mermaid-source -type d)
+  ⎿  diagrams/mermaid-source
+
+⏺ Bash(for dir in diagrams/phase-*; do echo "=== $dir ==="; ls -la "$dir"
+      2>/dev/null || echo "Empty or error"; done)
+  ⎿  === diagrams/phase-1-claude-framework ===           
+     total 0
+     drwxr-xr-x@  2 halcasteel  staff   64 Nov 15 21:47 .
+     … +25 lines (ctrl+o to expand)
+
+⏺ Bash(ls -la diagrams/mermaid-source/)
+  ⎿  total 0                                              
+     drwxr-xr-x@  2 halcasteel  staff   64 Nov 15 21:47 .
+     drwxr-xr-x@ 11 halcasteel  staff  352 Nov 17 11:30 ..
+
+⏺ I can see all diagram directories are completely empty. Let me check what
+  documentation exists to understand what diagrams are needed:
+
+⏺ Search(pattern: "docs/*ARCHITECTURE*.md")
+  ⎿  Found 8 files (ctrl+o to expand)
+
+⏺ Search(pattern: "docs/*PLAN*.md")
+  ⎿  Found 14 files (ctrl+o to expand)
+
+⏺ Read(docs/REPO-NAMING-CONVENTION.md)
+  ⎿  Read 200 lines
+
+⏺ Let me read key architecture documents to understand what diagrams are
+  needed:
+
+⏺ Read(docs/CODITECT-C4-ARCHITECTURE-EVOLUTION.md)
+  ⎿  Read 100 lines
+
+⏺ Read(docs/CODITECT-MASTER-ORCHESTRATION-PLAN.md)
+  ⎿  Read 100 lines
+
+⏺ Now let me read the complete C4 architecture document to extract all
+  diagrams:
+
+⏺ Read(docs/CODITECT-C4-ARCHITECTURE-EVOLUTION.md)
+  ⎿  Read 1567 lines
+
+⏺ Perfect! I found the source - all diagrams are embedded in the
+  architecture documentation. Let me extract and organize them
+  systematically. I'll create:
+
+  1. Mermaid source files (.mmd) for each diagram
+  2. README files explaining each phase
+  3. A master overview
+
+⏺ Write(diagrams/README.md)
+  ⎿  Wrote 184 lines to diagrams/README.md                                 
+     # CODITECT Architecture Diagrams
+     ## Overview
+     This directory contains **C4 Model architecture diagrams** for the
+     CODITECT platform, documenting the evolution from Phase 1 (local
+     .claude framework) through Phase 7 (enterprise scale).
+     **Methodology:** C4 Model (Context → Container → Component → Code)
+     ## Directory Structure
+     … +174 lines (ctrl+o to expand)
+  ⎿  Interrupted · What should Claude do instead?
+
+> cr recurse and read /analyze the submodules if necessary to be informed to
+ create the mermaid diagrams 
+
+⏺ I'll analyze the submodules to gather accurate implementation details for
+  creating the mermaid diagrams.
+
+⏺ Explore(Analyze submodules for diagram details)
+  ⎿  Done (34 tool uses · 77.6k tokens · 2m 46s)                           
+
+⏺ Excellent analysis! Now I have accurate implementation details. Let me
+  create the mermaid diagrams based on both the architecture documentation
+  and actual implementation.
+
+⏺ Write(diagrams/phase-1-claude-framework/phase1-c1-system-context.mmd)
+  ⎿  Wrote 21 lines to                                                  
+     diagrams/phase-1-claude-framework/phase1-c1-system-context.mmd
+     graph TB
+         subgraph "External Systems"
+             User[Developer<br/>Local Machine]
+             Claude[Anthropic Claude API]
+             GitHub[GitHub Repository]
+         end
+         subgraph "CODITECT Phase 1"
+             CoditectFramework[CODITECT Framework<br/>.coditect/.claude]
+         end
+     … +11 lines (ctrl+o to expand)
+
+⏺ Write(diagrams/phase-1-claude-framework/phase1-c2-container.mmd)
+  ⎿  Wrote 34 lines to                                                     
+     diagrams/phase-1-claude-framework/phase1-c2-container.mmd
+     graph TB
+         subgraph "Developer Local Machine"
+             subgraph ".coditect Directory (Git Submodule)"
+                 Agents[agents/<br/>50 AI Agents]
+                 Skills[skills/<br/>18+ Automation Skills]
+                 Commands[commands/<br/>75 Slash Commands]
+                 Templates[templates/<br/>Project Templates]
+                 Training[user-training/<br/>13 docs, 55K+ words]
+             end
+     … +24 lines (ctrl+o to expand)
+
+⏺ Write(diagrams/phase-1-claude-framework/phase1-c3-agent-execution.mmd)
+  ⎿  Wrote 43 lines to                                                     
+     diagrams/phase-1-claude-framework/phase1-c3-agent-execution.mmd
+     graph TB
+         subgraph "Agent Execution Flow"
+             TaskProxy[Task Tool Proxy]
+             AgentDispatcher[Agent Dispatcher]
+             subgraph "Agent Types (50 Total)"
+                 Orchestrator[Orchestrator Agent]
+                 Analyzer[Analysis Specialists<br/>codebase-analyzer, etc.]
+                 Locator[Locator Specialists<br/>codebase-locator,
+     pattern-finder]
+                 Developer[Development Specialists<br/>rust-expert,
+     frontend-react]
+     … +33 lines (ctrl+o to expand)
+
+⏺ Write(diagrams/phase-1-claude-framework/README.md)
+  ⎿  Wrote 169 lines to diagrams/phase-1-claude-framework/README.md        
+     # Phase 1: .coditect/.claude Framework
+     **Status:** ✅ Active Pilot (<5 users)
+     **Timeline:** Current state
+     **User Scale:** <5 users
+     **Deployment:** Local development only
+     ## Overview
+     Phase 1 is the **CODITECT Core Framework** - a local development
+     framework that provides 50 specialized AI agents, 75 slash commands,
+     and 18+ production skills through a git submodule pattern.
+     … +159 lines (ctrl+o to expand)
+
+⏺ Now creating Phase 2 diagrams for the production IDE:
+
+⏺ Write(diagrams/phase-2-ide-cloud/phase2-c1-system-context.mmd)
+  ⎿  Wrote 25 lines to                                                     
+     diagrams/phase-2-ide-cloud/phase2-c1-system-context.mmd
+     graph TB
+         subgraph "Users"
+             Developer[Developer<br/>Web Browser]
+         end
+         subgraph "CODITECT Phase 2"
+             IDE[CODITECT IDE<br/>coditect.ai]
+         end
+         subgraph "External Systems"
+     … +15 lines (ctrl+o to expand)
+
+⏺ Write(diagrams/phase-2-ide-cloud/phase2-c2-container.mmd)
+  ⎿  Wrote 51 lines to diagrams/phase-2-ide-cloud/phase2-c2-container.mmd
+     graph TB
+         subgraph "Google Kubernetes Engine (GKE)"
+             subgraph "Ingress Layer"
+                 LB[Cloud Load Balancer<br/>34.8.51.57<br/>coditect.ai]
+             end
+             subgraph "Application Pods (StatefulSet)"
+                 Pod1[coditect-combined-hybrid-0]
+                 Pod2[coditect-combined-hybrid-1]
+                 Pod3[coditect-combined-hybrid-2]
+     … +41 lines (ctrl+o to expand)
+
+⏺ Write(diagrams/phase-2-ide-cloud/phase2-c3-theia-ide.mmd)
+  ⎿  Wrote 37 lines to diagrams/phase-2-ide-cloud/phase2-c3-theia-ide.mmd  
+     graph TB
+         subgraph "Theia IDE Container"
+             subgraph "Frontend (Browser)"
+                 MonacoEditor[Monaco Editor 0.45<br/>Code editing<br/>100+
+     languages]
+                 Terminal[xterm.js 5.3<br/>Terminal emulation]
+                 FileExplorer[File Explorer<br/>Workspace tree view]
+                 Extensions[Extension Host<br/>20+ VS Code extensions]
+             end
+             subgraph "Theia Backend (Node.js)"
+     … +27 lines (ctrl+o to expand)
+
+⏺ Write(diagrams/phase-2-ide-cloud/README.md)
+  ⎿  Wrote 258 lines to diagrams/phase-2-ide-cloud/README.md
+     # Phase 2: Full IDE in the Cloud
+     **Status:** ✅ Deployed (Production)
+     **URL:** https://coditect.ai
+     **Timeline:** Currently operational (Build #32)
+     **User Scale:** Open to public (ungated)
+     **Deployment:** GKE with 3 hybrid StatefulSet pods
+     ## Overview
+     … +248 lines (ctrl+o to expand)
+
+⏺ Continuing with the remaining phases. Let me create Phase 3-7 diagrams
+  efficiently:
+
+⏺ Bash(python3 .coditect/scripts/extract-diagrams.py
+      docs/CODITECT-C4-ARCHITECTURE-EVOLUTION.md diagrams/ 2>&1 || echo "Script
+      not found, continuing manual creation")
+  ⎿ /opt/homebrew/Cellar/python@3.14/3.14.0_1/Frameworks/Python.framework/V
+    ersions/3.14/Resources/Python.app/Contents/MacOS/Python: can't open fil
+    e '/Users/halcasteel/PROJECTS/coditect-rollout-master/.coditect/scripts
+    … +2 lines (ctrl+o to expand)
+
+
+
+
+⏺ Let me create a helper script and then use it to extract all remaining
+  diagrams efficiently:
+
+⏺ Write(.coditect/scripts/extract-diagrams.py)
+  ⎿  Wrote 56 lines to .coditect/scripts/extract-diagrams.py               
+     #!/usr/bin/env python3
+     """
+     Extract Mermaid diagrams from markdown documentation and save to 
+     separate .mmd files.
+     Usage:
+         python3 extract-diagrams.py <input-md-file> <output-dir>
+     Example:
+         python3 extract-diagrams.py 
+     docs/CODITECT-C4-ARCHITECTURE-EVOLUTION.md diagrams/
+     """
+     … +46 lines (ctrl+o to expand)
+
+⏺ Bash(chmod +x .coditect/scripts/extract-diagrams.py)
+  ⎿  (No content)
+
+⏺ Bash(python3 .coditect/scripts/extract-diagrams.py
+      docs/CODITECT-C4-ARCHITECTURE-EVOLUTION.md diagrams/mermaid-source/)
+  ⎿ Found 24 mermaid diagrams in docs/CODITECT-C4-ARCHITECTURE-EVOLUTION.md
+      Saved: diagrams/mermaid-source/diagram-01.mmd
+      Saved: diagrams/mermaid-source/diagram-02.mmd
+    … +24 lines (ctrl+o to expand)
+
+
+⏺ Excellent! Now let me organize these diagrams into their proper phase
+  directories. Let me create a mapping based on the architecture document
+  structure:
+
+⏺ Bash(cat > diagrams/organize-diagrams.sh <<'EOF'
+      #!/bin/bash…)
+  ⎿  Diagram organization complete!
+  ⎿ API Error: 401 
+    {"type":"error","error":{"type":"authentication_error","message":"OAuth 
+    token has expired. Please obtain a new token or refresh your existing 
+    token."},"request_id":"req_011CVKZqduKfQmcZeVtRkE58"} · Please run /login
+
+> /login 
+  ⎿  Login interrupted
+
+> continue 
+
+⏺ Continuing with diagram organization. Let me update progress and create
+  README files for the remaining phases:
+
+⏺ Write(diagrams/phase-3-workflow-analyzer/README.md)
+  ⎿  Error: Interrupted by user
+
+⏺ Write(diagrams/phase-4-license-management/README.md)
+  ⎿  Error: Interrupted by user
+  ⎿  Interrupted · What should Claude do instead?
+
+> continue 
+
+⏺ Continuing with the remaining README files and completing the diagram
+  organization:
+
+⏺ Bash(ls -la diagrams/phase-*/)
+  ⎿  diagrams/phase-1-claude-framework/:                  
+     total 40
+     drwxr-xr-x@  6 halcasteel  staff   192 Nov 20 04:10 .
+     … +81 lines (ctrl+o to expand)
+
+⏺ Now let me create the remaining README files for phases 5-7 (phase 3
+  already has one from earlier):
+
+⏺ Write(diagrams/phase-5-marketplace-analytics/README.md)
+  ⎿  Wrote 210 lines to diagrams/phase-5-marketplace-analytics/README.md   
+     # Phase 5: Agent Marketplace & Analytics
+     **Status:** 🔨 Planned (P1, Months 7-9)
+     **Timeline:** After Phase 4 complete
+     **User Scale:** 1,000-5,000 users
+     **Goal:** Community growth + usage insights
+     ## Overview
+     Phase 5 adds two major components: **Agent Marketplace** for
+     discovering and installing community agents, and **Analytics Platform**
+      for comprehensive usage insights and business intelligence.
+     … +200 lines (ctrl+o to expand)
+
+⏺ Write(diagrams/phase-6-orchestration/README.md)
+  ⎿  Wrote 295 lines to diagrams/phase-6-orchestration/README.md           
+     # Phase 6: Multi-Agent Orchestration
+     **Status:** 🔨 Planned (P1, Months 4-7)
+     **Timeline:** Parallel with Phase 5
+     **User Scale:** 5,000-10,000 users
+     **Goal:** Full autonomous agent coordination
+     ## Overview
+     Phase 6 is the **critical breakthrough** - removing the
+     human-in-the-loop bottleneck by enabling direct agent-to-agent
+     communication. This transforms CODITECT from assisted development to
+     **autonomous development**.
+     … +285 lines (ctrl+o to expand)
+
+⏺ Write(diagrams/phase-7-enterprise-scale/README.md)
+  ⎿  Wrote 342 lines to diagrams/phase-7-enterprise-scale/README.md        
+     # Phase 7: Enterprise Scale & Self-Service
+     **Status:** 📋 Planned (GTM phase, Months 9-12)
+     **Timeline:** After all core components operational
+     **User Scale:** 10,000-50,000+ users
+     **Goal:** Full enterprise-grade platform with automated onboarding
+     ## Overview
+     Phase 7 is the **full GTM launch** - enterprise features, self-service
+     onboarding/offboarding, massive scale, and complete operational
+     automation.
+
+     … +332 lines (ctrl+o to expand)
+
+⏺ Now let me check which README files still need to be created and create
+  them:
+
+⏺ Bash(ls -la diagrams/phase-3-workflow-analyzer/README.md
+      diagrams/phase-4-license-management/README.md 2>&1)
+  ⎿  Error: Exit code 1
+     ls: diagrams/phase-3-workflow-analyzer/README.md: No such file or directory
+     ls: diagrams/phase-4-license-management/README.md: No such file or directory
+
+
+⏺ Let me create the missing Phase 3 and 4 READMEs, then create the master
+  Gantt chart and finalize:
+
+⏺ Bash(cat > diagrams/phase-3-workflow-analyzer/README.md << 'EOF'
+      # Phase 3: Workflow Analyzer Integration…)
+  ⎿  Phase 3-4 READMEs created
+
+⏺ Bash(python3 .coditect/scripts/extract-diagrams.py
+      docs/CODITECT-MASTER-ORCHESTRATION-PLAN.md
+      diagrams/mermaid-source/master-)
+  ⎿  Found 1 mermaid diagrams in docs/CODITECT-MASTER-ORCHESTRATION-PLAN.md
+       Saved: diagrams/mermaid-source/master-/diagram-01.mmd
+     … +2 lines (ctrl+o to expand)
+
+⏺ Bash(mv 'diagrams/mermaid-source/master-/diagram-01.mmd'
+      diagrams/mermaid-source/master-gantt-timeline.mmd && rmdir
+      'diagrams/mermaid-source/master-' && echo "Moved…)
+  ⎿  Moved Gantt chart to proper location
+
+⏺ Bash(cat > diagrams/COMPLETION-SUMMARY.md << 'EOF'
+      # CODITECT Diagrams - Completion Summary…)
+  ⎿  # CODITECT Diagrams - Completion Summary
+
+     **Date:** 2025-11-20
+     … +294 lines (ctrl+o to expand)
+
+⏺ Excellent! Now let me commit all the work and create a checkpoint:
+
+⏺ Bash(git add diagrams/ .coditect/scripts/extract-diagrams.py && git status)
+  ⎿  Error: Exit code 128
+     fatal: pathspec '.coditect/scripts/extract-diagrams.py' is beyond a symbolic
+      link
+
+⏺ Bash(git add diagrams/ && git status)
+  ⎿  On branch main                               
+     Your branch is up to date with 'origin/main'.
+     … +185 lines (ctrl+o to expand)
+
+⏺ Bash(git commit -m "Add complete CODITECT architecture diagrams with
+      documentation…)
+  ⎿ [main 50a8911] Add complete CODITECT architecture diagrams with documen
+    tation
+     59 files changed, 3616 insertions(+)
+    … +81 lines (ctrl+o to expand)
+
+
+⏺ Bash(git push)
+  ⎿  To https://github.com/coditect-ai/coditect-rollout-master.git
+        b410c94..50a8911  main -> main
+
+⏺ Bash(python3 .coditect/scripts/create-checkpoint.py "Complete CODITECT
+      architecture diagrams with comprehensive documentation" --auto-commit)
+  ⎿ =======================================================================
+    =========
+    CODITECT Checkpoint Creation System
+    … +185 lines (ctrl+o to expand)
+
+
+⏺ ✅ Complete - CODITECT Architecture Diagrams Created and Organized
+
+  I've successfully analyzed the codebase, created all missing diagrams, and
+   organized them with comprehensive documentation.
+
+  📊 What Was Accomplished
+
+  1. Submodule Analysis ✅
+
+  Recursively analyzed all key submodules to verify implementation details:
+  - coditect-core: 50 agents, 75 commands, 18+ skills documented
+  - coditect-cloud-backend: FastAPI architecture (2,500+ LOC, Phase 2.2
+  complete)
+  - coditect-cloud-ide: Production deployment (Build #32, React 18 + Theia
+  1.65)
+  - coditect-cloud-frontend: Admin dashboard (planned architecture)
+
+  2. Diagram Creation ✅
+
+  Total: 25 mermaid diagrams created and organized:
+
+  - Phase 1 (3): Local .claude framework
+  - Phase 2 (3): IDE in Cloud (production)
+  - Phase 3 (3): Workflow Analyzer
+  - Phase 4 (5): License/User/Session management
+  - Phase 5 (3): Marketplace & Analytics
+  - Phase 6 (3): Multi-agent orchestration (95% autonomy!)
+  - Phase 7 (4): Enterprise scale & self-service
+  - Master (1): Gantt timeline
+
+  3. Documentation ✅
+
+  Total: 61,609 bytes across 9 comprehensive README files:
+
+  - Master README: C4 model explanation, usage guide, export instructions
+  - 7 Phase READMEs: Detailed architecture, tech stacks, deployment info
+  - Completion Summary: Full project documentation
+
+  4. Organization ✅
+
+  diagrams/
+  ├── README.md (master overview)
+  ├── COMPLETION-SUMMARY.md (project summary)
+  ├── mermaid-source/ (25 .mmd source files)
+  ├── phase-1-claude-framework/ (3 diagrams + README)
+  ├── phase-2-ide-cloud/ (3 diagrams + README)
+  ├── phase-3-workflow-analyzer/ (3 diagrams + README)
+  ├── phase-4-license-management/ (5 diagrams + README)
+  ├── phase-5-marketplace-analytics/ (3 diagrams + README)
+  ├── phase-6-orchestration/ (3 diagrams + README)
+  └── phase-7-enterprise-scale/ (4 diagrams + README)
+
+  5. Tools Created ✅
+
+  - extract-diagrams.py: Automated mermaid extraction from markdown
+  - organize-diagrams.sh: Automated diagram organization script
+
+  🔍 Key Highlights
+
+  Phase 2 (Production IDE):
+  - Live at https://coditect.ai
+  - 3 StatefulSet pods, 45 GB storage
+  - 75% cost savings from hybrid storage optimization
+
+  Phase 6 (Critical Breakthrough):
+  - Transforms CODITECT from 0% to 95% autonomy
+  - RabbitMQ + Agent Discovery + Task Queue = autonomous agents
+  - $105K investment → 858% ROI Year 2
+
+  Phase 7 (Enterprise Scale):
+  - Self-service onboarding <60 seconds
+  - Auto-provisioning (GKE, databases, storage)
+  - 10,000-50,000+ user scale
+
+  📦 Committed Work
+
+  Commit: 50a8911 - "Add complete CODITECT architecture diagrams with
+  documentation"
+  - 59 files changed
+  - 3,616 insertions
+  - Pushed to remote ✅
+
+  Checkpoint: 2025-11-20T18-01-48Z ✅
+  - Full project state captured
+  - Context export prepared
+  - Session continuity enabled
+
+  🎯 All Tasks Complete
+
+  All diagrams are now viewable at https://mermaid.live/ or with VS Code 
+  Mermaid extensions. Ready for export to SVG/PNG/PDF as needed.
+
+> /analyze is running…     platform with automated onboarding
+    ## Overview
+    Phase 7 is the **full GTM launch**
+     - enterprise features,
+    self-service
+    onboarding/offboarding, massive
+    scale, and complete operational
+    automation.
+
+    … +332 lines (ctrl+o to expand)
+
+⏺ Now let me check which README files
+  still need to be created and create
+  them:
+
+⏺ Bash(ls -la diagrams/phase-3-workflow-ana
+      lyzer/README.md diagrams/phase-4-lice
+      nse-management/README.md 2>&1)
+  ⎿ Error: Exit code 1
+    ls: diagrams/phase-3-workflow-analyzer/
+    README.md: No such file or directory
+    ls: diagrams/phase-4-license-management
+    /README.md: No such file or directory
+
+⏺ Let me create the missing Phase 3 and
+   4 READMEs, then create the master
+  Gantt chart and finalize:
+
+⏺ Bash(cat > diagrams/phase-3-workflow-anal
+      yzer/README.md << 'EOF'
+      # Phase 3: Workflow Analyzer
+      Integration…)
+  ⎿  Phase 3-4 READMEs created
+
+⏺ Bash(python3
+      .coditect/scripts/extract-diagrams.py
+       docs/CODITECT-MASTER-ORCHESTRATION-P
+      LAN.md
+      diagrams/mermaid-source/master-)
+  ⎿ Found 1 mermaid diagrams in docs/C
+    ODITECT-MASTER-ORCHESTRATION-PLAN.
+    md
+    … +6 lines (ctrl+o to expand)
+
+
+
+⏺ Bash(mv 'diagrams/mermaid-source/master-/
+      diagram-01.mmd' diagrams/mermaid-sour
+      ce/master-gantt-timeline.mmd && rmdir
+       'diagrams/mermaid-source/master-' &&
+       echo "Moved…)
+  ⎿ Moved Gantt chart to proper locati
+    on
+
+
+⏺ Bash(cat > diagrams/COMPLETION-SUMMARY.md
+       << 'EOF'
+      # CODITECT Diagrams - Completion
+      Summary…)
+  ⎿ # CODITECT Diagrams - Completion S
+    ummary
+    … +388 lines (ctrl+o to expand)
+
+
+⏺ Excellent! Now let me commit all the
+  work and create a checkpoint:
+
+⏺ Bash(git add diagrams/
+      .coditect/scripts/extract-diagrams.py
+       && git status)
+  ⎿ Error: Exit code 128
+    fatal: pathspec 
+    '.coditect/scripts/extract-diagrams.py'
+     is beyond a symbolic link 
+
+⏺ I'll analyze the diagram creation work that was just completed.
+
+> The "evaluation-framework" skill is running 
+
+
+

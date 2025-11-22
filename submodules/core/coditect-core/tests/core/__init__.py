@@ -1,0 +1,3 @@
+"""
+CODITECT Core Tests Package
+"""

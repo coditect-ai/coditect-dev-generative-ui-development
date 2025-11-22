@@ -19,8 +19,8 @@ This repository serves as the **MASTER PLAN** orchestration point for the comple
 - 📖 **[WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core/blob/main/WHAT-IS-CODITECT.md)** - Understanding the distributed intelligence nervous system
 - 📊 **[Visual Architecture Guide](https://github.com/coditect-ai/coditect-core/blob/main/diagrams/distributed-intelligence-architecture.md)** - 5 Mermaid diagrams showing complete system
 - 🧠 **[MEMORY-CONTEXT Architecture](https://github.com/coditect-ai/coditect-labs-learning/blob/main/MEMORY-CONTEXT-ARCHITECTURE.md)** - Eliminates catastrophic forgetting
-- 📘 **[Vision & Strategy](./docs/AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete ecosystem vision and market strategy
-- 📂 **[Naming Convention](./docs/REPO-NAMING-CONVENTION.md)** - Repository naming rules for 8 categories
+- 📘 **[Vision & Strategy](submodules/core/coditect-core/docs/02-architecture/vision/AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete ecosystem vision and market strategy
+- 📂 **[Naming Convention](./submodules/core/coditect-core/docs/03-project-planning/standards/REPO-NAMING-CONVENTION.md)** - Repository naming rules for 8 categories
 - 🎓 **[Training System](https://github.com/coditect-ai/coditect-core/blob/main/user-training/README.md)** - CODITECT Operator certification program
 - 🚀 **[Slash Command Quick Start](.coditect/1-2-3-SLASH-COMMAND-QUICK-START.md)** - Master all 81 commands in 3 steps (⭐ +4 hooks commands Nov 22)
 - 🤖 **AI Command Router** - Type `coditect-router "your request"` for instant command suggestions (never memorize again!)
@@ -31,7 +31,7 @@ This repository serves as the **MASTER PLAN** orchestration point for the comple
 
 This master project uses **git submodules** to coordinate **42 sub-projects** across the CODITECT ecosystem, organized into **8 category folders**.
 
-See [docs/REPO-NAMING-CONVENTION.md](docs/REPO-NAMING-CONVENTION.md) for the complete naming convention and rules.
+See [submodules/core/coditect-core/docs/03-project-planning/standards/REPO-NAMING-CONVENTION.md](submodules/core/coditect-core/docs/03-project-planning/standards/REPO-NAMING-CONVENTION.md) for the complete naming convention and rules.
 
 ### 📊 Architecture Diagrams
 
@@ -949,7 +949,7 @@ This master project enforces phase gates with quality criteria:
 2. **Beta → Pilot** (Month 7)
 3. **Pilot → GTM** (Month 9)
 
-See [docs/CODITECT-MASTER-ORCHESTRATION-PLAN.md](docs/CODITECT-MASTER-ORCHESTRATION-PLAN.md) for complete phase gate criteria.
+See [submodules/core/coditect-core/docs/03-project-planning/master-plans/CODITECT-MASTER-ORCHESTRATION-PLAN.md](submodules/core/coditect-core/docs/03-project-planning/master-plans/CODITECT-MASTER-ORCHESTRATION-PLAN.md) for complete phase gate criteria.
 
 ### Decision Authority
 
@@ -1035,9 +1035,9 @@ coditect-rollout-master/
 - 📖 [WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core/blob/main/WHAT-IS-CODITECT.md) - Distributed intelligence architecture
 - 📊 [Visual Architecture](https://github.com/coditect-ai/coditect-core/blob/main/diagrams/distributed-intelligence-architecture.md) - 5 comprehensive Mermaid diagrams
 - 🧠 [MEMORY-CONTEXT](https://github.com/coditect-ai/coditect-labs-learning/blob/main/MEMORY-CONTEXT-ARCHITECTURE.md) - Experiential intelligence layer
-- 📘 [Vision & Strategy](./docs/AZ1.AI-CODITECT-VISION-AND-STRATEGY.md) - Complete ecosystem vision and market strategy
-- 📋 [Master Plan](./docs/CODITECT-ROLLOUT-MASTER-PLAN.md) - Detailed implementation roadmap
-- 📂 [Naming Convention](./docs/REPO-NAMING-CONVENTION.md) - Repository naming rules
+- 📘 [Vision & Strategy](submodules/core/coditect-core/docs/02-architecture/vision/AZ1.AI-CODITECT-VISION-AND-STRATEGY.md) - Complete ecosystem vision and market strategy
+- 📋 [Master Plan](submodules/core/coditect-core/docs/03-project-planning/master-plans/CODITECT-ROLLOUT-MASTER-PLAN.md) - Detailed implementation roadmap
+- 📂 [Naming Convention](./submodules/core/coditect-core/docs/03-project-planning/standards/REPO-NAMING-CONVENTION.md) - Repository naming rules
 - 🎓 [Training System](https://github.com/coditect-ai/coditect-core/blob/main/user-training/README.md) - CODITECT Operator certification
 - 🤖 [AI Agent Config](./CLAUDE.md) - AI agent coordination guidelines
 
@@ -1050,7 +1050,7 @@ Checkpoints capture sprint completion and provide context for next sessions:
 - **[2025-11-16T09-26-41Z]** [TASKLISTs Updated and Checkpoint Automation System Complete](CHECKPOINTS/2025-11-16T09-26-41Z-TASKLISTs-Updated-and-Checkpoint-Automation-System-Complete.md)
 - **[2025-11-16T09-05-16Z]** [Checkpoint Automation System Implementation Complete](CHECKPOINTS/2025-11-16T09-05-16Z-Checkpoint-Automation-System-Implementation-Complete.md)
 - **[2025-11-16T08:34:53Z]** [Phase 0 Architecture Documentation Complete](CHECKPOINTS/2025-11-16T08-34-53Z-DISTRIBUTED-INTELLIGENCE-ARCHITECTURE-COMPLETE.md)
-- **[2025-11-16]** [TASKLISTs Updated Across All Submodules](docs/PROJECT-PLAN-UPDATE-2025-11-16-ARCHITECTURE-SPRINT.md)
+- **[2025-11-16]** [TASKLISTs Updated Across All Submodules](submodules/core/coditect-core/docs/03-project-planning/PROJECT-PLAN-UPDATE-2025-11-16-ARCHITECTURE-SPRINT.md)
 
 **Create new checkpoint:**
 ```bash

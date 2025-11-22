@@ -16,7 +16,7 @@ Before working on this project, understand the architecture:
 - 📖 **[WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core/blob/main/WHAT-IS-CODITECT.md)** - Distributed intelligence architecture
 - 🎓 **[Training System](https://github.com/coditect-ai/coditect-core/blob/main/user-training/README.md)** - CODITECT Operator training
 - 📘 **[AZ1.AI-CODITECT-VISION-AND-STRATEGY.md](AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete vision
-- 📂 **[REPO-NAMING-CONVENTION.md](docs/REPO-NAMING-CONVENTION.md)** - Repository naming rules for 8 categories
+- 📂 **[REPO-NAMING-CONVENTION.md](submodules/core/coditect-core/docs/03-project-planning/standards/REPO-NAMING-CONVENTION.md)** - Repository naming rules for 8 categories
 - 🚀 **[1-2-3-SLASH-COMMAND-QUICK-START.md](.coditect/1-2-3-SLASH-COMMAND-QUICK-START.md)** - Master all 72 commands in 3 steps
 - 🤖 **AI Command Router** (`coditect-router`) - Never memorize commands, just describe what you want in plain English!
 
@@ -78,7 +78,7 @@ coditect-rollout-master/
 
 **Key Pattern:** Every submodule has `.coditect -> ../../../.coditect` symlink enabling intelligent autonomous operation at every level. See [WHAT-IS-CODITECT.md](https://github.com/coditect-ai/coditect-core/blob/main/WHAT-IS-CODITECT.md) for complete architecture details.
 
-**Repository Naming:** All repos follow `coditect-{category}-{name}` convention. See [docs/REPO-NAMING-CONVENTION.md](docs/REPO-NAMING-CONVENTION.md) for rules.
+**Repository Naming:** All repos follow `coditect-{category}-{name}` convention. See [submodules/core/coditect-core/docs/03-project-planning/standards/REPO-NAMING-CONVENTION.md](submodules/core/coditect-core/docs/03-project-planning/standards/REPO-NAMING-CONVENTION.md) for rules.
 
 ---
 
@@ -146,8 +146,8 @@ When working in this repository, Claude should:
 1. **Read Master Plans First**
    ```bash
    # Start with these documents
-   docs/CODITECT-MASTER-ORCHESTRATION-PLAN.md
-   docs/CODITECT-ROLLOUT-MASTER-PLAN.md
+   submodules/core/coditect-core/docs/03-project-planning/master-plans/CODITECT-MASTER-ORCHESTRATION-PLAN.md
+   submodules/core/coditect-core/docs/03-project-planning/master-plans/CODITECT-ROLLOUT-MASTER-PLAN.md
    ```
 
 2. **Understand Submodule Dependencies**
