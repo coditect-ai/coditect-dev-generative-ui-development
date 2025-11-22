@@ -1,1 +1,1 @@
-submodules/core/coditect-core/WHAT-IS-CODITECT.md
+submodules/core/coditect-core/docs/02-architecture/distributed-intelligence/WHAT-IS-CODITECT.md
