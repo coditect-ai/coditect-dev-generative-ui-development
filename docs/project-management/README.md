@@ -12,7 +12,7 @@ This directory contains the **master project management documentation** for the 
 
 **Project Scope:**
 - **Duration:** August 27, 2025 → March 11, 2026 (197 days)
-- **Budget:** $884K total investment
+- **Budget:** $2.566M total investment (through Month 12)
 - **Current Phase:** Beta Testing (Active - Week 2 of 4)
 - **Next Milestone:** Beta Analysis - December 10, 2025
 - **Public Launch:** March 11, 2026 (109 days remaining)
@@ -28,7 +28,7 @@ This directory contains the **master project management documentation** for the 
 **Contents:**
 - Executive summary with current status dashboard
 - 6-phase rollout timeline (Foundation → Beta → Pilot → GTM → Scale → Evolve)
-- Budget breakdown ($884K across 6 months)
+- Budget breakdown ($2.566M through Month 12)
 - Milestone tracking and phase gates
 - Risk management and mitigation strategies
 - Success metrics and KPIs
