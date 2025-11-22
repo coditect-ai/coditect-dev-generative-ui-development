@@ -20,15 +20,79 @@ This repository orchestrates the complete AZ1.AI CODITECT platform rollout from 
 - **AI-First Development:** Designed for autonomous AI agents with human strategic guidance
 - **Zero Catastrophic Forgetting:** MEMORY-CONTEXT system preserves session continuity
 
-### Essential Reading
+---
 
-📖 **[WHAT-IS-CODITECT.md](WHAT-IS-CODITECT.md)** - Distributed intelligence architecture (START HERE)
-📊 **[Visual Architecture](diagrams/README.md)** - 24 C4 diagrams documenting 7-phase evolution
-🧠 **[MEMORY-CONTEXT Architecture](https://github.com/coditect-ai/coditect-labs-learning/blob/main/docs/02-architecture/MEMORY-CONTEXT-ARCHITECTURE.md)** - Session continuity system
-📋 **[PROJECT-PLAN.md](docs/project-management/PROJECT-PLAN.md)** - Complete rollout strategy and current status
-✅ **[TASKLIST.md](docs/project-management/TASKLIST.md)** - Checkbox-based progress tracking (530+ tasks)
-🎓 **[Training System](https://github.com/coditect-ai/coditect-core/blob/main/user-training/README.md)** - CODITECT Operator certification (55K+ words)
-🤖 **[CLAUDE.md](CLAUDE.md)** - AI agent coordination and development workflow
+## 📖 Essential Reading
+
+**START HERE (in order):**
+
+1. **[WHAT-IS-CODITECT.md](WHAT-IS-CODITECT.md)** - Distributed intelligence architecture (CRITICAL)
+2. **[NAVIGATING DOCUMENTATION](#-navigating-documentation)** - How to find the right documentation
+3. **[docs/project-management/PROJECT-PLAN.md](docs/project-management/PROJECT-PLAN.md)** - Complete rollout strategy
+4. **[docs/project-management/TASKLIST.md](docs/project-management/TASKLIST.md)** - Checkbox-based progress tracking (530+ tasks)
+5. **[CLAUDE.md](CLAUDE.md)** - AI agent coordination and development workflow
+
+**Quick Links:**
+- 📊 [Visual Architecture](diagrams/README.md) - 24 C4 diagrams documenting 7-phase evolution
+- 🧠 [MEMORY-CONTEXT Architecture](https://github.com/coditect-ai/coditect-labs-learning/blob/main/docs/02-architecture/MEMORY-CONTEXT-ARCHITECTURE.md) - Session continuity system
+- 🎓 [Training System](https://github.com/coditect-ai/coditect-core/blob/main/user-training/README.md) - CODITECT Operator certification (55K+ words)
+
+---
+
+## 🗺️ Navigating Documentation
+
+**This repository uses a hierarchical documentation structure** - each major directory has its own `README.md` (for humans) and `CLAUDE.md` (for AI agents) providing directory-specific context.
+
+### Documentation Hierarchy
+
+```
+coditect-rollout-master/
+├── README.md ⭐ YOU ARE HERE - Master overview and navigation guide
+├── CLAUDE.md - AI agent orchestration and workflows
+│
+├── docs/
+│   ├── project-management/
+│   │   ├── README.md 📋 - Project planning navigation (8.4KB)
+│   │   ├── CLAUDE.md - AI context for planning tasks
+│   │   ├── PROJECT-PLAN.md - Complete rollout strategy (72KB)
+│   │   └── TASKLIST.md - 530+ tasks with checkboxes (23KB)
+│   │
+│   ├── adrs/
+│   │   ├── README.md 🏛️ - Architecture decisions index (12KB)
+│   │   ├── CLAUDE.md - AI context for ADR work
+│   │   └── project-intelligence/ - 8 ADRs for Project Intelligence Platform
+│   │
+│   └── security/
+│       ├── README.md 🔒 - Security documentation guide (9.5KB)
+│       ├── CLAUDE.md - AI context for security operations
+│       └── coditect-google-security-advisories/ - GCP security notifications
+│
+├── scripts/
+│   ├── README.md 🔧 - Automation scripts catalog (13KB)
+│   ├── CLAUDE.md - AI context for script execution
+│   └── (19 Python + 6 shell scripts)
+│
+├── diagrams/ - 24 C4 architecture diagrams
+├── submodules/ - 46 repositories across 8 categories
+└── MEMORY-CONTEXT/ - Session exports and context preservation
+```
+
+### Finding the Right Documentation
+
+**For Project Planning & Status:**
+→ Start with [docs/project-management/README.md](docs/project-management/README.md)
+
+**For Architecture Decisions:**
+→ Start with [docs/adrs/README.md](docs/adrs/README.md)
+
+**For Security Information:**
+→ Start with [docs/security/README.md](docs/security/README.md)
+
+**For Automation Scripts:**
+→ Start with [scripts/README.md](scripts/README.md)
+
+**For AI Agents:**
+→ Read this README.md first, then navigate to relevant subdirectory `CLAUDE.md` for task-specific context
 
 ---
 
@@ -53,9 +117,19 @@ coditect-rollout-master/
 ├── WHAT-IS-CODITECT.md -> ...                    # Architecture documentation (symlink)
 │
 ├── docs/                                         # Master orchestration documentation
-│   ├── project-management/                       # PROJECT-PLAN.md (72KB), TASKLIST.md (23KB)
-│   ├── adrs/project-intelligence/                # 10 ADRs for Project Intelligence Platform
-│   └── security/                                 # GCP security advisories
+│   ├── project-management/                       # 📋 PROJECT-PLAN.md (72KB), TASKLIST.md (23KB)
+│   │   ├── README.md (8.4KB) ⭐                  # Navigation guide for planning docs
+│   │   └── CLAUDE.md (5.5KB)                     # AI context for planning tasks
+│   │
+│   ├── adrs/                                     # 🏛️ Architecture Decision Records
+│   │   ├── README.md (12KB) ⭐                   # ADR index and navigation
+│   │   ├── CLAUDE.md (5.1KB)                     # AI context for ADR work
+│   │   └── project-intelligence/ - 10 ADRs
+│   │
+│   └── security/                                 # 🔒 GCP security advisories
+│       ├── README.md (9.5KB) ⭐                  # Security docs guide
+│       ├── CLAUDE.md (5.5KB)                     # AI context for security ops
+│       └── coditect-google-security-advisories/
 │
 ├── diagrams/                                     # 24 C4 architecture diagrams
 │   ├── phase-1-claude-framework/
@@ -65,6 +139,11 @@ coditect-rollout-master/
 │   ├── phase-5-marketplace-analytics/
 │   ├── phase-6-orchestration/
 │   └── phase-7-enterprise-scale/
+│
+├── scripts/                                      # 🔧 Orchestration automation
+│   ├── README.md (13KB) ⭐                       # Scripts catalog and usage
+│   ├── CLAUDE.md (6.5KB)                         # AI context for script execution
+│   └── (19 Python + 6 shell scripts)
 │
 ├── submodules/                                   # 46 submodules in 8 categories
 │   ├── core/       # 3 repos  - Core CODITECT framework
@@ -76,14 +155,11 @@ coditect-rollout-master/
 │   ├── gtm/        # 6 repos  - Go-to-market materials
 │   └── labs/       # 12 repos - Research and next-generation
 │
-├── MEMORY-CONTEXT/                               # Session exports and context preservation
-│   ├── sessions/                                 # Session exports
-│   ├── checkpoints/                              # Sprint checkpoints
-│   ├── dedup_state/                              # Message deduplication (7,507+ unique messages)
-│   └── exports-archive/                          # Archived exports
-│
-├── scripts/                                      # Orchestration automation scripts
-└── templates/                                    # Project templates
+└── MEMORY-CONTEXT/                               # Session exports and context preservation
+    ├── sessions/                                 # Session exports
+    ├── checkpoints/                              # Sprint checkpoints
+    ├── dedup_state/                              # Message deduplication (7,507+ unique messages)
+    └── exports-archive/                          # Archived exports
 ```
 
 ---
@@ -180,56 +256,87 @@ coditect-rollout-master/
 
 ## Documentation Structure
 
-### Master Planning Documents (docs/project-management/)
+### Master Planning & Orchestration
 
-- **[PROJECT-PLAN.md](docs/project-management/PROJECT-PLAN.md)** (72KB)
-  - Complete rollout strategy from Beta through GTM
-  - Current status: Beta Testing Week 2 of 4
-  - Budget: $2.566M total investment
-  - Timeline: 109 days to public launch (March 11, 2026)
+**📋 [docs/project-management/](docs/project-management/)** - Master planning and task tracking
+- **[README.md](docs/project-management/README.md)** (8.4KB) - Navigation guide for planning documentation
+- **[CLAUDE.md](docs/project-management/CLAUDE.md)** (5.5KB) - AI agent context for planning tasks
+- **[PROJECT-PLAN.md](docs/project-management/PROJECT-PLAN.md)** (72KB) - Complete rollout strategy (Beta → Pilot → GTM)
+- **[TASKLIST.md](docs/project-management/TASKLIST.md)** (23KB) - 530+ tasks with checkbox tracking
+- **Organization Reports:** Comprehensive audits, cleanup summaries, reorganization status
+- **Timeline Visualizations:** JSON data + interactive HTML Gantt charts
 
-- **[TASKLIST.md](docs/project-management/TASKLIST.md)** (23KB)
-  - 530+ tasks with checkbox tracking
-  - Phase 0: 350+ completed tasks ✅
-  - Phase 1-5: 180+ pending tasks
-  - Real-time progress updates
-
-- **Organization Reports**
-  - COMPREHENSIVE-ORGANIZATION-AUDIT-2025-11-22.md
-  - DOCS-CLEANUP-SUMMARY.md
-  - COMPLETE-ORGANIZATION-REPORT-2025-11-22.md
-
-### Architecture Decision Records (docs/adrs/project-intelligence/)
-
-10 ADRs documenting the Project Intelligence Platform architecture:
-- ADR-001 through ADR-008: Technology choices (Git, PostgreSQL, ChromaDB, FastAPI, React, GCP)
-- ADR-COMPLIANCE-REPORT.md: Quality verification
-
-### Security Documentation (docs/security/)
-
-Google Cloud Platform security advisories and compliance documentation for production deployment.
-
-### Diagrams Directory (diagrams/)
-
-24 C4 Model diagrams across 7 phases - see [Architecture Diagrams](#architecture-diagrams) below.
-
-### Submodule Documentation
-
-Each of the 46 submodules contains:
-- **PROJECT-PLAN.md** - Submodule-specific implementation plan
-- **TASKLIST.md** - Submodule-specific progress tracking
-- **README.md** - User-facing overview
-- **CLAUDE.md** - AI agent guidelines (in most submodules)
+**📖 Quick Guide:**
+- Current status: Read PROJECT-PLAN.md Executive Summary
+- Active tasks: Check TASKLIST.md for ⚡ ACTIVE phase
+- Timeline: Open PROJECT-TIMELINE-INTERACTIVE.html in browser
+- Details: Review README.md for complete documentation inventory
 
 ---
 
-## Architecture Diagrams
+### Architecture Decision Records
+
+**🏛️ [docs/adrs/](docs/adrs/)** - Architecture decisions documentation
+- **[README.md](docs/adrs/README.md)** (12KB) - ADR index and navigation guide
+- **[CLAUDE.md](docs/adrs/CLAUDE.md)** (5.1KB) - AI agent context for ADR-related work
+- **project-intelligence/** - 10 ADRs documenting Project Intelligence Platform
+  - ADR-001 through ADR-008: Technology choices (Git, PostgreSQL, ChromaDB, FastAPI, React, GCP)
+  - ADR-COMPLIANCE-REPORT.md: Cross-ADR validation and consistency check
+
+**📖 Quick Guide:**
+- Technology stack: Review ADRs 002, 003, 005, 006, 007
+- Multi-tenancy: ADR-004 (schema-based approach)
+- Access control: ADR-008 (RBAC)
+- Data source: ADR-001 (Git as source of truth)
+
+---
+
+### Security Documentation
+
+**🔒 [docs/security/](docs/security/)** - Security advisories and compliance
+- **[README.md](docs/security/README.md)** (9.5KB) - Security documentation guide
+- **[CLAUDE.md](docs/security/CLAUDE.md)** (5.5KB) - AI agent context for security operations
+- **coditect-google-security-advisories/** - GCP security notifications
+  - container-contract.html (300KB): GCP Cloud Run security requirements
+  - Security advisory exports from GCP Security Command Center
+
+**📖 Quick Guide:**
+- Container security: Review container-contract.html
+- Recent advisories: Check coditect-google-security-advisories/
+- Best practices: See README.md security checklist
+- Incident response: Follow security incident workflow in README.md
+
+---
+
+### Automation Scripts
+
+**🔧 [scripts/](scripts/)** - Orchestration automation and utilities
+- **[README.md](scripts/README.md)** (13KB) - Complete scripts catalog and usage guide
+- **[CLAUDE.md](scripts/CLAUDE.md)** (6.5KB) - AI agent context for script execution
+- **19 Python scripts + 6 shell scripts** organized by category:
+  - Project initialization and setup
+  - Git and submodule operations
+  - Timeline and documentation generation
+  - MEMORY-CONTEXT management
+  - Reporting and status
+
+**📖 Quick Guide:**
+- Submodule sync: Use `sync-all-submodules.sh` (never raw git commands)
+- Timeline generation: Run `generate-enhanced-timeline.py` after PROJECT-PLAN updates
+- New projects: Execute `coditect-project-init.sh` with interactive prompts
+- Script safety: Review CLAUDE.md for critical constraints
+
+---
+
+### Visual Architecture
+
+**📊 [diagrams/](diagrams/)** - 24 C4 Model architecture diagrams
 
 **Complete C4 Model architecture** documenting evolution from Phase 1 (local framework) through Phase 7 (enterprise scale).
 
 **[📂 View All Diagrams](diagrams/README.md)** | **[📈 Master Timeline](diagrams/mermaid-source/master-gantt-timeline.mmd)**
 
-### Quick Access by Phase
+#### Quick Access by Phase
 
 | Phase | Status | Focus | Diagrams |
 |-------|--------|-------|----------|
@@ -242,6 +349,16 @@ Each of the 46 submodules contains:
 | **[Phase 7](diagrams/phase-7-enterprise-scale/)** | 📋 Planned | Enterprise Scale & Self-Service | [C1](diagrams/phase-7-enterprise-scale/phase7-c1-system-context.md) · [C2](diagrams/phase-7-enterprise-scale/phase7-c2-self-service.md) · [C3×2](diagrams/phase-7-enterprise-scale/) |
 
 **Total:** 24 comprehensive diagram docs | **Methodology:** C4 Model (Context → Container → Component)
+
+---
+
+### Submodule Documentation
+
+**Each of the 46 submodules contains:**
+- **PROJECT-PLAN.md** - Submodule-specific implementation plan
+- **TASKLIST.md** - Submodule-specific progress tracking
+- **README.md** - User-facing overview
+- **CLAUDE.md** - AI agent guidelines (in most submodules)
 
 ---
 
@@ -418,9 +535,9 @@ coditect-rollout-master/
 See [CLAUDE.md](CLAUDE.md) for AI agent coordination guidelines and development workflow.
 
 For humans:
-1. Read master planning documents in docs/project-management/
-2. Follow git submodule workflow in CLAUDE.md
-3. Update TASKLIST.md with progress
+1. Read master planning documents in [docs/project-management/](docs/project-management/)
+2. Follow git submodule workflow in [CLAUDE.md](CLAUDE.md)
+3. Update [TASKLIST.md](docs/project-management/TASKLIST.md) with progress
 4. Create checkpoint after completing work
 
 ---

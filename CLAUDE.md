@@ -2,119 +2,167 @@
 
 ## Project Overview
 
-**CODITECT Rollout Master** is the master orchestration repository coordinating the complete AZ1.AI CODITECT platform rollout through **46 git submodules** organized across **8 category folders**. This repository demonstrates CODITECT's distributed intelligence architecture in action.
+Master orchestration repository coordinating **46 git submodules** across **8 category folders** for complete AZ1.AI CODITECT platform rollout (Beta → Pilot → GTM).
 
-**Current Phase:** Beta Testing (Active - Nov 12 to Dec 10, 2025)
-**Public Launch Target:** March 11, 2026 (109 days remaining)
+**Current Phase:** Beta Testing (Active - Week 2 of 4)
+**Public Launch:** March 11, 2026 (109 days remaining)
+**Architecture:** Distributed intelligence via .coditect symlink chains
+
+---
 
 ## Essential Reading
 
-**YOU MUST read these documents before working in this repository:**
+**READ FIRST (in order):**
 
-1. **[WHAT-IS-CODITECT.md](WHAT-IS-CODITECT.md)** - Understanding the distributed intelligence architecture (CRITICAL)
-2. **[docs/project-management/PROJECT-PLAN.md](docs/project-management/PROJECT-PLAN.md)** - Complete rollout strategy and current status
-3. **[docs/project-management/TASKLIST.md](docs/project-management/TASKLIST.md)** - Checkbox-based progress tracking
-4. **[README.md](README.md)** - Repository overview and architecture
+1. **[WHAT-IS-CODITECT.md](WHAT-IS-CODITECT.md)** - Distributed intelligence architecture (CRITICAL)
+2. **[README.md](README.md)** - Repository overview and navigation guide
+3. **[docs/project-management/PROJECT-PLAN.md](docs/project-management/PROJECT-PLAN.md)** - Complete rollout strategy
+4. **[docs/project-management/TASKLIST.md](docs/project-management/TASKLIST.md)** - 530+ tasks with checkbox tracking
+
+---
+
+## 📂 Hierarchical Documentation
+
+**This repository uses hierarchical CLAUDE.md files** - navigate to subdirectory CLAUDE.md for task-specific AI agent context.
+
+### Documentation Structure
+
+```
+ROOT (you are here)
+├── CLAUDE.md ⭐ - Master orchestration and submodule coordination
+│
+├── docs/project-management/CLAUDE.md - Project planning and task management
+│   → Read this for: PROJECT-PLAN/TASKLIST updates, sprint planning, milestone tracking
+│
+├── docs/adrs/CLAUDE.md - Architecture decision documentation
+│   → Read this for: ADR creation/review, technology choices, architectural constraints
+│
+├── docs/security/CLAUDE.md - Security operations and compliance
+│   → Read this for: Security advisories, incident response, container compliance
+│
+└── scripts/CLAUDE.md - Automation script execution
+    → Read this for: Running scripts, submodule sync, timeline generation
+```
+
+### When to Read Subdirectory CLAUDE.md
+
+**Project Planning Tasks** → docs/project-management/CLAUDE.md
+- Updating PROJECT-PLAN.md or TASKLIST.md
+- Sprint planning and milestone tracking
+- Progress reporting and status updates
+- Timeline visualization regeneration
+
+**Architecture Tasks** → docs/adrs/CLAUDE.md
+- Creating or reviewing ADRs
+- Understanding technology stack choices
+- Implementing features per architectural constraints
+- Validating cross-ADR consistency
+
+**Security Tasks** → docs/security/CLAUDE.md
+- Reviewing GCP security advisories
+- Container security compliance
+- Incident response workflows
+- Security best practices for deployments
+
+**Script Execution** → scripts/CLAUDE.md
+- Running submodule sync scripts
+- Generating documentation/timelines
+- Project initialization workflows
+- MEMORY-CONTEXT management
+
+---
 
 ## Repository Structure
 
 ```
 coditect-rollout-master/
-├── .coditect -> submodules/core/coditect-core    # The CODITECT brain (distributed intelligence)
-├── .claude -> .coditect                          # Claude Code compatibility symlink
-├── docs/                                         # Master orchestration documentation
-│   ├── project-management/                       # PROJECT-PLAN.md and TASKLIST.md
-│   ├── adrs/                                     # Architecture Decision Records
-│   └── security/                                 # Security documentation
-├── submodules/                                   # 46 submodules in 8 categories
-│   ├── core/       # 3 repos  - Core CODITECT framework
-│   ├── cloud/      # 4 repos  - Cloud platform (optional SaaS)
-│   ├── dev/        # 10 repos - Developer tools and CLI
-│   ├── market/     # 2 repos  - Agent marketplace
-│   ├── docs/       # 5 repos  - Documentation sites
-│   ├── ops/        # 4 repos  - Operations and distribution
-│   ├── gtm/        # 6 repos  - Go-to-market materials
-│   └── labs/       # 12 repos - Research and next-generation
-├── MEMORY-CONTEXT/                               # Session exports and context preservation
-└── scripts/                                      # Orchestration automation scripts
+├── .coditect -> submodules/core/coditect-core    # CODITECT brain
+├── .claude -> .coditect                          # Claude Code compatibility
+├── docs/                                         # Master documentation
+│   ├── project-management/ - PROJECT-PLAN.md (72KB) + TASKLIST.md (23KB)
+│   ├── adrs/ - 10 ADRs for Project Intelligence Platform
+│   └── security/ - GCP security advisories
+├── diagrams/ - 24 C4 architecture diagrams (7 phases)
+├── scripts/ - 19 Python + 6 shell automation scripts
+├── submodules/ - 46 repositories across 8 categories
+└── MEMORY-CONTEXT/ - Session exports and context preservation
 ```
 
-## Developer Environment Setup
+---
 
-### Prerequisites
+## Prerequisites
 
-IMPORTANT: Install these tools before working in this repository:
+**Required Tools:**
+- Git 2.25+ (submodule support)
+- Python 3.10+
+- Claude Code (Anthropic CLI)
 
-- **Git** (with submodule support): `git --version` should show 2.25+
-- **Python 3.10+**: For CODITECT automation scripts
-- **Claude Code**: Anthropic's official CLI (recommended)
-
-### Initial Setup
-
+**Initial Setup:**
 ```bash
-# Clone with all 46 submodules
 git clone --recurse-submodules https://github.com/coditect-ai/coditect-rollout-master.git
-
-# Or if already cloned, initialize submodules
+# OR if already cloned:
 git submodule update --init --recursive
 ```
 
-## Repository Etiquette
+---
 
-### IMPORTANT: Git Submodule Workflow
+## Git Submodule Workflow
 
-**YOU MUST follow this workflow when working with submodules:**
+### CRITICAL: Always Follow This Pattern
 
-#### Working in a Submodule
+**Working in a Submodule:**
 
 ```bash
-# 1. Navigate to the submodule
+# 1. Navigate to submodule
 cd submodules/cloud/coditect-cloud-backend
 
-# 2. Ensure you're on the correct branch
+# 2. Ensure on main branch
 git checkout main
 git pull
 
-# 3. Make changes, commit, and push IN THE SUBMODULE
+# 3. Make changes, commit, push IN THE SUBMODULE
 git add .
 git commit -m "feat: Add user authentication"
 git push
 
-# 4. Return to master repo and update the submodule reference
+# 4. Return to master and update pointer
 cd ../../..
 git add submodules/cloud/coditect-cloud-backend
 git commit -m "Update cloud backend: Add user authentication"
 git push
 ```
 
-**CRITICAL:** Always commit and push in the submodule FIRST, then update the pointer in the master repo.
+**CRITICAL:** Commit and push in submodule FIRST, then update pointer in master repo.
 
-#### Updating All Submodules
+**Syncing All Submodules:**
 
 ```bash
-# Pull latest changes from all submodules
-git submodule update --remote --merge
+# Use the sync script (NEVER use raw git submodule update)
+./scripts/sync-all-submodules.sh
 
 # Review changes
 git status
 
 # Commit pointer updates
 git add submodules/
-git commit -m "Update all submodule pointers to latest"
+git commit -m "Sync all submodules to latest"
 git push
 ```
 
-### Branch Naming Convention
+**Safety:** Always use `scripts/sync-all-submodules.sh` instead of raw git commands - it handles detached HEAD states automatically.
 
-- `main` - Production-ready code (protected)
+---
+
+## Branch Naming & Commits
+
+**Branch Convention:**
+- `main` - Production-ready (protected)
 - `feature/short-description` - New features
 - `fix/short-description` - Bug fixes
-- `docs/short-description` - Documentation updates
+- `docs/short-description` - Documentation
 - `refactor/short-description` - Code refactoring
 
-### Commit Message Format
-
-Follow Conventional Commits:
+**Commit Format:**
 
 ```
 <type>(<scope>): <subject>
@@ -127,13 +175,14 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 **Types:** `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`
 
+---
+
 ## Development Workflow
 
-### Explore → Plan → Code → Commit
+### 1. EXPLORE - Understand Current State
 
-**1. EXPLORE** - Understand the current state
 ```bash
-# Read master planning documents
+# Read master planning
 cat docs/project-management/PROJECT-PLAN.md | head -100
 cat docs/project-management/TASKLIST.md | grep '\[ \]' | head -20
 
@@ -141,28 +190,103 @@ cat docs/project-management/TASKLIST.md | grep '\[ \]' | head -20
 git submodule status
 ```
 
-**2. PLAN** - Create implementation plan
+### 2. PLAN - Create Implementation Plan
+
 - Identify which submodules need changes
-- Check for cross-submodule dependencies
+- Check cross-submodule dependencies
 - Review relevant ADRs in docs/adrs/
 - Update TASKLIST.md with new tasks
 
-**3. CODE** - Implement changes
+### 3. CODE - Implement Changes
+
 - Work in one submodule at a time
 - Follow submodule's CLAUDE.md guidelines
-- Update submodule documentation as you go
+- Update submodule documentation
 
-**4. COMMIT** - Checkpoint your work
+### 4. COMMIT - Checkpoint Work
+
 ```bash
-# Create automated checkpoint (after significant work)
 python3 .coditect/scripts/create-checkpoint.py "Sprint description" --auto-commit
 ```
 
-## Unexpected Behaviors & Important Notes
+---
+
+## Common Tasks
+
+### Sync Submodules to Latest
+
+```bash
+./scripts/sync-all-submodules.sh
+git add submodules/
+git commit -m "Sync all submodules to latest"
+git push
+```
+
+### Create Project Checkpoint
+
+```bash
+python3 .coditect/scripts/create-checkpoint.py "Description of work completed" --auto-commit
+```
+
+### Regenerate Timeline After PROJECT-PLAN Updates
+
+```bash
+cd scripts/
+python generate-enhanced-timeline.py
+# Verify: open ../docs/project-management/PROJECT-TIMELINE-INTERACTIVE.html
+```
+
+### Verify Distributed Intelligence
+
+```bash
+./scripts/verify-distributed-intelligence.sh
+```
+
+---
+
+## AI Agent Coordination
+
+### Master Planning Documents
+
+**AI agents MUST read before making changes:**
+
+1. docs/project-management/PROJECT-PLAN.md - Overall rollout strategy
+2. docs/project-management/TASKLIST.md - Current progress
+3. Subdirectory CLAUDE.md - Task-specific context
+
+### Human Approval Required For
+
+**YOU MUST request human approval for:**
+
+- Architecture changes affecting multiple submodules
+- New dependencies or technology additions
+- Budget changes (>$5K)
+- Timeline adjustments
+- Security-related changes
+
+Provide clear recommendations with pros/cons for human decision.
+
+---
+
+## Security & Secrets
+
+**NEVER commit:**
+- API keys, tokens, credentials
+- `.env` files with secrets
+- SSL certificates or private keys
+
+**ALWAYS use:**
+- Google Cloud Secret Manager (production)
+- `.gitignore` for local secrets
+- Environment variables for configuration
+
+---
+
+## Unexpected Behaviors
 
 ### Submodule Detached HEAD
 
-**Problem:** After `git submodule update`, submodules may be in detached HEAD state.
+**Problem:** After `git submodule update`, submodule in detached HEAD state.
 
 **Solution:**
 ```bash
@@ -176,7 +300,7 @@ git commit -m "Fix detached HEAD in submodule"
 
 ### Merge Conflicts in Submodules
 
-**Problem:** Submodule has merge conflicts after `git submodule update --remote`.
+**Problem:** Submodule has conflicts after `git submodule update --remote`.
 
 **Solution:**
 ```bash
@@ -191,89 +315,30 @@ git add submodules/conflicted-submodule
 git commit -m "Resolve merge conflicts in submodule"
 ```
 
-### MEMORY-CONTEXT Architecture
+---
 
-**IMPORTANT:** This repository uses MEMORY-CONTEXT for session preservation:
+## MEMORY-CONTEXT Architecture
+
+**Session Preservation System:**
 
 - `/MEMORY-CONTEXT/sessions/` - Session exports (read at session start)
 - `/MEMORY-CONTEXT/checkpoints/` - Sprint checkpoints
-- `/MEMORY-CONTEXT/dedup_state/` - Deduplicated message store (7,507+ unique messages)
+- `/MEMORY-CONTEXT/dedup_state/` - Deduplicated messages (7,507+ unique)
 
-**Always create checkpoints after completing work** to enable context continuity across sessions.
+**Always create checkpoints after completing work** to enable context continuity.
 
-## AI Agent Coordination
-
-### Master Planning Documents
-
-AI agents MUST read these before making changes:
-
-1. **docs/project-management/PROJECT-PLAN.md** - Overall rollout strategy
-2. **docs/project-management/TASKLIST.md** - Current progress tracking
-3. **Per-submodule PROJECT-PLAN.md** - Submodule-specific plans
-
-### Human Checkpoints Required
-
-**YOU MUST request human approval for:**
-
-- Architecture changes affecting multiple submodules
-- New dependencies or technology additions
-- Budget changes (>$5K)
-- Timeline adjustments
-- Security-related changes
-
-Provide clear recommendations with pros/cons for human decision-making.
-
-## Security & Secrets
-
-**NEVER commit:**
-- API keys, tokens, credentials
-- `.env` files with secrets
-- SSL certificates or private keys
-
-**ALWAYS use:**
-- Google Cloud Secret Manager (production)
-- `.gitignore` for local secrets
-- Environment variables for configuration
-
-## Common Tasks
-
-### Create Checkpoint (After Completing Work)
-
-```bash
-python3 .coditect/scripts/create-checkpoint.py "Description of work completed" --auto-commit
-```
-
-This creates:
-- Checkpoint document in CHECKPOINTS/
-- MEMORY-CONTEXT session export
-- Updates README.md with checkpoint link
-- Commits all changes to git
-
-### Sync All Submodules
-
-```bash
-# Update all to latest
-git submodule update --remote --merge
-
-# Commit updates
-git add submodules/
-git commit -m "Sync all submodules to latest"
-git push
-```
-
-### Add New Submodule
-
-```bash
-git submodule add https://github.com/coditect-ai/new-repo.git submodules/category/new-repo
-git commit -m "Add new-repo submodule to category"
-git push
-```
+---
 
 ## Support & Troubleshooting
 
-- **Submodule Issues:** See [Git Submodules Documentation](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
-- **CODITECT Framework:** See `.coditect/README.md` or [coditect-core repository](https://github.com/coditect-ai/coditect-core)
-- **Project Questions:** Review docs/project-management/ directory
+**Documentation:**
+- Submodule issues: [Git Submodules Documentation](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
+- CODITECT framework: `.coditect/README.md`
+- Project questions: docs/project-management/
+
+**Contact:** Hal Casteel, Founder/CEO/CTO
+
+---
 
 ## Current Status
 
