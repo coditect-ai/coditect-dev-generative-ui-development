@@ -2,7 +2,7 @@
 
 **Last Updated:** November 22, 2025
 **Status:** ✅ Verified and Current
-**Total Components:** 177 (52 Agents + 26 Skills + 78 Commands + 21 Scripts)
+**Total Components:** 180 (53 Agents + 27 Skills + 79 Commands + 21 Scripts)
 
 ---
 
@@ -10,16 +10,16 @@
 
 | Type | Count | Status | Notes |
 |------|-------|--------|-------|
-| **Agents** | 52 | ✅ Operational | 2 new (discovery, structure) |
-| **Skills** | 26 | ✅ Operational | 5 new submodule skills |
-| **Commands** | 78 | ✅ Operational | 1 new (/new-project) |
+| **Agents** | 53 | ✅ Operational | 3 new (discovery, structure, librarian) |
+| **Skills** | 27 | ✅ Operational | 6 new (5 submodule + 1 documentation) |
+| **Commands** | 79 | ✅ Operational | 2 new (/new-project, /documentation-librarian) |
 | **Scripts** | 21 | ✅ Operational | 4 new submodule scripts |
 | **Hooks** | 0 | — | None configured |
-| **Total** | **177** | ✅ | Production-ready |
+| **Total** | **180** | ✅ | Production-ready |
 
 ---
 
-## 🤖 AGENTS (52 Total)
+## 🤖 AGENTS (53 Total)
 
 ### Project Lifecycle & Discovery (4 agents)
 1. **project-discovery-specialist** ⭐ NEW
@@ -299,33 +299,43 @@
     - Testing infrastructure
     - Path: `agents/codi-test-engineer.md`
 
+### Documentation & Knowledge Management (1 agent) ⭐ NEW
+48. **documentation-librarian** ⭐ NEW
+    - Documentation organization and maintenance
+    - Navigation system creation (README.md, CLAUDE.md)
+    - Content deduplication and consolidation
+    - Cross-reference validation and fixing
+    - Automated freshness monitoring
+    - Documentation quality assurance
+    - Path: `agents/documentation-librarian.md`
+
 ### Business Intelligence & Analysis (2 agents)
-48. **business-intelligence-analyst**
+49. **business-intelligence-analyst**
     - Market sizing and analysis
     - Competitive landscape evaluation
     - Financial modeling
     - Path: `agents/business-intelligence-analyst.md`
 
-49. **venture-capital-business-analyst**
+50. **venture-capital-business-analyst**
     - Investment decision analysis
     - Series A-B valuations
     - Strategic positioning for investment
     - Path: `agents/venture-capital-business-analyst.md`
 
 ### Educational Specialists (3 agents)
-50. **ai-curriculum-specialist**
+51. **ai-curriculum-specialist**
     - Master curriculum development
     - Educational architecture
     - Multi-level content strategy
     - Path: `agents/ai-curriculum-specialist.md`
 
-51. **educational-content-generator**
+52. **educational-content-generator**
     - Multi-level content creation
     - Pedagogical frameworks
     - NotebookLM optimization
     - Path: `agents/educational-content-generator.md`
 
-52. **assessment-creation-agent**
+53. **assessment-creation-agent**
     - Adaptive assessment design
     - Bias detection and mitigation
     - Bloom's taxonomy integration
@@ -333,7 +343,7 @@
 
 ---
 
-## 💾 SKILLS (26 Total)
+## 💾 SKILLS (27 Total)
 
 ### Project & Submodule Management (5 skills) ⭐ NEW/RECENT
 1. **submodule-setup**
@@ -414,89 +424,97 @@
     - Multi-stage search patterns
     - Path: `skills/search-strategies/SKILL.md`
 
-### Documentation & Communication (3 skills)
-13. **cross-file-documentation-update**
+### Documentation & Communication (4 skills) ⭐ UPDATED
+13. **documentation-librarian** ⭐ NEW
+    - Documentation organization and maintenance
+    - Content deduplication (30-50% file reduction)
+    - Navigation system creation (README.md, CLAUDE.md)
+    - Cross-reference validation and fixing
+    - Automated freshness monitoring
+    - Path: `skills/documentation-librarian/SKILL.md`
+
+14. **cross-file-documentation-update**
     - Synchronized documentation updates
     - CLAUDE.md, README.md consistency
     - Deployment checklist sync
     - Path: `skills/cross-file-documentation-update/SKILL.md`
 
-14. **internal-comms**
+15. **internal-comms**
     - Internal communication templates
     - Status reports, leadership updates
     - Incident reports, newsletters
     - Path: `skills/internal-comms/SKILL.md`
 
-15. **document-skills**
+16. **document-skills**
     - Documentation specialization
     - User guides and runbooks
     - Architecture documentation
     - Path: `skills/document-skills/SKILL.md`
 
 ### Workflow & Automation (5 skills)
-16. **git-workflow-automation**
+17. **git-workflow-automation**
     - Automated git workflows
     - Conventional commit format
     - Branch management and safety checks
     - Path: `skills/git-workflow-automation/SKILL.md`
 
-17. **multi-agent-workflow**
+18. **multi-agent-workflow**
     - Multi-agent orchestration
     - Token budget management
     - Recursive workflow execution
     - Path: `skills/multi-agent-workflow/SKILL.md`
 
-18. **build-deploy-workflow**
+19. **build-deploy-workflow**
     - Automated build and deployment
     - GKE and Cloud Run deployment
     - Documentation workflow
     - Path: `skills/build-deploy-workflow/SKILL.md`
 
-19. **communication-protocols**
+20. **communication-protocols**
     - Control commands (PAUSE, CHECKPOINT)
     - Delegation syntax
     - Multi-agent handoff protocols
     - Path: `skills/communication-protocols/SKILL.md`
 
-20. **token-cost-tracking**
+21. **token-cost-tracking**
     - Token usage and cost tracking
     - Model-specific pricing
     - Session efficiency analysis
     - Path: `skills/token-cost-tracking/SKILL.md`
 
 ### Infrastructure & Cloud (3 skills)
-21. **google-cloud-build**
+22. **google-cloud-build**
     - GCP Cloud Build integration
     - Module deployment
     - Build optimization
     - Path: `skills/google-cloud-build/SKILL.md`
 
-22. **gcp-resource-cleanup**
+23. **gcp-resource-cleanup**
     - Legacy GCP resource cleanup
     - Cost tracking and optimization
     - Safety checks during cleanup
     - Path: `skills/gcp-resource-cleanup/SKILL.md`
 
-23. **deployment-archeology**
+24. **deployment-archeology**
     - Deployment regression investigation
     - Configuration recovery
     - Git history analysis
     - Path: `skills/deployment-archeology/SKILL.md`
 
 ### Research & Learning (3 skills)
-24. **ai-curriculum-development**
+25. **ai-curriculum-development**
     - AI curriculum development automation
     - Multi-level content generation
     - Assessment integration
     - Path: `skills/ai-curriculum-development/SKILL.md`
 
-25. **notebooklm-content-optimization**
+26. **notebooklm-content-optimization**
     - NotebookLM optimization
     - Book generation, quiz creation
     - Flashcard development
     - Path: `skills/notebooklm-content-optimization/SKILL.md`
 
-26. **foundationdb-queries**
+27. **foundationdb-queries**
     - FoundationDB key patterns
     - Query helpers
     - Tenant isolation patterns
@@ -504,7 +522,7 @@
 
 ---
 
-## 🚀 COMMANDS (78 Total)
+## 🚀 COMMANDS (79 Total)
 
 ### Project Creation & Management (5 commands) ⭐ NEW
 1. **new-project** ⭐ NEW
@@ -562,71 +580,72 @@
 29. **validate_plan** - Plan validation
 30. **code_explain** - Code explanation
 
-### Documentation (5 commands)
-31. **document** - Documentation generation mode
-32. **doc_generate** - Documentation generation
-33. **intent-classification-skill** - Intent classification for docs
-34. **c4-methodology-skill** - C4 diagram methodology
-35. **COMMAND-GUIDE** - Command decision trees and workflows
+### Documentation (6 commands) ⭐ UPDATED
+31. **documentation-librarian** ⭐ NEW - Documentation organization and quality automation
+32. **document** - Documentation generation mode
+33. **doc_generate** - Documentation generation
+34. **intent-classification-skill** - Intent classification for docs
+35. **c4-methodology-skill** - C4 diagram methodology
+36. **COMMAND-GUIDE** - Command decision trees and workflows
 
 ### Planning & Project Management (8 commands)
-36. **create_plan** - Project plan creation
-37. **create_plan_generic** - Generic plan creation
-38. **create_plan_nt** - NT plan creation variant
-39. **generate-project-plan** - Comprehensive project plan generation
-40. **optimize** - Performance optimization mode
-41. **feature_development** - Feature development workflow
-42. **tech_debt** - Technical debt management
-43. **slo_implement** - SLO implementation
+37. **create_plan** - Project plan creation
+38. **create_plan_generic** - Generic plan creation
+39. **create_plan_nt** - NT plan creation variant
+40. **generate-project-plan** - Comprehensive project plan generation
+41. **optimize** - Performance optimization mode
+42. **feature_development** - Feature development workflow
+43. **tech_debt** - Technical debt management
+44. **slo_implement** - SLO implementation
 
 ### Database Management (2 commands)
-44. **db_migrations** - SQL database migrations
-45. **db-performance-analyzer** - Database performance analysis
+45. **db_migrations** - SQL database migrations
+46. **db-performance-analyzer** - Database performance analysis
 
 ### Git & CI/CD (9 commands)
-46. **commit** - Git commit automation
-47. **ci_commit** - CI-compatible commits
-48. **create_worktree** - Git worktree creation
-49. **linear** - Linear issue integration
-50. **ci_describe_pr** - PR description generation
-51. **describe_pr** - PR description
-52. **pr_enhance** - PR enhancement
-53. **export-dedup** - Export deduplication
-54. **context_save** - Context saving
-55. **context_restore** - Context restoration
+47. **commit** - Git commit automation
+48. **ci_commit** - CI-compatible commits
+49. **create_worktree** - Git worktree creation
+50. **linear** - Linear issue integration
+51. **ci_describe_pr** - PR description generation
+52. **describe_pr** - PR description
+53. **pr_enhance** - PR enhancement
+54. **export-dedup** - Export deduplication
+55. **context_save** - Context saving
+56. **context_restore** - Context restoration
 
 ### Testing (4 commands)
-56. **test_generate** - Test generation
-57. **debug** - Debugging mode
-58. **smart_debug** - Smart debugging
-59. **error_trace** - Error trace analysis
+57. **test_generate** - Test generation
+58. **debug** - Debugging mode
+59. **smart_debug** - Smart debugging
+60. **error_trace** - Error trace analysis
 
 ### Implementation & Execution (6 commands)
-60. **oneshot** - One-shot execution
-61. **oneshot_plan** - One-shot planning
-62. **founder_mode** - Founder mode execution
-63. **ralph_impl** - Ralph implementation variant
-64. **ralph_plan** - Ralph planning variant
-65. **ralph_research** - Ralph research variant
+61. **oneshot** - One-shot execution
+62. **oneshot_plan** - One-shot planning
+63. **founder_mode** - Founder mode execution
+64. **ralph_impl** - Ralph implementation variant
+65. **ralph_plan** - Ralph planning variant
+66. **ralph_research** - Ralph research variant
 
 ### Workflow Management (6 commands)
-66. **recursive_workflow** - Recursive workflow execution
-67. **create_handoff** - Multi-agent handoff creation
-68. **resume_handoff** - Session handoff resumption
-69. **monitor_setup** - Monitoring setup
-70. **incident_response** - Incident response workflow
-71. **ai_review** - AI-powered review
+67. **recursive_workflow** - Recursive workflow execution
+68. **create_handoff** - Multi-agent handoff creation
+69. **resume_handoff** - Session handoff resumption
+70. **monitor_setup** - Monitoring setup
+71. **incident_response** - Incident response workflow
+72. **ai_review** - AI-powered review
 
 ### Agent & Configuration (3 commands)
-72. **agent-dispatcher** - Agent selection and orchestration
-73. **suggest-agent** - Agent recommendation
-74. **config_validate** - Configuration validation
+73. **agent-dispatcher** - Agent selection and orchestration
+74. **suggest-agent** - Agent recommendation
+75. **config_validate** - Configuration validation
 
 ### Local Development (4 commands)
-75. **local_review** - Local code review
-76. **implement_plan** - Plan implementation
-77. **generate-curriculum-content** - Curriculum generation
-78. **README** - Command documentation reference
+76. **local_review** - Local code review
+77. **implement_plan** - Plan implementation
+78. **generate-curriculum-content** - Curriculum generation
+79. **README** - Command documentation reference
 
 ---
 
