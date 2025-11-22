@@ -22,7 +22,7 @@ This repository serves as the **MASTER PLAN** orchestration point for the comple
 - 📘 **[Vision & Strategy](./docs/AZ1.AI-CODITECT-VISION-AND-STRATEGY.md)** - Complete ecosystem vision and market strategy
 - 📂 **[Naming Convention](./docs/REPO-NAMING-CONVENTION.md)** - Repository naming rules for 8 categories
 - 🎓 **[Training System](https://github.com/coditect-ai/coditect-core/blob/main/user-training/README.md)** - CODITECT Operator certification program
-- 🚀 **[Slash Command Quick Start](.coditect/1-2-3-SLASH-COMMAND-QUICK-START.md)** - Master all 72 commands in 3 steps
+- 🚀 **[Slash Command Quick Start](.coditect/1-2-3-SLASH-COMMAND-QUICK-START.md)** - Master all 81 commands in 3 steps (⭐ +4 hooks commands Nov 22)
 - 🤖 **AI Command Router** - Type `coditect-router "your request"` for instant command suggestions (never memorize again!)
 
 ---
@@ -32,6 +32,26 @@ This repository serves as the **MASTER PLAN** orchestration point for the comple
 This master project uses **git submodules** to coordinate **41 sub-projects** across the CODITECT ecosystem, organized into **8 category folders**.
 
 See [docs/REPO-NAMING-CONVENTION.md](docs/REPO-NAMING-CONVENTION.md) for the complete naming convention and rules.
+
+### 📊 Architecture Diagrams
+
+**Complete C4 Model architecture diagrams** documenting the evolution from Phase 1 (local framework) through Phase 7 (enterprise scale).
+
+**[📂 View All Diagrams](diagrams/README.md)** | **[📈 Master Timeline](diagrams/mermaid-source/master-gantt-timeline.mmd)**
+
+#### Quick Access by Phase
+
+| Phase | Status | Focus | Diagrams |
+|-------|--------|-------|----------|
+| **[Phase 1](diagrams/phase-1-claude-framework/)** | ✅ Active | .claude Framework (Local) | [C1](diagrams/phase-1-claude-framework/phase1-c1-system-context.md) · [C2](diagrams/phase-1-claude-framework/phase1-c2-container.md) · [C3](diagrams/phase-1-claude-framework/phase1-c3-agent-execution.md) |
+| **[Phase 2](diagrams/phase-2-ide-cloud/)** | ✅ Deployed | IDE in Cloud (coditect.ai) | [C1](diagrams/phase-2-ide-cloud/phase2-c1-system-context.md) · [C2](diagrams/phase-2-ide-cloud/phase2-c2-container.md) · [C3](diagrams/phase-2-ide-cloud/phase2-c3-theia-ide.md) |
+| **[Phase 3](diagrams/phase-3-workflow-analyzer/)** | ✅ Deployed | Workflow Analyzer | [C1](diagrams/phase-3-workflow-analyzer/phase3-c1-system-context.md) · [C2](diagrams/phase-3-workflow-analyzer/phase3-c2-container.md) · [C3](diagrams/phase-3-workflow-analyzer/phase3-c3-orchestration.md) |
+| **[Phase 4](diagrams/phase-4-license-management/)** | 🔨 In Dev | License/User/Session Mgmt | [C1](diagrams/phase-4-license-management/phase4-c1-system-context.md) · [C2](diagrams/phase-4-license-management/phase4-c2-container.md) · [C3×3](diagrams/phase-4-license-management/) |
+| **[Phase 5](diagrams/phase-5-marketplace-analytics/)** | 📋 Planned | Marketplace & Analytics | [C1](diagrams/phase-5-marketplace-analytics/phase5-c1-system-context.md) · [C2×2](diagrams/phase-5-marketplace-analytics/) |
+| **[Phase 6](diagrams/phase-6-orchestration/)** | 📋 Planned | Multi-Agent Orchestration | [C1](diagrams/phase-6-orchestration/phase6-c1-system-context.md) · [C2](diagrams/phase-6-orchestration/phase6-c2-infrastructure.md) · [C3](diagrams/phase-6-orchestration/phase6-c3-inter-agent-communication.md) |
+| **[Phase 7](diagrams/phase-7-enterprise-scale/)** | 📋 Planned | Enterprise Scale & Self-Service | [C1](diagrams/phase-7-enterprise-scale/phase7-c1-system-context.md) · [C2](diagrams/phase-7-enterprise-scale/phase7-c2-self-service.md) · [C3×2](diagrams/phase-7-enterprise-scale/) |
+
+**Total:** 24 comprehensive diagram docs | **Methodology:** C4 Model (Context → Container → Component)
 
 ### Repository Categories (8 Folders, 41 Submodules)
 
@@ -144,7 +164,7 @@ coditect-rollout-master/
     ├── core/                                     # [3 repos] Core Framework - The CODITECT Brain
     │   ├── coditect-core/                        # ⭐ PRIMARY PRODUCT
     │   │   ├── agents/                           # 49 specialized AI agents
-    │   │   ├── commands/                         # 72 slash commands
+    │   │   ├── commands/                         # 81 slash commands
     │   │   ├── skills/                           # 18 production skills
     │   │   ├── scripts/                          # 21 core automation scripts
     │   │   ├── user-training/                    # 55K+ words training materials
@@ -223,7 +243,7 @@ The foundational intelligence layer and AZ1.AI INC's **first commercial product*
 
 **What it contains:**
 - **49 specialized AI agents** across 8 domains (research, development, architecture, testing, security, DevOps, documentation, business)
-- **72 slash commands** for autonomous workflows (/deliberation, /implement, /analyze, /strategy, etc.)
+- **81 slash commands** for autonomous workflows (/deliberation, /implement, /analyze, /strategy, /analyze-hooks, /web-search-hooks, /generate-project-plan-hooks, etc.)
 - **18 production skills** for common development patterns
 - **21 core automation scripts** for checkpointing, deduplication, git workflows, installer creation
 - **55,000+ words** of training materials + **456,000+ words** comprehensive framework documentation
@@ -495,8 +515,8 @@ Your Project/
 
 **Every directory becomes intelligent** - capable of autonomous operation, context-aware decisions, and coordinated multi-agent workflows.
 
-#### 2. **50 Specialized AI Agents**
-Pre-built, production-ready agents across 8 domains:
+#### 2. **52 Specialized AI Agents** (⭐ +2 Nov 22)
+Pre-built, production-ready agents across 8 domains (including project-discovery-specialist and project-structure-optimizer):
 
 - **Research:** competitive-market-analyst, research-agent, web-search-researcher
 - **Architecture:** senior-architect, software-design-architect, database-architect, cloud-architect
@@ -507,18 +527,25 @@ Pre-built, production-ready agents across 8 domains:
 - **Documentation:** codi-documentation-writer, qa-reviewer
 - **Business:** business-intelligence-analyst, venture-capital-business-analyst
 
-#### 3. **72 Slash Commands**
+#### 3. **81 Slash Commands** (⭐ +4 Nov 22: Hooks Framework)
 One-line invocations for complex workflows:
 
-- `/deliberation` - Pure planning mode (no code execution)
-- `/implement` - Production-ready implementation with error handling
-- `/analyze` - Comprehensive code review and quality analysis
-- `/strategy` - Architectural planning with C4 diagrams
-- `/security_sast` - Static security analysis
-- `/document` - Auto-generate API docs and architecture guides
-- `/prototype` - Rapid proof-of-concept development
-- `/optimize` - Performance tuning and scalability
-- And 64 more...
+- **New Hooks Framework (Nov 22):**
+  - `/analyze-hooks` - Assess CODITECT readiness for hooks automation
+  - `/web-search-hooks` - Research hooks best practices and production patterns
+  - `/generate-project-plan-hooks` - Create comprehensive hooks implementation roadmap
+- **New Project Creation (Nov 22):**
+  - `/new-project` - Complete project initialization with discovery and structure generation
+- **Core Workflows:**
+  - `/deliberation` - Pure planning mode (no code execution)
+  - `/implement` - Production-ready implementation with error handling
+  - `/analyze` - Comprehensive code review and quality analysis
+  - `/strategy` - Architectural planning with C4 diagrams
+  - `/security_sast` - Static security analysis
+  - `/document` - Auto-generate API docs and architecture guides
+  - `/prototype` - Rapid proof-of-concept development
+  - `/optimize` - Performance tuning and scalability
+- And 73 more...
 
 #### 4. **MEMORY-CONTEXT: Zero Catastrophic Forgetting**
 Revolutionary experiential intelligence layer:
@@ -584,9 +611,9 @@ CODITECT Core is delivered as a **locally-installed framework** that runs on the
 ```
 ~/.coditect/                              # Installation directory
 ├── core/                                 # Framework core
-│   ├── agents/                           # 49 AI agents
-│   ├── commands/                         # 72 slash commands
-│   ├── skills/                           # 18 production skills
+│   ├── agents/                           # 52 AI agents
+│   ├── commands/                         # 81 slash commands
+│   ├── skills/                           # 26 production skills
 │   ├── scripts/                          # Automation scripts
 │   └── templates/                        # Project templates
 ├── config/                               # User configuration
@@ -961,9 +988,9 @@ This master project **IS** the CODITECT framework in action, demonstrating distr
 ```
 coditect-rollout-master/
 ├── .coditect -> submodules/core/coditect-core    # Master brain
-│   ├── agents/                       # 49 specialized AI agents
-│   ├── skills/                       # 18 production skills
-│   ├── commands/                     # 72 slash commands
+│   ├── agents/                       # 52 specialized AI agents
+│   ├── skills/                       # 26 production skills
+│   ├── commands/                     # 81 slash commands
 │   └── user-training/                # Training materials
 ├── .claude -> .coditect              # Claude Code compatibility
 │
