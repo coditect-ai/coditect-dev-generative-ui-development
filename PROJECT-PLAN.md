@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-This PROJECT-PLAN.md provides the comprehensive master orchestration strategy for the CODITECT platform rollout, coordinating development across **41 submodules** organized into **8 category folders**. This is the central planning document for transforming AZ1.AI's distributed intelligence architecture from internal development through beta testing, pilot program, and full Go-to-Market (GTM).
+This PROJECT-PLAN.md provides the comprehensive master orchestration strategy for the CODITECT platform rollout, coordinating development across **43 submodules** organized into **8 category folders**. This is the central planning document for transforming AZ1.AI's distributed intelligence architecture from internal development through beta testing, pilot program, and full Go-to-Market (GTM).
 
 **Project Mission:** Deliver CODITECT Core as AZ1.AI INC's first commercial product—a revolutionary distributed intelligence framework enabling autonomous AI-powered software development with zero catastrophic forgetting.
 
@@ -24,7 +24,7 @@ This PROJECT-PLAN.md provides the comprehensive master orchestration strategy fo
 | **Days Elapsed** | 85 days | - |
 | **Core Development Status** | ✅ Complete (Nov 19) | Development complete |
 | **Beta Testing Status** | ⚡ Active (Nov 12 - Dec 10) | 4 weeks, 50-100 users |
-| **Submodules Operational** | 41/41 repositories | All configured |
+| **Submodules Operational** | 43/43 repositories | All configured (⭐ +2 Nov 22: next-generation, ops-compliance) |
 | **Architecture Diagrams** | 24 complete C4 diagrams | Full coverage |
 | **Documentation** | 456K+ words | Comprehensive |
 | **Next Milestone** | Beta Analysis | Dec 10, 2025 |
@@ -79,7 +79,7 @@ This PROJECT-PLAN.md provides the comprehensive master orchestration strategy fo
 
 ### Purpose
 
-The **CODITECT Rollout Master** repository serves as the orchestration hub for the complete AZ1.AI CODITECT platform rollout. It coordinates development, testing, and deployment across 41 git submodules using a distributed intelligence architecture where every submodule operates autonomously while maintaining coherence through the `.coditect` symlink chain.
+The **CODITECT Rollout Master** repository serves as the orchestration hub for the complete AZ1.AI CODITECT platform rollout. It coordinates development, testing, and deployment across 43 git submodules using a distributed intelligence architecture where every submodule operates autonomously while maintaining coherence through the `.coditect` symlink chain.
 
 ### Strategic Context
 
@@ -94,7 +94,7 @@ coditect-rollout-master/                    # Master orchestrator
 ├── .coditect -> submodules/core/coditect-core  # Brain symlink
 ├── .claude -> .coditect                    # Claude Code compatibility
 │
-├── submodules/                             # 41 intelligent nodes
+├── submodules/                             # 43 intelligent nodes
 │   ├── core/                               # 3 repos - Framework brain
 │   │   ├── coditect-core/                  # ⭐ PRIMARY PRODUCT
 │   │   │   ├── agents/                     # 49 specialized AI agents
@@ -547,6 +547,114 @@ See [Agent Assignment Matrix](#agent-assignment-matrix) section for detailed map
 
 ---
 
+### Phase 0.5: Submodule Inventory & Critical Path Analysis 🔨 IN PROGRESS
+
+**Duration:** Nov 21-22, 2025 → Continues through Phase 1-5 (continuous inventory)
+**Status:** 🔨 IN PROGRESS (Concurrent with Beta Testing)
+**Priority:** P0 - CRITICAL for optimal rollout sequencing
+**Budget:** $8K (research and analysis)
+
+**Purpose:**
+Conduct comprehensive audit of all 43 submodules to inventory current status, verify PROJECT-PLAN.md and TASKLIST-WITH-CHECKBOXES.md exist in each repo, and determine optimal critical path for phased implementation and rollout.
+
+**Why This Matters:**
+- Provides complete visibility into which submodules are production-ready vs need work
+- Identifies blockers and dependencies across the ecosystem
+- Enables data-driven decisions on sequencing and resource allocation
+- Ensures no submodule is overlooked in rollout planning
+- Critical input for Phase 4 Pilot (Dec 24) and Phase 5 GTM (Mar 11) timelines
+
+**Scope: All 43 Submodules Across 8 Categories**
+
+| Category | Repos | Task |
+|----------|-------|------|
+| **core/** | 3 | Verify status, project plans, tasklists |
+| **cloud/** | 4 | Verify status, project plans, tasklists |
+| **dev/** | 9 | Verify status, project plans, tasklists |
+| **market/** | 2 | Verify status, project plans, tasklists |
+| **docs/** | 5 | Verify status, project plans, tasklists |
+| **ops/** | 4 | Verify status (including new coditect-ops-compliance) |
+| **gtm/** | 7 | Verify status, project plans, tasklists |
+| **labs/** | 12 | Verify status (including new coditect-next-generation) |
+| **TOTAL** | **43** | **Complete inventory** |
+
+**Audit Checklist Per Submodule:**
+- [ ] Repository exists and is cloned
+- [ ] Git remote configured correctly
+- [ ] .coditect symlink chain working
+- [ ] PROJECT-PLAN.md exists and current
+- [ ] TASKLIST-WITH-CHECKBOXES.md exists and current
+- [ ] README.md exists and accurate
+- [ ] Current development status documented
+- [ ] Key milestones and dependencies identified
+- [ ] Blockers and risks documented
+- [ ] Resource requirements estimated
+- [ ] Integration points with other submodules mapped
+
+**Deliverables:**
+1. **Submodule Inventory Report** - Complete status of all 43 repos
+   - Current development status (% complete)
+   - Project planning documentation status
+   - Critical blockers and dependencies
+   - Resource requirements by submodule
+
+2. **Critical Path Analysis** - Optimal sequencing for rollout
+   - Dependency graph showing inter-submodule relationships
+   - Recommended implementation order
+   - Parallel vs sequential work opportunities
+   - Risk-adjusted timeline
+
+3. **Updated Master PROJECT-PLAN.md** - Refined based on inventory
+   - Submodule counts updated (41 → 43)
+   - Compliance and next-generation integration details
+   - Adjusted Phase 2-5 timeline based on findings
+
+4. **Updated Master TASKLIST-WITH-CHECKBOXES.md** - New audit tasks
+   - Per-submodule verification tasks
+   - Remediation tasks for missing documentation
+   - Critical path sequencing tasks
+
+**Success Criteria:**
+- [ ] All 43 submodules audited and documented
+- [ ] 100% of submodules have current PROJECT-PLAN.md
+- [ ] 100% of submodules have current TASKLIST-WITH-CHECKBOXES.md
+- [ ] Dependency graph complete and validated
+- [ ] Critical path identified with confidence >90%
+- [ ] Blockers documented with mitigation strategies
+- [ ] Resource requirements estimated within 20% accuracy
+- [ ] Rollout timeline refined based on findings
+
+**Critical Questions to Answer:**
+1. Which 5 submodules are on critical path to Phase 4 Pilot (Dec 24)?
+2. Which submodules have missing or outdated documentation?
+3. What are the top 3 blockers preventing faster rollout?
+4. Which submodules can be parallelized vs must be sequential?
+5. What's the minimum viable subset for Phase 4 Pilot launch?
+6. What additional resources are needed to hit Phase 5 GTM (Mar 11)?
+
+**Timeline:**
+- **Nov 21-22:** Initial audit kickoff (2 days) - assess scope
+- **Nov 23-26:** Systematic submodule-by-submodule review (4 days)
+- **Nov 27:** Analysis and critical path determination (1 day)
+- **Nov 28:** Report generation and recommendations (1 day)
+- **Nov 29-Dec 1:** Stakeholder review and refinement
+- **Dec 2+:** Continuous monitoring and updates through rollout
+
+**Agent Assignment:**
+- **Project Analyzer Agent** - Lead audit coordination
+- **Codebase Explorer Agent** - Per-submodule status assessment
+- **Project Planner Agent** - Critical path analysis
+- **Risk Manager Agent** - Blocker identification and mitigation
+
+**Next Steps:**
+1. Start submodule-by-submodule audit (see TASKLIST-WITH-CHECKBOXES.md)
+2. Document findings in per-submodule audit sheets
+3. Build dependency graph and critical path
+4. Generate comprehensive inventory report
+5. Propose refined Phase 2-5 timeline
+
+---
+
 ### Phase 1: Development ✅ COMPLETE
 
 **Duration:** Aug 27 - Nov 19, 2025 (12 weeks)
@@ -562,7 +670,7 @@ See [Agent Assignment Matrix](#agent-assignment-matrix) section for detailed map
 **Key Activities Completed:**
 
 #### Months 1-2: Foundation (Aug-Sep)
-- ✅ Project setup and repository creation (41 submodules)
+- ✅ Project setup and repository creation (41 initial submodules, 43 total with Phase 0.5 additions)
 - ✅ Infrastructure provisioning (GCP, GitHub, CI/CD)
 - ✅ Database schema design and implementation
 - ✅ Authentication system (OAuth, JWT)
@@ -629,7 +737,7 @@ See [Agent Assignment Matrix](#agent-assignment-matrix) section for detailed map
 
 **Exit Criteria: Development → Beta** ✅ MET
 
-- ✅ All 41 submodules deployed to staging
+- ✅ All 41 submodules deployed to staging (43 total including Phase 0.5 additions)
 - ✅ Security audit passed (0 critical findings)
 - ✅ Performance benchmarks met (1000 concurrent users)
 - ✅ User documentation complete

@@ -1,8 +1,8 @@
 # CODITECT Platform Rollout - Master Task List
 
-**Last Updated:** 2025-11-20
-**Status:** Phase 0 Complete ✅, Phase 1 Beta Testing Active ⚡ (Week 2 of 4)
-**Overall Progress:** Foundation 100% ✅, Beta 50% ⚡, Pilot 0% ⏸️, GTM 0% ⏸️
+**Last Updated:** 2025-11-22
+**Status:** Phase 0 Complete ✅, Phase 0.5 Inventory Active 🔨 (Concurrent), Phase 1 Beta Testing Active ⚡ (Week 2 of 4)
+**Overall Progress:** Foundation 100% ✅, Inventory 15% 🔨, Beta 50% ⚡, Pilot 0% ⏸️, GTM 0% ⏸️
 
 ---
 
@@ -76,6 +76,195 @@
   - [x] Push to GitHub (all repositories)
   - [x] Verify GitHub rendering of diagrams
   - [x] Create session export for MEMORY-CONTEXT
+
+---
+
+## Phase 0.5: Submodule Inventory & Critical Path Analysis (🔨 IN PROGRESS - Nov 21-Dec 1, 2025)
+
+**Purpose:** Comprehensive audit of all 43 submodules to determine optimal critical path for phased rollout
+
+**Timeline:** Nov 21-22 kickoff → Nov 23-26 systematic review → Nov 27-28 analysis → Dec 2+ continuous monitoring
+
+---
+
+### Submodule Inventory Sprint (Nov 21-26)
+
+**Core Category Audit (3 repos)**
+- [ ] **Audit coditect-core** - Status, PROJECT-PLAN.md, TASKLIST-WITH-CHECKBOXES.md verification
+  - [ ] Verify symlink structure and distributed intelligence working
+  - [ ] Check PROJECT-PLAN.md currency (52 agents, 81 commands, 26 skills)
+  - [ ] Review TASKLIST-WITH-CHECKBOXES.md progress
+  - [ ] Document blockers and next steps
+  - [ ] Estimate resource requirements
+
+- [ ] **Audit coditect-core-framework** - Status, project plans, tasklists
+  - [ ] Repository status and branch state
+  - [ ] PROJECT-PLAN.md and TASKLIST-WITH-CHECKBOXES.md verification
+  - [ ] Dependencies on coditect-core documented
+  - [ ] Integration points identified
+
+- [ ] **Audit coditect-core-architecture** - Documentation completeness
+  - [ ] Architecture decision records (ADRs) current
+  - [ ] Diagram accuracy verified
+  - [ ] Design patterns documented
+  - [ ] Future roadmap clear
+
+**Cloud Category Audit (4 repos)**
+- [ ] **Audit coditect-cloud-backend** (FastAPI, P0 priority)
+  - [ ] Deployment status and production readiness
+  - [ ] PROJECT-PLAN.md and TASKLIST status
+  - [ ] API endpoint completeness
+  - [ ] Database schema alignment with core
+
+- [ ] **Audit coditect-cloud-frontend** (React/TypeScript, P0)
+  - [ ] UI completeness against spec
+  - [ ] PROJECT-PLAN and TASKLIST status
+  - [ ] Performance metrics
+  - [ ] Accessibility compliance
+
+- [ ] **Audit coditect-cloud-ide** (Eclipse Theia, P0)
+  - [ ] IDE functionality status
+  - [ ] Integration with cloud platform
+  - [ ] PROJECT-PLAN status
+
+- [ ] **Audit coditect-cloud-infra** (Terraform, P0)
+  - [ ] IaC completeness
+  - [ ] Production readiness
+  - [ ] Cost optimization opportunities
+
+**Dev Category Audit (9 repos)**
+- [ ] **coditect-cli** - Command-line interface status
+- [ ] **coditect-analytics** - Usage tracking implementation
+- [ ] **coditect-automation** - AI orchestration systems
+- [ ] **coditect-dev-context** - Context management
+- [ ] **coditect-dev-intelligence** - Development intelligence
+- [ ] **coditect-dev-pdf** - PDF handling
+- [ ] **coditect-dev-audio2text** - Audio transcription
+- [ ] **coditect-dev-qrcode** - QR code generation
+- [ ] [OTHER dev repos] - Verify status and dependencies
+
+**Market Category Audit (2 repos)**
+- [ ] **coditect-market-agents** - Agent marketplace implementation
+- [ ] **coditect-market-activity** - Marketplace activity tracking
+
+**Docs Category Audit (5 repos)**
+- [ ] **coditect-docs-main** - Primary documentation site
+- [ ] **coditect-legal** - Legal and compliance docs
+- [ ] **coditect-docs-blog** - Blog and announcements
+- [ ] **coditect-docs-training** - Training materials
+- [ ] **coditect-docs-setup** - Installation and setup guides
+
+**Ops Category Audit (4 repos - INCLUDES NEW)**
+- [ ] **coditect-ops-distribution** - Installer and auto-updater
+- [ ] **coditect-ops-license** - License validation and management
+- [ ] **coditect-ops-projects** - Project orchestration tools
+- [ ] **coditect-ops-compliance** (⭐ NEW Nov 22) - Compliance and audit systems
+
+**GTM Category Audit (7 repos)**
+- [ ] **coditect-gtm-comms** - Communications strategy
+- [ ] **coditect-gtm-strategy** - GTM strategy documentation
+- [ ] **coditect-gtm-crm** - CRM integration
+- [ ] **coditect-gtm-personas** - User personas
+- [ ] **coditect-gtm-customer-clipora** - Customer success
+- [ ] **coditect-gtm-legitimacy** - Legitimacy and positioning
+- [ ] **coditect-gtm-investor** - Investor relations
+
+**Labs Category Audit (12 repos - INCLUDES NEW)**
+- [ ] **coditect-labs-agent-standards** - Agent development standards
+- [ ] **coditect-labs-agents-research** - Multi-agent research
+- [ ] **coditect-labs-claude-research** - Claude integration research
+- [ ] **coditect-labs-workflow** - Workflow analysis
+- [ ] **coditect-labs-screenshot** - Screenshot automation
+- [ ] **coditect-labs-v4-archive** - V4 codebase archive
+- [ ] **coditect-labs-multi-agent-rag** - RAG research
+- [ ] **coditect-labs-cli-web-arch** - CLI/Web architecture
+- [ ] **coditect-labs-first-principles** - First principles research
+- [ ] **coditect-labs-learning** - Learning experiments
+- [ ] **coditect-labs-mcp-auth** - MCP authentication
+- [ ] **coditect-next-generation** (⭐ NEW Nov 22) - Autonomous platform
+
+---
+
+### Critical Path Analysis (Nov 27-28)
+
+- [ ] **Build Dependency Graph**
+  - [ ] Map inter-submodule dependencies
+  - [ ] Identify blocking relationships
+  - [ ] Highlight parallel opportunities
+  - [ ] Create visual dependency diagram
+
+- [ ] **Identify Critical Path to Phase 4 Pilot (Dec 24)**
+  - [ ] List top 5 critical submodules
+  - [ ] Identify minimum viable subset
+  - [ ] Flag remaining work required
+  - [ ] Estimate completion timeline
+
+- [ ] **Document Blockers & Mitigations**
+  - [ ] List top 3-5 critical blockers
+  - [ ] Propose mitigation strategies
+  - [ ] Estimate mitigation effort
+  - [ ] Assess impact on timeline
+
+- [ ] **Resource Requirements Assessment**
+  - [ ] Estimate person-weeks per submodule
+  - [ ] Identify skill gaps
+  - [ ] Propose team assignments
+  - [ ] Calculate resource availability
+
+---
+
+### Deliverables (Nov 28)
+
+- [ ] **Submodule Inventory Report**
+  - [ ] Status table (43 repos × 11 audit dimensions)
+  - [ ] Production readiness assessment
+  - [ ] Documentation completeness scorecard
+  - [ ] Critical path identification
+
+- [ ] **Dependency Graph Documentation**
+  - [ ] Visual diagram showing all relationships
+  - [ ] Textual dependency list
+  - [ ] Critical path highlighted
+  - [ ] Parallel opportunities noted
+
+- [ ] **Critical Path Sequence**
+  - [ ] Optimal implementation order
+  - [ ] Timeline with dependencies
+  - [ ] Parallel work streams
+  - [ ] Risk-adjusted estimates
+
+- [ ] **Updated Master Documents**
+  - [ ] Master PROJECT-PLAN.md with Phase 0.5 (THIS ITEM)
+  - [ ] Master TASKLIST-WITH-CHECKBOXES.md with audit tasks (THIS ITEM)
+  - [ ] Per-submodule summary sheets
+  - [ ] Resource allocation spreadsheet
+
+- [ ] **Stakeholder Presentation**
+  - [ ] Executive summary findings
+  - [ ] Top risks and blockers
+  - [ ] Recommended critical path
+  - [ ] Resource requirements and timeline
+
+---
+
+### Follow-up Actions (Dec 2+)
+
+- [ ] **Per-Submodule Remediation Tasks**
+  - [ ] Create missing PROJECT-PLAN.md files
+  - [ ] Create missing TASKLIST-WITH-CHECKBOXES.md files
+  - [ ] Update outdated documentation
+  - [ ] Fix blocker issues
+
+- [ ] **Critical Path Execution**
+  - [ ] Begin Phase 4 Pilot prep (Dec 3+)
+  - [ ] Resource allocation per findings
+  - [ ] Timeline adjustments if needed
+
+- [ ] **Continuous Monitoring**
+  - [ ] Weekly submodule status updates
+  - [ ] Blocker tracking and resolution
+  - [ ] Resource utilization monitoring
+  - [ ] Critical path validation
 
 ---
 
