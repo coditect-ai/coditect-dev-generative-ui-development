@@ -66,7 +66,7 @@ class DatabaseInitializer:
             verbose: Enable verbose logging
         """
         self.db_path = Path(db_path)
-        self.schema_path = PROJECT_ROOT / "MEMORY-CONTEXT" / "database-schema.sql"
+        self.schema_path = PROJECT_ROOT.parent.parent.parent / "MEMORY-CONTEXT" / "database-schema.sql"
         self.verbose = verbose
 
         # Ensure parent directory exists
@@ -374,7 +374,7 @@ def main():
         if args.db_path:
             db_path = Path(args.db_path)
         else:
-            db_path = PROJECT_ROOT / "MEMORY-CONTEXT" / "memory-context.db"
+            db_path = PROJECT_ROOT.parent.parent.parent / "MEMORY-CONTEXT" / "memory-context.db"
 
         # Confirm reset if requested
         if args.reset:

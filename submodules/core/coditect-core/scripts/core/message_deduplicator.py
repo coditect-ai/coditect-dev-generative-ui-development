@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 
 # Setup dual logging (stdout + file)
-log_dir = Path(__file__).parent.parent.parent / "MEMORY-CONTEXT" / "logs"
+log_dir = Path(__file__).parent.parent.parent.parent.parent.parent / "MEMORY-CONTEXT" / "logs"
 log_dir.mkdir(parents=True, exist_ok=True)
 log_file = log_dir / "message_deduplicator.log"
 

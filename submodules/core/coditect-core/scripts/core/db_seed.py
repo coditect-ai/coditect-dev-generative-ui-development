@@ -624,7 +624,7 @@ def main():
         if args.db_path:
             db_path = Path(args.db_path)
         else:
-            db_path = PROJECT_ROOT / "MEMORY-CONTEXT" / "memory-context.db"
+            db_path = PROJECT_ROOT.parent.parent.parent / "MEMORY-CONTEXT" / "memory-context.db"
 
         logger.info(f"Starting seeding operation for: {db_path}")
 

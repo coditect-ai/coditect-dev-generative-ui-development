@@ -32,7 +32,8 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # Setup dual logging (stdout + file)
-log_dir = PROJECT_ROOT / "MEMORY-CONTEXT" / "logs"
+# MEMORY-CONTEXT is at master level (one dir up from coditect-core)
+log_dir = PROJECT_ROOT.parent.parent.parent / "MEMORY-CONTEXT" / "logs"
 log_dir.mkdir(parents=True, exist_ok=True)
 log_file = log_dir / "db_migrate.log"
 
@@ -101,7 +102,7 @@ class DatabaseMigrator:
                 raise MigrationConfigError("Database path cannot be empty")
 
             self.db_path = Path(db_path)
-            self.migrations_dir = PROJECT_ROOT / "MEMORY-CONTEXT" / "migrations"
+            self.migrations_dir = PROJECT_ROOT.parent.parent.parent / "MEMORY-CONTEXT" / "migrations"
             self.alembic_ini = PROJECT_ROOT / "alembic.ini"
 
             # Import Alembic (late import to provide clear error if not installed)
@@ -383,7 +384,7 @@ def main():
                 print("\n❌ Error: Database path must be absolute")
                 return 1
         else:
-            db_path = PROJECT_ROOT / "MEMORY-CONTEXT" / "memory-context.db"
+            db_path = PROJECT_ROOT.parent.parent.parent / "MEMORY-CONTEXT" / "memory-context.db"
 
         logger.info(f"Using database: {db_path}")
 

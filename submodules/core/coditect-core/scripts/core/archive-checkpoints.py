@@ -66,7 +66,7 @@ class CheckpointArchiver:
                 raise ValueError("Could not find git repository root")
 
         self.repo_root = Path(repo_root)
-        self.memory_context_dir = self.repo_root / "MEMORY-CONTEXT"
+        self.memory_context_dir = self.repo_root.parent.parent.parent / "MEMORY-CONTEXT"
         self.checkpoints_dir = self.memory_context_dir / "checkpoints"
         self.archive_dir = self.memory_context_dir / "archive"
         self.config_path = self.memory_context_dir / "checkpoint.config.json"

@@ -97,7 +97,7 @@ class PrivacyIntegration:
                 logger.error(error_msg)
                 raise PrivacyIntegrationError(error_msg)
 
-            self.memory_context_dir = self.repo_root / "MEMORY-CONTEXT"
+            self.memory_context_dir = self.repo_root.parent.parent.parent / "MEMORY-CONTEXT"
             self.audit_dir = self.memory_context_dir / "audit"
 
             # Create audit directory

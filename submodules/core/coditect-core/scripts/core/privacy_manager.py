@@ -207,7 +207,7 @@ class PrivacyManager:
                 logger.error(error_msg)
                 raise InvalidPathError(error_msg)
 
-            self.memory_context_dir = self.repo_root / "MEMORY-CONTEXT"
+            self.memory_context_dir = self.repo_root.parent.parent.parent / "MEMORY-CONTEXT"
             self.config_path = self.memory_context_dir / "privacy.config.json"
 
             # Load or create configuration

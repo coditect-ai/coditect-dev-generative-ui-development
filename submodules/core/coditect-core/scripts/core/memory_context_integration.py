@@ -75,8 +75,8 @@ class MemoryContextIntegration:
             db_path: Path to SQLite database
             chroma_dir: Path to ChromaDB directory
         """
-        self.db_path = db_path or PROJECT_ROOT / "MEMORY-CONTEXT" / "memory-context.db"
-        self.chroma_dir = chroma_dir or PROJECT_ROOT / "MEMORY-CONTEXT" / "chromadb"
+        self.db_path = db_path or PROJECT_ROOT.parent.parent.parent / "MEMORY-CONTEXT" / "memory-context.db"
+        self.chroma_dir = chroma_dir or PROJECT_ROOT.parent.parent.parent / "MEMORY-CONTEXT" / "chromadb"
 
         # Initialize components
         self.session_exporter = SessionExporter(repo_root=PROJECT_ROOT)

@@ -36,7 +36,7 @@ import subprocess
 from utils import find_git_root
 
 # Setup dual logging (stdout + file)
-log_dir = Path(__file__).parent.parent.parent / "MEMORY-CONTEXT" / "logs"
+log_dir = Path(__file__).parent.parent.parent.parent.parent.parent / "MEMORY-CONTEXT" / "logs"
 log_dir.mkdir(parents=True, exist_ok=True)
 log_file = log_dir / "session_export.log"
 
@@ -121,7 +121,7 @@ class SessionExporter:
                     raise RepositoryNotFoundError(f"Provided path is not a git repository: {repo_root}")
 
             self.repo_root = Path(repo_root)
-            self.memory_context_dir = self.repo_root / "MEMORY-CONTEXT"
+            self.memory_context_dir = self.repo_root.parent.parent.parent / "MEMORY-CONTEXT"
             self.sessions_dir = self.memory_context_dir / "sessions"
             self.exports_dir = self.memory_context_dir / "exports"
             self.checkpoints_dir = self.memory_context_dir / "checkpoints"

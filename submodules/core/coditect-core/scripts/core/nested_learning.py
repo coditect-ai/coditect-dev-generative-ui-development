@@ -224,8 +224,8 @@ class NestedLearningProcessor:
         """
         try:
             # Set paths with validation
-            self.db_path = db_path or PROJECT_ROOT / "MEMORY-CONTEXT" / "memory-context.db"
-            self.config_path = config_path or PROJECT_ROOT / "MEMORY-CONTEXT" / "nested-learning.config.json"
+            self.db_path = db_path or PROJECT_ROOT.parent.parent.parent / "MEMORY-CONTEXT" / "memory-context.db"
+            self.config_path = config_path or PROJECT_ROOT.parent.parent.parent / "MEMORY-CONTEXT" / "nested-learning.config.json"
 
             # Validate db_path parent directory exists
             if not self.db_path.parent.exists():

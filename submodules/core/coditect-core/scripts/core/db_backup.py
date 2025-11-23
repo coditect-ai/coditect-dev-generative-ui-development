@@ -415,9 +415,9 @@ def main():
         args = parser.parse_args()
 
         # Determine paths
-        db_path = Path(args.db_path) if args.db_path else PROJECT_ROOT / "MEMORY-CONTEXT" / "memory-context.db"
-        chroma_dir = Path(args.chroma_dir) if args.chroma_dir else PROJECT_ROOT / "MEMORY-CONTEXT" / "chromadb"
-        backup_dir = Path(args.backup_dir) if args.backup_dir else PROJECT_ROOT / "MEMORY-CONTEXT" / "backups"
+        db_path = Path(args.db_path) if args.db_path else PROJECT_ROOT.parent.parent.parent / "MEMORY-CONTEXT" / "memory-context.db"
+        chroma_dir = Path(args.chroma_dir) if args.chroma_dir else PROJECT_ROOT.parent.parent.parent / "MEMORY-CONTEXT" / "chromadb"
+        backup_dir = Path(args.backup_dir) if args.backup_dir else PROJECT_ROOT.parent.parent.parent / "MEMORY-CONTEXT" / "backups"
 
         logger.info(f"Starting {args.command} operation")
 

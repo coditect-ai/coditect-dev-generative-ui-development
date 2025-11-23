@@ -377,7 +377,7 @@ def main():
     if args.chroma_dir:
         chroma_dir = Path(args.chroma_dir)
     else:
-        chroma_dir = PROJECT_ROOT / "MEMORY-CONTEXT" / "chromadb"
+        chroma_dir = PROJECT_ROOT.parent.parent.parent / "MEMORY-CONTEXT" / "chromadb"
 
     # Setup ChromaDB
     setup = ChromaDBSetup(
