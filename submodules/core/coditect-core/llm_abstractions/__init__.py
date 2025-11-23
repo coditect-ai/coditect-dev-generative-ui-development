@@ -26,6 +26,14 @@ Phase: Phase 1C - LLM Provider Implementation
 from .base_llm import BaseLlm
 from .llm_factory import LlmFactory
 
+# Agent-to-LLM configuration (Phase 2A)
+try:
+    from .agent_llm_config import AgentLlmConfig, LlmConfig, get_agent_config
+except ImportError:
+    AgentLlmConfig = None
+    LlmConfig = None
+    get_agent_config = None
+
 # Import providers (lazy loaded by factory)
 
 # Cloud/API providers
@@ -69,6 +77,10 @@ except ImportError:
 __all__ = [
     "BaseLlm",
     "LlmFactory",
+    # Agent-to-LLM configuration (Phase 2A)
+    "AgentLlmConfig",
+    "LlmConfig",
+    "get_agent_config",
     # Cloud/API providers
     "AnthropicLlm",
     "OpenAILlm",

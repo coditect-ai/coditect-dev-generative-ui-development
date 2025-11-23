@@ -61,6 +61,13 @@ try:
 except ImportError:
     LLM_ABSTRACTIONS_AVAILABLE = False
 
+# Import Agent-to-LLM configuration (Phase 2A)
+try:
+    from llm_abstractions import AgentLlmConfig
+    AGENT_LLM_CONFIG_AVAILABLE = True
+except ImportError:
+    AGENT_LLM_CONFIG_AVAILABLE = False
+
 
 class ExecutionStatus(str, Enum):
     """Status of task execution."""
