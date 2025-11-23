@@ -1,0 +1,204 @@
+# Agent-to-LLM Bindings Configuration
+# Maps CODITECT agents to specific LLM providers and models
+#
+# Schema:
+#   agents:
+#     <agent-id>:
+#       provider: <provider-name>  # Required: anthropic-claude, openai-gpt, google-gemini, huggingface, ollama, lmstudio
+#       model: <model-name>         # Required: provider-specific model
+#       api_key: <key>              # Optional: defaults to environment variable
+#       max_tokens: <int>           # Optional: defaults to provider default (usually 4096)
+#       temperature: <float>        # Optional: defaults to 0.7
+#       metadata:                   # Optional: provider-specific settings
+#         <key>: <value>
+#
+#   defaults:                       # Fallback configuration for unmapped agents
+#     provider: <provider-name>
+#     model: <model-name>
+#     max_tokens: <int>
+#     temperature: <float>
+#
+# Provider Options:
+#   - anthropic-claude: Claude models (cloud, premium quality, $0.003/1K)
+#   - openai-gpt: GPT-4 models (cloud, premium quality, $0.0025/1K)
+#   - google-gemini: Gemini models (cloud, free tier available)
+#   - huggingface: 100K+ models (cloud, free tier available)
+#   - ollama: Local inference (free, private, fast for simple tasks)
+#   - lmstudio: Local inference (free, private, GUI management)
+#
+# Cost Optimization Strategy:
+#   - Premium models (Claude Sonnet, GPT-4o): Complex reasoning, architecture, critical decisions
+#   - Fast/cheap models (Claude Haiku, GPT-3.5): QA, simple analysis, documentation
+#   - Free models (Gemini, local Ollama): Research, search, codebase navigation
+#   - Local models (Ollama, LM Studio): Dev/test, privacy-sensitive, high-volume simple tasks
+
+# Default Configuration (fallback for unmapped agents)
+defaults:
+  provider: anthropic-claude
+  model: claude-3-5-sonnet-20241022
+  max_tokens: 4096
+  temperature: 0.7
+
+# Agent-Specific Bindings
+agents:
+  # === Premium Agents: Complex Reasoning ===
+
+  # AI Specialist - Multi-provider routing, intelligent model selection
+  ai-specialist:
+    provider: anthropic-claude
+    model: claude-3-5-sonnet-20241022
+    max_tokens: 4096
+    temperature: 0.7
+    metadata:
+      description: "Core AI orchestration - needs premium reasoning"
+      use_case: "Model selection, prompt optimization, AI strategy"
+
+  # Orchestrator - Multi-agent coordination
+  orchestrator:
+    provider: anthropic-claude
+    model: claude-3-5-sonnet-20241022
+    max_tokens: 8192  # Needs higher token limit for complex orchestration
+    temperature: 0.6  # Lower temperature for consistent orchestration
+    metadata:
+      description: "Multi-agent orchestration - premium reasoning required"
+      use_case: "Complex workflows, agent delegation, task decomposition"
+
+  # Senior Architect - System design and architecture decisions
+  senior-architect:
+    provider: openai-gpt
+    model: gpt-4o
+    max_tokens: 8192
+    temperature: 0.7
+    metadata:
+      description: "Architecture and system design - needs deep reasoning"
+      use_case: "System architecture, technical decisions, trade-off analysis"
+
+  # === Development Agents: Code Generation ===
+
+  # Rust Expert Developer - Advanced Rust development
+  rust-expert-developer:
+    provider: openai-gpt
+    model: gpt-4o
+    max_tokens: 4096
+    temperature: 0.4  # Lower temperature for more deterministic code
+    metadata:
+      description: "Rust code generation - GPT-4o excellent for code"
+      use_case: "Rust implementation, async patterns, production code"
+
+  # Frontend React TypeScript Expert - Frontend development
+  frontend-react-typescript-expert:
+    provider: openai-gpt
+    model: gpt-4o
+    max_tokens: 4096
+    temperature: 0.4
+    metadata:
+      description: "React/TypeScript development"
+      use_case: "Frontend components, TypeScript, React patterns"
+
+  # === Research & Analysis: Fast/Cheap/Free Models ===
+
+  # Research Agent - Web research and information gathering
+  research-agent:
+    provider: google-gemini
+    model: gemini-pro
+    max_tokens: 2048
+    temperature: 0.8  # Higher temperature for creative research
+    metadata:
+      description: "Research tasks - Gemini free tier, good quality"
+      use_case: "Technical research, library comparisons, best practices"
+
+  # Codebase Locator - Find files and components
+  codebase-locator:
+    provider: ollama
+    model: llama3.2
+    max_tokens: 2048
+    temperature: 0.5
+    metadata:
+      description: "Simple search tasks - local Ollama, fast and free"
+      use_case: "File discovery, component location, directory structure"
+
+  # Codebase Analyzer - Code analysis
+  codebase-analyzer:
+    provider: ollama
+    model: llama3.2
+    max_tokens: 4096
+    temperature: 0.6
+    metadata:
+      description: "Code analysis - local model sufficient for pattern detection"
+      use_case: "Code structure analysis, pattern finding, complexity analysis"
+
+  # Web Search Researcher - Current information with web search
+  web-search-researcher:
+    provider: anthropic-claude  # Base model, will be wrapped by SearchAugmentedLlm
+    model: claude-3-5-sonnet-20241022
+    max_tokens: 4096
+    temperature: 0.7
+    metadata:
+      description: "Web search + LLM - needs current information"
+      use_case: "Latest news, current pricing, recent updates"
+      search_augmented: true  # Flag to wrap with SearchAugmentedLlm
+
+  # === Quality Assurance: Fast/Cheap Premium Models ===
+
+  # QA Reviewer - Code review and quality checks
+  qa-reviewer:
+    provider: anthropic-claude
+    model: claude-3-5-haiku-20241022  # Fast and cheap but still high quality
+    max_tokens: 4096
+    temperature: 0.5  # Lower temperature for consistent QA
+    metadata:
+      description: "QA tasks - Claude Haiku fast/cheap but quality"
+      use_case: "Code review, standards compliance, quality gates"
+
+  # Rust QA Specialist - Rust-specific quality assurance
+  rust-qa-specialist:
+    provider: anthropic-claude
+    model: claude-3-5-haiku-20241022
+    max_tokens: 4096
+    temperature: 0.5
+    metadata:
+      description: "Rust QA - fast Claude Haiku for quick checks"
+      use_case: "Rust safety checks, performance analysis, best practices"
+
+  # === Documentation: Good Quality, Moderate Cost ===
+
+  # Documentation Writer - Technical documentation
+  codi-documentation-writer:
+    provider: openai-gpt
+    model: gpt-4o
+    max_tokens: 8192  # Documentation can be lengthy
+    temperature: 0.6
+    metadata:
+      description: "Documentation - GPT-4o excellent at clear technical writing"
+      use_case: "API docs, user guides, technical specifications"
+
+  # Software Design Document Specialist - SDD creation
+  software-design-document-specialist:
+    provider: openai-gpt
+    model: gpt-4o
+    max_tokens: 8192
+    temperature: 0.6
+    metadata:
+      description: "Design documents - GPT-4o for comprehensive specs"
+      use_case: "Software design documents, architecture documentation"
+
+# Cost Optimization Notes:
+#
+# Monthly cost estimate for 1,000 agent invocations:
+# - 400 premium tasks (Claude Sonnet, GPT-4o): ~$10-12
+# - 200 fast/cheap tasks (Claude Haiku): ~$1-2
+# - 200 free tasks (Gemini): ~$0
+# - 200 local tasks (Ollama): $0
+# Total: ~$11-14/month
+#
+# Scaling strategy:
+# - As usage grows, shift more simple tasks to Ollama (local, free)
+# - Use Gemini for high-volume research (free tier)
+# - Reserve Claude Sonnet/GPT-4o for complex reasoning only
+#
+# Performance characteristics:
+# - Ollama (local): <1s latency, unlimited throughput (CPU-bound)
+# - Claude Haiku: <2s latency, $0.00025/1K tokens
+# - Claude Sonnet: 2-5s latency, $0.003/1K tokens
+# - GPT-4o: 2-4s latency, $0.0025/1K tokens
+# - Gemini: 2-5s latency, free tier (60 req/min)
