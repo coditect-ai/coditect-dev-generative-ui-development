@@ -79,15 +79,13 @@ def execute_task() -> str:
     """
 
     # Task execution using Claude Code Task protocol
-    task_call = """
-
-Task(
-    subagent_type="general-purpose",
-    description="Create module1_foundations Assessments - Intermediate Level",
-    prompt="""
-Use assessment-creation-agent subagent to the task requirements"""
-)
-"""
+    task_call = (
+        "Task(\n"
+        "    subagent_type=\"general-purpose\",\n"
+        "    description=\"Create module1_foundations Assessments - Intermediate Level\",\n"
+        "    prompt=\"Use assessment-creation-agent subagent to execute the task requirements above\"\n"
+        ")"
+    )
 
     logger.info("Executing Task Call:")
     logger.info(task_call)

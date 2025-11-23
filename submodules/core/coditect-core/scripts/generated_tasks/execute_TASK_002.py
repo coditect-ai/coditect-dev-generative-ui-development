@@ -80,15 +80,13 @@ def execute_task() -> str:
     """
 
     # Task execution using Claude Code Task protocol
-    task_call = """
-
-Task(
-    subagent_type="general-purpose",
-    description="Curriculum Architecture Research",
-    prompt="""
-Use ai-curriculum-specialist subagent to the task requirements"""
-)
-"""
+    task_call = (
+        "Task(\n"
+        "    subagent_type=\"general-purpose\",\n"
+        "    description=\"Curriculum Architecture Research\",\n"
+        "    prompt=\"Use ai-curriculum-specialist subagent to execute the task requirements above\"\n"
+        ")"
+    )
 
     logger.info("Executing Task Call:")
     logger.info(task_call)
