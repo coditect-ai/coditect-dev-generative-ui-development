@@ -23,10 +23,23 @@ import os
 import sys
 import json
 import subprocess
+import logging
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 import argparse
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('checkpoint-creation.log', mode='a')
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Privacy integration (optional - fail gracefully if not available)
 try:
@@ -57,6 +70,32 @@ except ImportError:
     DEDUP_AVAILABLE = False
 
 
+# Custom Exception Hierarchy
+class CheckpointError(Exception):
+    """Base exception for checkpoint operations."""
+    pass
+
+
+class GitOperationError(CheckpointError):
+    """Raised when git operation fails."""
+    pass
+
+
+class SubmoduleOperationError(CheckpointError):
+    """Raised when submodule operation fails."""
+    pass
+
+
+class FileOperationError(CheckpointError):
+    """Raised when file operation fails."""
+    pass
+
+
+class ValidationError(CheckpointError):
+    """Raised when input validation fails."""
+    pass
+
+
 class CheckpointCreator:
     """Automated checkpoint creation and documentation system."""
 
@@ -83,6 +122,135 @@ class CheckpointCreator:
 
         # ISO-DATETIME timestamp
         self.timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
+
+        # Git state tracking for rollback
+        self.git_state = None
+        self.submodule_states = {}
+
+    def save_git_state(self) -> Dict[str, any]:
+        """
+        Save current git state for potential rollback.
+
+        Returns:
+            Dictionary containing current git state
+
+        Raises:
+            GitOperationError: If unable to save git state
+        """
+        try:
+            logger.info("Saving git state for potential rollback...")
+            os.chdir(self.base_dir)
+
+            state = {
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'head': self._run_command("git rev-parse HEAD"),
+                'branch': self._run_command("git rev-parse --abbrev-ref HEAD"),
+                'staged_files': self._run_command("git diff --cached --name-only"),
+                'modified_files': self._run_command("git diff --name-only"),
+                'untracked_files': self._run_command("git ls-files --others --exclude-standard"),
+                'submodules': {}
+            }
+
+            # Save submodule states
+            submodule_output = self._run_command("git submodule status --recursive")
+            if submodule_output and not submodule_output.startswith('fatal'):
+                for line in submodule_output.strip().split('\n'):
+                    if not line.strip() or line.startswith('fatal'):
+                        continue
+
+                    parts = line.strip().split()
+                    if len(parts) >= 2:
+                        commit = parts[0].lstrip('+-')
+                        path = parts[1]
+
+                        submodule_path = self.base_dir / path
+                        if submodule_path.exists():
+                            try:
+                                os.chdir(submodule_path)
+                                submodule_head = self._run_command("git rev-parse HEAD")
+                                submodule_branch = self._run_command("git rev-parse --abbrev-ref HEAD")
+
+                                state['submodules'][path] = {
+                                    'head': submodule_head,
+                                    'branch': submodule_branch,
+                                    'commit': commit
+                                }
+                                os.chdir(self.base_dir)
+                            except Exception as e:
+                                logger.warning(f"Could not save state for submodule {path}: {e}")
+                                continue
+
+            self.git_state = state
+            logger.info(f"Git state saved: HEAD={state['head'][:7]}, branch={state['branch']}")
+            return state
+
+        except Exception as e:
+            logger.error(f"Failed to save git state: {e}")
+            raise GitOperationError(f"Unable to save git state: {e}")
+
+    def rollback_git_state(self, saved_state: Dict[str, any] = None) -> None:
+        """
+        Rollback git to saved state.
+
+        Args:
+            saved_state: Previously saved git state (uses self.git_state if None)
+
+        Raises:
+            GitOperationError: If rollback fails
+        """
+        state = saved_state or self.git_state
+        if not state:
+            logger.warning("No saved git state to rollback to")
+            return
+
+        try:
+            logger.warning("Rolling back git state...")
+            os.chdir(self.base_dir)
+
+            # Reset to saved HEAD
+            logger.info(f"Resetting to {state['head'][:7]}")
+            self._run_command(f"git reset --hard {state['head']}")
+
+            # Restore submodules
+            for path, sub_state in state.get('submodules', {}).items():
+                submodule_path = self.base_dir / path
+                if submodule_path.exists():
+                    try:
+                        os.chdir(submodule_path)
+                        logger.info(f"Restoring submodule {path} to {sub_state['head'][:7]}")
+                        self._run_command(f"git reset --hard {sub_state['head']}")
+                        os.chdir(self.base_dir)
+                    except Exception as e:
+                        logger.error(f"Failed to restore submodule {path}: {e}")
+                        continue
+
+            logger.info("Git state rollback complete")
+
+        except Exception as e:
+            logger.error(f"Git rollback failed: {e}")
+            raise GitOperationError(f"Rollback failed: {e}")
+
+    def validate_inputs(self, sprint_description: str) -> None:
+        """
+        Validate input parameters.
+
+        Args:
+            sprint_description: Sprint description to validate
+
+        Raises:
+            ValidationError: If inputs are invalid
+        """
+        if not sprint_description or not sprint_description.strip():
+            raise ValidationError("Sprint description cannot be empty")
+
+        if len(sprint_description) > 200:
+            raise ValidationError("Sprint description too long (max 200 characters)")
+
+        # Check for safe characters (prevent command injection)
+        unsafe_chars = ['`', '$', '|', ';', '&', '>', '<']
+        for char in unsafe_chars:
+            if char in sprint_description:
+                raise ValidationError(f"Sprint description contains unsafe character: {char}")
 
     def get_git_status(self) -> Dict[str, any]:
         """Get comprehensive git status information.
@@ -733,7 +901,7 @@ Updates:
         privacy_level: str = 'private',
         with_export: bool = True
     ) -> str:
-        """Run complete checkpoint creation process.
+        """Run complete checkpoint creation process with error handling and rollback.
 
         Args:
             sprint_description: Description of the sprint/work completed
@@ -745,6 +913,11 @@ Updates:
 
         Returns:
             Path to created checkpoint file
+
+        Raises:
+            ValidationError: If inputs are invalid
+            GitOperationError: If git operations fail
+            FileOperationError: If file operations fail
         """
         # If auto_push is enabled, auto_commit must also be enabled
         if auto_push:
@@ -753,6 +926,24 @@ Updates:
         print(f"\n{'='*80}")
         print(f"CODITECT Checkpoint Creation System")
         print(f"{'='*80}\n")
+
+        # Validate inputs
+        try:
+            self.validate_inputs(sprint_description)
+            logger.info("Input validation successful")
+        except ValidationError as e:
+            logger.error(f"Input validation failed: {e}")
+            print(f"\n❌ Validation Error: {e}\n")
+            raise
+
+        # Save git state before making any changes
+        if auto_commit:
+            try:
+                self.save_git_state()
+            except GitOperationError as e:
+                logger.error(f"Failed to save git state: {e}")
+                print(f"\n⚠️  Warning: Could not save git state for rollback: {e}")
+                print("Continuing without rollback capability...\n")
 
         print(f"📋 Sprint: {sprint_description}")
         print(f"🕐 Timestamp: {self.timestamp}")
@@ -876,15 +1067,40 @@ Updates:
                 print(f"  ⚠️ Deduplication failed: {e}")
                 print(f"  Continuing with checkpoint creation...")
 
-        # Step 4: Commit changes (optional)
+        # Step 4: Commit changes (optional) - CRITICAL SECTION WITH ROLLBACK
         if auto_commit:
-            print("\nStep 4: Committing changes to git...")
-            self.commit_changes(filename, sprint_description)
+            try:
+                print("\nStep 4: Committing changes to git...")
+                logger.info("Starting git commit operations...")
+                self.commit_changes(filename, sprint_description)
+                logger.info("Commit successful")
 
-            # Step 5: Push changes (optional)
-            if auto_push:
-                print("\nStep 5: Pushing changes to remote...")
-                self.push_changes()
+                # Step 5: Push changes (optional)
+                if auto_push:
+                    print("\nStep 5: Pushing changes to remote...")
+                    logger.info("Starting git push operations...")
+                    self.push_changes()
+                    logger.info("Push successful")
+
+            except Exception as e:
+                logger.error(f"Git operations failed: {e}")
+                print(f"\n❌ Error during git operations: {e}")
+
+                # Attempt rollback if we saved state
+                if self.git_state:
+                    print("\n⚠️  Attempting to rollback git state...")
+                    try:
+                        self.rollback_git_state()
+                        print("✅ Rollback successful - git state restored")
+                        logger.info("Rollback completed successfully")
+                    except GitOperationError as rollback_error:
+                        logger.critical(f"Rollback failed: {rollback_error}")
+                        print(f"❌ CRITICAL: Rollback failed: {rollback_error}")
+                        print("⚠️  Manual intervention required!")
+                        print(f"   Saved state: {self.git_state}")
+
+                # Re-raise the original exception
+                raise GitOperationError(f"Checkpoint git operations failed: {e}")
         else:
             print("\nStep 4: Skipping auto-commit (use --auto-commit flag to enable)")
             print("\nTo commit manually:")
@@ -944,7 +1160,7 @@ Updates:
 
 
 def main():
-    """Main entry point for checkpoint creation script."""
+    """Main entry point for checkpoint creation script with comprehensive error handling."""
     parser = argparse.ArgumentParser(
         description="CODITECT Checkpoint Creation System",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -1065,29 +1281,89 @@ For more information: https://github.com/coditect-ai/coditect-rollout-master
 
     args = parser.parse_args()
 
-    # Handle --no-push flag (overrides default auto_push=True)
-    auto_push = args.auto_push and not args.no_push
+    try:
+        # Handle --no-push flag (overrides default auto_push=True)
+        auto_push = args.auto_push and not args.no_push
 
-    # Handle --no-export flag (overrides default with_export=True)
-    with_export = args.with_export and not args.no_export
+        # Handle --no-export flag (overrides default with_export=True)
+        with_export = args.with_export and not args.no_export
 
-    # Privacy check
-    if args.privacy_scan and not PRIVACY_AVAILABLE:
-        print("⚠️  WARNING: Privacy scanning requested but privacy_manager not available")
-        print("Privacy features will be skipped")
+        # Privacy check
+        if args.privacy_scan and not PRIVACY_AVAILABLE:
+            print("⚠️  WARNING: Privacy scanning requested but privacy_manager not available")
+            print("Privacy features will be skipped")
+            logger.warning("Privacy manager not available")
 
-    # Create checkpoint
-    creator = CheckpointCreator(base_dir=args.base_dir)
-    checkpoint_path = creator.run(
-        args.description,
-        auto_commit=args.auto_commit or auto_push,  # auto_push implies auto_commit
-        auto_push=auto_push,
-        privacy_scan=args.privacy_scan if PRIVACY_AVAILABLE else False,
-        privacy_level=args.privacy_level,
-        with_export=with_export
-    )
+        # Create checkpoint with comprehensive error handling
+        logger.info(f"Starting checkpoint creation: {args.description}")
+        creator = CheckpointCreator(base_dir=args.base_dir)
 
-    return 0
+        checkpoint_path = creator.run(
+            args.description,
+            auto_commit=args.auto_commit or auto_push,  # auto_push implies auto_commit
+            auto_push=auto_push,
+            privacy_scan=args.privacy_scan if PRIVACY_AVAILABLE else False,
+            privacy_level=args.privacy_level,
+            with_export=with_export
+        )
+
+        logger.info(f"Checkpoint creation completed successfully: {checkpoint_path}")
+        return 0
+
+    except ValidationError as e:
+        logger.error(f"Validation error: {e}")
+        print(f"\n{'='*80}")
+        print(f"❌ VALIDATION ERROR")
+        print(f"{'='*80}")
+        print(f"\n{e}\n")
+        print("Please fix the validation errors and try again.")
+        return 1
+
+    except GitOperationError as e:
+        logger.error(f"Git operation error: {e}")
+        print(f"\n{'='*80}")
+        print(f"❌ GIT OPERATION FAILED")
+        print(f"{'='*80}")
+        print(f"\n{e}\n")
+        print("Git operations failed. Check the log file for details:")
+        print("  checkpoint-creation.log")
+        return 2
+
+    except FileOperationError as e:
+        logger.error(f"File operation error: {e}")
+        print(f"\n{'='*80}")
+        print(f"❌ FILE OPERATION FAILED")
+        print(f"{'='*80}")
+        print(f"\n{e}\n")
+        print("File operations failed. Check permissions and disk space.")
+        return 3
+
+    except CheckpointError as e:
+        logger.error(f"Checkpoint error: {e}")
+        print(f"\n{'='*80}")
+        print(f"❌ CHECKPOINT CREATION FAILED")
+        print(f"{'='*80}")
+        print(f"\n{e}\n")
+        print("Checkpoint creation failed. See log for details:")
+        print("  checkpoint-creation.log")
+        return 4
+
+    except KeyboardInterrupt:
+        logger.warning("Checkpoint creation interrupted by user")
+        print(f"\n\n⚠️  Checkpoint creation interrupted by user (Ctrl+C)")
+        print("No changes were committed to git.")
+        return 130  # Standard exit code for SIGINT
+
+    except Exception as e:
+        logger.exception("Unexpected error occurred")
+        print(f"\n{'='*80}")
+        print(f"❌ UNEXPECTED ERROR")
+        print(f"{'='*80}")
+        print(f"\n{e}\n")
+        print("An unexpected error occurred. Full details in log file:")
+        print("  checkpoint-creation.log")
+        print("\nPlease report this issue if it persists.")
+        return 255
 
 
 if __name__ == "__main__":

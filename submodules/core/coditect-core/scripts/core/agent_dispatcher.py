@@ -8,9 +8,50 @@ Analyzes workflows and automatically determines optimal agents, skills, and comm
 
 import json
 import yaml
+import logging
+import sys
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
+
+# Configure logging
+log_file = Path(__file__).parent / "agent_dispatcher.log"
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(log_file),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
+
+
+# Custom Exception Classes
+class DispatcherError(Exception):
+    """Base exception for agent dispatcher errors"""
+    pass
+
+
+class WorkflowAnalysisError(DispatcherError):
+    """Raised when workflow analysis fails"""
+    pass
+
+
+class AgentRecommendationError(DispatcherError):
+    """Raised when agent recommendation fails"""
+    pass
+
+
+class ScriptGenerationError(DispatcherError):
+    """Raised when script generation fails"""
+    pass
+
+
+class ValidationError(DispatcherError):
+    """Raised when input validation fails"""
+    pass
 
 class TaskType(Enum):
     CONTENT_GENERATION = "content_generation"
@@ -120,121 +161,160 @@ class CurriculumAgentDispatcher:
     
     def analyze_workflow(self, description: str, requirements: Dict) -> TaskRequirement:
         """Analyze workflow description to determine requirements"""
+        logger.info("Starting workflow analysis")
+
+        try:
+            # Input validation
+            if not description or not isinstance(description, str):
+                raise ValidationError("Description must be a non-empty string")
+
+            if not isinstance(requirements, dict):
+                raise ValidationError("Requirements must be a dictionary")
+
+            logger.info(f"Analyzing workflow: {description[:100]}...")
+
+            # Simple keyword-based analysis (could be enhanced with NLP)
+            task_type_keywords = {
+                TaskType.CONTENT_GENERATION: ["content", "material", "learning", "module", "week"],
+                TaskType.ASSESSMENT_CREATION: ["quiz", "test", "assessment", "evaluation", "grade"],
+                TaskType.CURRICULUM_PLANNING: ["curriculum", "syllabus", "plan", "structure", "framework"],
+                TaskType.QUALITY_ASSURANCE: ["quality", "review", "validate", "check", "audit"],
+                TaskType.PROJECT_MANAGEMENT: ["project", "manage", "coordinate", "track", "organize"],
+                TaskType.RESEARCH_ANALYSIS: ["research", "analyze", "investigate", "study", "explore"],
+                TaskType.NOTEBOOKLM_OPTIMIZATION: ["notebooklm", "optimize", "format", "metadata", "ai-ready"]
+            }
+
+            # Determine primary task type
+            description_lower = description.lower()
+            task_scores = {}
+
+            for task_type, keywords in task_type_keywords.items():
+                score = sum(1 for keyword in keywords if keyword in description_lower)
+                if score > 0:
+                    task_scores[task_type] = score
+
+            primary_task = max(task_scores.keys(), key=lambda x: task_scores[x]) if task_scores else TaskType.CONTENT_GENERATION
+
+            # Determine complexity based on scope
+            complexity_indicators = {
+                ComplexityLevel.SIMPLE: ["single", "simple", "basic", "one"],
+                ComplexityLevel.MODERATE: ["multiple", "several", "moderate", "standard"],
+                ComplexityLevel.COMPLEX: ["complex", "advanced", "comprehensive", "full"],
+                ComplexityLevel.ENTERPRISE: ["enterprise", "large-scale", "complete", "all modules"]
+            }
+
+            complexity_scores = {}
+            for level, indicators in complexity_indicators.items():
+                score = sum(1 for indicator in indicators if indicator in description_lower)
+                if score > 0:
+                    complexity_scores[level] = score
+
+            complexity = max(complexity_scores.keys(), key=lambda x: complexity_scores[x]) if complexity_scores else ComplexityLevel.MODERATE
         
-        # Simple keyword-based analysis (could be enhanced with NLP)
-        task_type_keywords = {
-            TaskType.CONTENT_GENERATION: ["content", "material", "learning", "module", "week"],
-            TaskType.ASSESSMENT_CREATION: ["quiz", "test", "assessment", "evaluation", "grade"],
-            TaskType.CURRICULUM_PLANNING: ["curriculum", "syllabus", "plan", "structure", "framework"],
-            TaskType.QUALITY_ASSURANCE: ["quality", "review", "validate", "check", "audit"],
-            TaskType.PROJECT_MANAGEMENT: ["project", "manage", "coordinate", "track", "organize"],
-            TaskType.RESEARCH_ANALYSIS: ["research", "analyze", "investigate", "study", "explore"],
-            TaskType.NOTEBOOKLM_OPTIMIZATION: ["notebooklm", "optimize", "format", "metadata", "ai-ready"]
-        }
-        
-        # Determine primary task type
-        description_lower = description.lower()
-        task_scores = {}
-        
-        for task_type, keywords in task_type_keywords.items():
-            score = sum(1 for keyword in keywords if keyword in description_lower)
-            if score > 0:
-                task_scores[task_type] = score
-        
-        primary_task = max(task_scores.keys(), key=lambda x: task_scores[x]) if task_scores else TaskType.CONTENT_GENERATION
-        
-        # Determine complexity based on scope
-        complexity_indicators = {
-            ComplexityLevel.SIMPLE: ["single", "simple", "basic", "one"],
-            ComplexityLevel.MODERATE: ["multiple", "several", "moderate", "standard"],
-            ComplexityLevel.COMPLEX: ["complex", "advanced", "comprehensive", "full"],
-            ComplexityLevel.ENTERPRISE: ["enterprise", "large-scale", "complete", "all modules"]
-        }
-        
-        complexity_scores = {}
-        for level, indicators in complexity_indicators.items():
-            score = sum(1 for indicator in indicators if indicator in description_lower)
-            if score > 0:
-                complexity_scores[level] = score
-        
-        complexity = max(complexity_scores.keys(), key=lambda x: complexity_scores[x]) if complexity_scores else ComplexityLevel.MODERATE
-        
-        # Extract other requirements
-        skill_levels = requirements.get("skill_levels", ["beginner", "intermediate", "advanced", "expert"])
-        modules = requirements.get("modules", ["foundations"])
-        deliverables = requirements.get("deliverables", ["content", "assessments"])
-        timeline = requirements.get("timeline", "1-2 weeks")
-        dependencies = requirements.get("dependencies", [])
-        
-        return TaskRequirement(
-            task_type=primary_task,
-            complexity=complexity,
-            skill_levels=skill_levels,
-            modules=modules,
-            deliverables=deliverables,
-            timeline=timeline,
-            dependencies=dependencies
-        )
+            # Extract other requirements
+            skill_levels = requirements.get("skill_levels", ["beginner", "intermediate", "advanced", "expert"])
+            modules = requirements.get("modules", ["foundations"])
+            deliverables = requirements.get("deliverables", ["content", "assessments"])
+            timeline = requirements.get("timeline", "1-2 weeks")
+            dependencies = requirements.get("dependencies", [])
+
+            task_requirement = TaskRequirement(
+                task_type=primary_task,
+                complexity=complexity,
+                skill_levels=skill_levels,
+                modules=modules,
+                deliverables=deliverables,
+                timeline=timeline,
+                dependencies=dependencies
+            )
+
+            logger.info(f"Workflow analysis completed successfully: {primary_task.value}, complexity {complexity.value}")
+            return task_requirement
+
+        except ValidationError as e:
+            logger.error(f"Validation error in workflow analysis: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in workflow analysis: {e}")
+            raise WorkflowAnalysisError(f"Failed to analyze workflow: {e}") from e
     
     def recommend_agents(self, task_req: TaskRequirement) -> AgentRecommendation:
         """Recommend optimal agents, skills, and commands for task"""
+        logger.info("Starting agent recommendation")
+
+        try:
+            # Input validation
+            if not isinstance(task_req, TaskRequirement):
+                raise ValidationError("task_req must be a TaskRequirement instance")
+
+            logger.info(f"Recommending agents for task type: {task_req.task_type.value}")
+
+            # Find primary agent
+            primary_candidates = []
+            for agent, capabilities in self.agent_capabilities.items():
+                if (task_req.task_type in capabilities["task_types"] and
+                    capabilities["complexity_range"][0] <= task_req.complexity.value <= capabilities["complexity_range"][1]):
+                    primary_candidates.append((agent, capabilities))
+
+            # Select best primary agent (prioritize coordination ability for complex tasks)
+            if task_req.complexity.value >= 3:
+                primary_agent = max(primary_candidates, key=lambda x: x[1]["coordination_ability"] == "excellent")[0]
+            else:
+                primary_agent = primary_candidates[0][0] if primary_candidates else "ai-curriculum-specialist"
+
+            # Determine supporting agents
+            supporting_agents = []
+            if task_req.complexity.value >= 2:
+                if task_req.task_type == TaskType.CURRICULUM_PLANNING:
+                    supporting_agents.extend(["educational-content-generator", "assessment-creation-agent"])
+                elif task_req.task_type == TaskType.CONTENT_GENERATION:
+                    supporting_agents.append("assessment-creation-agent")
+                elif task_req.task_type == TaskType.PROJECT_MANAGEMENT:
+                    supporting_agents.extend(["ai-curriculum-specialist", "educational-content-generator"])
+
+            # Recommend skills
+            required_skills = []
+            for skill, capabilities in self.skill_capabilities.items():
+                if (any(use_case in str(task_req).lower() for use_case in capabilities["use_cases"]) and
+                    capabilities["educational_focus"]):
+                    required_skills.append(skill)
+
+            if not required_skills:
+                required_skills = ["ai-curriculum-development"]  # Default educational skill
+
+            # Recommend commands
+            recommended_commands = []
+            for command, capabilities in self.command_capabilities.items():
+                if (any(use_case in str(task_req).lower() for use_case in capabilities["use_cases"]) and
+                    capabilities["complexity_level"][0] <= task_req.complexity.value <= capabilities["complexity_level"][1]):
+                    recommended_commands.append(command)
+
+            # Determine execution order
+            execution_order = self._plan_execution_order(task_req, primary_agent, supporting_agents, recommended_commands)
         
-        # Find primary agent
-        primary_candidates = []
-        for agent, capabilities in self.agent_capabilities.items():
-            if (task_req.task_type in capabilities["task_types"] and
-                capabilities["complexity_range"][0] <= task_req.complexity.value <= capabilities["complexity_range"][1]):
-                primary_candidates.append((agent, capabilities))
-        
-        # Select best primary agent (prioritize coordination ability for complex tasks)
-        if task_req.complexity.value >= 3:
-            primary_agent = max(primary_candidates, key=lambda x: x[1]["coordination_ability"] == "excellent")[0]
-        else:
-            primary_agent = primary_candidates[0][0] if primary_candidates else "ai-curriculum-specialist"
-        
-        # Determine supporting agents
-        supporting_agents = []
-        if task_req.complexity.value >= 2:
-            if task_req.task_type == TaskType.CURRICULUM_PLANNING:
-                supporting_agents.extend(["educational-content-generator", "assessment-creation-agent"])
-            elif task_req.task_type == TaskType.CONTENT_GENERATION:
-                supporting_agents.append("assessment-creation-agent")
-            elif task_req.task_type == TaskType.PROJECT_MANAGEMENT:
-                supporting_agents.extend(["ai-curriculum-specialist", "educational-content-generator"])
-        
-        # Recommend skills
-        required_skills = []
-        for skill, capabilities in self.skill_capabilities.items():
-            if (any(use_case in str(task_req).lower() for use_case in capabilities["use_cases"]) and
-                capabilities["educational_focus"]):
-                required_skills.append(skill)
-        
-        if not required_skills:
-            required_skills = ["ai-curriculum-development"]  # Default educational skill
-        
-        # Recommend commands
-        recommended_commands = []
-        for command, capabilities in self.command_capabilities.items():
-            if (any(use_case in str(task_req).lower() for use_case in capabilities["use_cases"]) and
-                capabilities["complexity_level"][0] <= task_req.complexity.value <= capabilities["complexity_level"][1]):
-                recommended_commands.append(command)
-        
-        # Determine execution order
-        execution_order = self._plan_execution_order(task_req, primary_agent, supporting_agents, recommended_commands)
-        
-        # Estimate resources
-        estimated_tokens = self._estimate_tokens(task_req, len(supporting_agents) + 1)
-        estimated_duration = self._estimate_duration(task_req, estimated_tokens)
-        
-        return AgentRecommendation(
-            primary_agent=primary_agent,
-            supporting_agents=supporting_agents,
-            required_skills=required_skills,
-            recommended_commands=recommended_commands,
-            execution_order=execution_order,
-            estimated_tokens=estimated_tokens,
-            estimated_duration=estimated_duration
-        )
+            # Estimate resources
+            estimated_tokens = self._estimate_tokens(task_req, len(supporting_agents) + 1)
+            estimated_duration = self._estimate_duration(task_req, estimated_tokens)
+
+            recommendation = AgentRecommendation(
+                primary_agent=primary_agent,
+                supporting_agents=supporting_agents,
+                required_skills=required_skills,
+                recommended_commands=recommended_commands,
+                execution_order=execution_order,
+                estimated_tokens=estimated_tokens,
+                estimated_duration=estimated_duration
+            )
+
+            logger.info(f"Agent recommendation completed: primary={primary_agent}, supporting={len(supporting_agents)}")
+            return recommendation
+
+        except ValidationError as e:
+            logger.error(f"Validation error in agent recommendation: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in agent recommendation: {e}")
+            raise AgentRecommendationError(f"Failed to recommend agents: {e}") from e
     
     def _plan_execution_order(self, task_req: TaskRequirement, primary_agent: str, 
                             supporting_agents: List[str], commands: List[str]) -> List[str]:
@@ -299,8 +379,19 @@ class CurriculumAgentDispatcher:
     
     def generate_task_script(self, task_req: TaskRequirement, recommendation: AgentRecommendation) -> str:
         """Generate executable task script for agent invocation"""
-        
-        script_template = f'''#!/usr/bin/env python3
+        logger.info("Starting script generation")
+
+        try:
+            # Input validation
+            if not isinstance(task_req, TaskRequirement):
+                raise ValidationError("task_req must be a TaskRequirement instance")
+
+            if not isinstance(recommendation, AgentRecommendation):
+                raise ValidationError("recommendation must be an AgentRecommendation instance")
+
+            logger.info(f"Generating script for task: {task_req.task_type.value}")
+
+            script_template = f'''#!/usr/bin/env python3
 """
 Generated Task Script for {task_req.task_type.value}
 Complexity: {task_req.complexity.value}/4
@@ -323,33 +414,33 @@ class TaskExecution:
         
     def execute_phase(self, phase: str, agent: str, prompt: str) -> Dict:
         """Execute single phase with specified agent"""
-        
+
         # Using Claude Code Task protocol from CLAUDE.md
-        task_call = f'''
+        task_call = f\"\"\"
 Task(
     subagent_type="general-purpose",
-    description="{phase}",
-    prompt="""Use {{agent}} subagent to {{prompt}}
-    
+    description="{{phase}}",
+    prompt=\\\"\\\"\\\"Use {{{{agent}}}} subagent to {{{{prompt}}}}
+
     Context:
     - Task Type: {task_req.task_type.value}
     - Skill Levels: {task_req.skill_levels}
     - Modules: {task_req.modules}
     - Deliverables: {task_req.deliverables}
-    
+
     Requirements:
     - Follow curriculum development best practices
     - Create content with proper metadata for NotebookLM
     - Include assessment integration
     - Track progress with checkboxes
-    
+
     Report back:
     - What was completed
     - What remains to be done
     - Current status and any blockers
     - Recommendations for next steps
-    """
-)'''
+    \\\"\\\"\\\"
+)\"\"\"
         
         print(f"Executing Phase: {{phase}}")
         print(f"Agent: {{agent}}")
@@ -402,22 +493,22 @@ Task(
     
     def execute_orchestrated_phase(self, orchestrator: str, action: str) -> Dict:
         """Execute complex orchestrated phase"""
-        
-        orchestrator_prompt = f'''Act as project manager and {{action}}.
-        
+
+        orchestrator_prompt = f\"\"\"Act as project manager and {{{{action}}}}.
+
         Create comprehensive project plan with:
         - Detailed task breakdown with checkboxes
         - Agent assignment and coordination
         - Progress tracking and milestone management
         - Quality gates and validation steps
         - Token budget and timeline management
-        
+
         Coordinate the following workflow:
         - Task Type: {task_req.task_type.value}
         - Complexity: {task_req.complexity.value}/4
         - Deliverables: {task_req.deliverables}
         - Timeline: {task_req.timeline}
-        '''
+        \"\"\"
         
         return self.execute_phase("orchestration", orchestrator, orchestrator_prompt)
     
@@ -491,75 +582,127 @@ if __name__ == "__main__":
     
     print("\\n📊 Detailed results saved to task_execution_results.json")
 '''
-        
-        return script_template
+
+            logger.info("Script generation completed successfully")
+            return script_template
+
+        except ValidationError as e:
+            logger.error(f"Validation error in script generation: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in script generation: {e}")
+            raise ScriptGenerationError(f"Failed to generate task script: {e}") from e
 
 def main():
     """Example usage of the agent dispatcher"""
-    
-    dispatcher = CurriculumAgentDispatcher()
-    
-    # Example workflow analysis
-    workflow_description = """
-    Create comprehensive AI curriculum content for Module 3 Deep Learning 
-    across all skill levels (beginner through expert) with integrated 
-    assessments, NotebookLM optimization, and progress tracking.
-    """
-    
-    requirements = {
-        "skill_levels": ["beginner", "intermediate", "advanced", "expert"],
-        "modules": ["module3_deep_learning"],
-        "deliverables": ["content", "assessments", "notebooklm_optimization"],
-        "timeline": "2-3 weeks",
-        "dependencies": ["module2_machine_learning"]
-    }
-    
-    # Analyze and recommend
-    task_req = dispatcher.analyze_workflow(workflow_description, requirements)
-    recommendation = dispatcher.recommend_agents(task_req)
-    
-    # Generate executable script
-    script = dispatcher.generate_task_script(task_req, recommendation)
-    
-    # Output results
-    print("="*60)
-    print("AI CURRICULUM AGENT DISPATCHER - ANALYSIS RESULTS")
-    print("="*60)
-    
-    print(f"\\n🎯 **Task Analysis:**")
-    print(f"   Task Type: {task_req.task_type.value}")
-    print(f"   Complexity: {task_req.complexity.value}/4")
-    print(f"   Skill Levels: {', '.join(task_req.skill_levels)}")
-    print(f"   Modules: {', '.join(task_req.modules)}")
-    
-    print(f"\\n🤖 **Agent Recommendations:**")
-    print(f"   Primary Agent: {recommendation.primary_agent}")
-    print(f"   Supporting Agents: {', '.join(recommendation.supporting_agents)}")
-    print(f"   Required Skills: {', '.join(recommendation.required_skills)}")
-    print(f"   Commands: {', '.join(recommendation.recommended_commands)}")
-    
-    print(f"\\n⚡ **Execution Plan:**")
-    for i, step in enumerate(recommendation.execution_order, 1):
-        print(f"   {i}. {step}")
-    
-    print(f"\\n📊 **Resource Estimates:**")
-    print(f"   Estimated Tokens: {recommendation.estimated_tokens:,}")
-    print(f"   Estimated Duration: {recommendation.estimated_duration}")
-    
-    print(f"\\n📝 **Generated Script:**")
-    print("   Executable task script generated with:")
-    print("   - Agent invocation using Task protocol")
-    print("   - Progress tracking with checkboxes")
-    print("   - Autonomous execution and reporting")
-    print("   - Multi-session state management")
-    
-    # Save the script
-    script_filename = f"generated_task_{task_req.task_type.value}.py"
-    with open(script_filename, "w") as f:
-        f.write(script)
-    
-    print(f"\\n✅ **Script saved as:** {script_filename}")
-    print("   Execute with: python " + script_filename)
+    logger.info("Agent Dispatcher starting")
+
+    try:
+        dispatcher = CurriculumAgentDispatcher()
+
+        # Example workflow analysis
+        workflow_description = """
+        Create comprehensive AI curriculum content for Module 3 Deep Learning
+        across all skill levels (beginner through expert) with integrated
+        assessments, NotebookLM optimization, and progress tracking.
+        """
+
+        requirements = {
+            "skill_levels": ["beginner", "intermediate", "advanced", "expert"],
+            "modules": ["module3_deep_learning"],
+            "deliverables": ["content", "assessments", "notebooklm_optimization"],
+            "timeline": "2-3 weeks",
+            "dependencies": ["module2_machine_learning"]
+        }
+
+        # Analyze and recommend
+        logger.info("Executing workflow analysis and agent recommendation")
+        task_req = dispatcher.analyze_workflow(workflow_description, requirements)
+        recommendation = dispatcher.recommend_agents(task_req)
+
+        # Generate executable script
+        logger.info("Generating executable task script")
+        script = dispatcher.generate_task_script(task_req, recommendation)
+
+        # Output results
+        print("="*60)
+        print("AI CURRICULUM AGENT DISPATCHER - ANALYSIS RESULTS")
+        print("="*60)
+
+        print(f"\\n🎯 **Task Analysis:**")
+        print(f"   Task Type: {task_req.task_type.value}")
+        print(f"   Complexity: {task_req.complexity.value}/4")
+        print(f"   Skill Levels: {', '.join(task_req.skill_levels)}")
+        print(f"   Modules: {', '.join(task_req.modules)}")
+
+        print(f"\\n🤖 **Agent Recommendations:**")
+        print(f"   Primary Agent: {recommendation.primary_agent}")
+        print(f"   Supporting Agents: {', '.join(recommendation.supporting_agents)}")
+        print(f"   Required Skills: {', '.join(recommendation.required_skills)}")
+        print(f"   Commands: {', '.join(recommendation.recommended_commands)}")
+
+        print(f"\\n⚡ **Execution Plan:**")
+        for i, step in enumerate(recommendation.execution_order, 1):
+            print(f"   {i}. {step}")
+
+        print(f"\\n📊 **Resource Estimates:**")
+        print(f"   Estimated Tokens: {recommendation.estimated_tokens:,}")
+        print(f"   Estimated Duration: {recommendation.estimated_duration}")
+
+        print(f"\\n📝 **Generated Script:**")
+        print("   Executable task script generated with:")
+        print("   - Agent invocation using Task protocol")
+        print("   - Progress tracking with checkboxes")
+        print("   - Autonomous execution and reporting")
+        print("   - Multi-session state management")
+
+        # Save the script
+        script_filename = f"generated_task_{task_req.task_type.value}.py"
+        with open(script_filename, "w") as f:
+            f.write(script)
+
+        print(f"\\n✅ **Script saved as:** {script_filename}")
+        print(f"   Execute with: python {script_filename}")
+        print(f"\\n📋 **Log file:** {log_file}")
+
+        logger.info("Agent Dispatcher completed successfully")
+        return 0
+
+    except ValidationError as e:
+        error_msg = f"Validation error: {e}"
+        print(f"\\n❌ ERROR: {error_msg}", file=sys.stderr)
+        logger.error(error_msg)
+        return 1
+
+    except WorkflowAnalysisError as e:
+        error_msg = f"Workflow analysis failed: {e}"
+        print(f"\\n❌ ERROR: {error_msg}", file=sys.stderr)
+        logger.error(error_msg)
+        return 1
+
+    except AgentRecommendationError as e:
+        error_msg = f"Agent recommendation failed: {e}"
+        print(f"\\n❌ ERROR: {error_msg}", file=sys.stderr)
+        logger.error(error_msg)
+        return 1
+
+    except ScriptGenerationError as e:
+        error_msg = f"Script generation failed: {e}"
+        print(f"\\n❌ ERROR: {error_msg}", file=sys.stderr)
+        logger.error(error_msg)
+        return 1
+
+    except DispatcherError as e:
+        error_msg = f"Dispatcher error: {e}"
+        print(f"\\n❌ ERROR: {error_msg}", file=sys.stderr)
+        logger.error(error_msg)
+        return 1
+
+    except Exception as e:
+        error_msg = f"Unexpected error: {e}"
+        print(f"\\n❌ CRITICAL ERROR: {error_msg}", file=sys.stderr)
+        logger.exception("Unexpected error in main()")
+        return 1
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

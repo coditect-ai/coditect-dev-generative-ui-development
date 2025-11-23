@@ -35,12 +35,54 @@ import subprocess
 # Import core utilities
 from utils import find_git_root
 
-# Setup logging
+# Setup dual logging (stdout + file)
+log_dir = Path(__file__).parent.parent.parent / "MEMORY-CONTEXT" / "logs"
+log_dir.mkdir(parents=True, exist_ok=True)
+log_file = log_dir / "session_export.log"
+
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(log_file)
+    ]
 )
 logger = logging.getLogger(__name__)
+
+
+# ============================================================================
+# Custom Exception Hierarchy
+# ============================================================================
+
+class SessionExportError(Exception):
+    """Base exception for session export errors."""
+    pass
+
+
+class CheckpointNotFoundError(SessionExportError):
+    """Raised when checkpoint file is not found."""
+    pass
+
+
+class GitOperationError(SessionExportError):
+    """Raised when git operations fail."""
+    pass
+
+
+class ExportFormatError(SessionExportError):
+    """Raised when export format is invalid."""
+    pass
+
+
+class FileWriteError(SessionExportError):
+    """Raised when file writing fails."""
+    pass
+
+
+class RepositoryNotFoundError(SessionExportError):
+    """Raised when git repository is not found."""
+    pass
 
 
 class SessionExporter:
@@ -57,27 +99,46 @@ class SessionExporter:
 
         Args:
             repo_root: Root directory of repository. Auto-detected if not provided.
+
+        Raises:
+            RepositoryNotFoundError: If repository is not found
+            FileWriteError: If directory creation fails
         """
-        if repo_root is None:
-            # Auto-detect repo root using utility
-            repo_root = find_git_root()
-        else:
-            repo_root = Path(repo_root)
-            # Validate that provided path is a git repository
-            if not ((repo_root / '.git').exists() or (repo_root / '.git').is_file()):
-                raise ValueError(f"Provided path is not a git repository: {repo_root}")
+        try:
+            if repo_root is None:
+                # Auto-detect repo root using utility
+                try:
+                    repo_root = find_git_root()
+                except Exception as e:
+                    logger.error("Failed to auto-detect repository root")
+                    raise RepositoryNotFoundError(
+                        "Could not find git repository. Run from within a git repo or provide --repo-root"
+                    ) from e
+            else:
+                repo_root = Path(repo_root)
+                # Validate that provided path is a git repository
+                if not ((repo_root / '.git').exists() or (repo_root / '.git').is_file()):
+                    raise RepositoryNotFoundError(f"Provided path is not a git repository: {repo_root}")
 
-        self.repo_root = Path(repo_root)
-        self.memory_context_dir = self.repo_root / "MEMORY-CONTEXT"
-        self.sessions_dir = self.memory_context_dir / "sessions"
-        self.exports_dir = self.memory_context_dir / "exports"
-        self.checkpoints_dir = self.memory_context_dir / "checkpoints"
+            self.repo_root = Path(repo_root)
+            self.memory_context_dir = self.repo_root / "MEMORY-CONTEXT"
+            self.sessions_dir = self.memory_context_dir / "sessions"
+            self.exports_dir = self.memory_context_dir / "exports"
+            self.checkpoints_dir = self.memory_context_dir / "checkpoints"
 
-        # Ensure directories exist
-        self.sessions_dir.mkdir(parents=True, exist_ok=True)
-        self.exports_dir.mkdir(parents=True, exist_ok=True)
+            # Ensure directories exist
+            try:
+                self.sessions_dir.mkdir(parents=True, exist_ok=True)
+                self.exports_dir.mkdir(parents=True, exist_ok=True)
+            except OSError as e:
+                logger.error(f"Failed to create directories: {e}")
+                raise FileWriteError(f"Could not create required directories: {e}") from e
 
-        logger.info(f"SessionExporter initialized for repo: {self.repo_root}")
+            logger.info(f"SessionExporter initialized for repo: {self.repo_root}")
+
+        except Exception as e:
+            logger.error(f"Failed to initialize SessionExporter: {e}")
+            raise
 
     def export_session(
         self,
@@ -93,60 +154,85 @@ class SessionExporter:
 
         Returns:
             Path to exported session file
+
+        Raises:
+            CheckpointNotFoundError: If checkpoint is not found
+            FileWriteError: If export file cannot be written
         """
-        # Auto-detect latest checkpoint if not provided
-        if checkpoint_path is None:
-            checkpoint_path = self._find_latest_checkpoint()
+        try:
+            # Auto-detect latest checkpoint if not provided
             if checkpoint_path is None:
-                raise ValueError("No checkpoints found. Create a checkpoint first.")
+                checkpoint_path = self._find_latest_checkpoint()
+                if checkpoint_path is None:
+                    raise CheckpointNotFoundError(
+                        "No checkpoints found. Create a checkpoint first using create-checkpoint.py"
+                    )
 
-        checkpoint_path = Path(checkpoint_path)
-        if not checkpoint_path.exists():
-            raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
+            checkpoint_path = Path(checkpoint_path)
+            if not checkpoint_path.exists():
+                raise CheckpointNotFoundError(f"Checkpoint not found: {checkpoint_path}")
 
-        logger.info(f"Exporting session from checkpoint: {checkpoint_path.name}")
+            if not checkpoint_path.is_file():
+                raise CheckpointNotFoundError(f"Checkpoint path is not a file: {checkpoint_path}")
 
-        # Extract session data
-        conversation = self._extract_conversation(checkpoint_path)
-        metadata = self._generate_metadata(checkpoint_path)
-        file_changes = self._track_file_changes()
-        decisions = self._extract_decisions(checkpoint_path)
+            logger.info(f"Exporting session from checkpoint: {checkpoint_path.name}")
 
-        # Generate session export
-        session_content = self._build_session_export(
-            conversation=conversation,
-            metadata=metadata,
-            file_changes=file_changes,
-            decisions=decisions
-        )
+            # Extract session data with error handling
+            try:
+                conversation = self._extract_conversation(checkpoint_path)
+                metadata = self._generate_metadata(checkpoint_path)
+                file_changes = self._track_file_changes()
+                decisions = self._extract_decisions(checkpoint_path)
+            except Exception as e:
+                logger.error(f"Failed to extract session data: {e}")
+                raise ExportFormatError(f"Failed to extract session data: {e}") from e
 
-        # Generate session filename with ISO-DATETIME prefix
-        if session_name is None:
-            # Extract from checkpoint filename or use metadata
-            session_name = self._generate_session_name(checkpoint_path, metadata)
+            # Generate session export
+            session_content = self._build_session_export(
+                conversation=conversation,
+                metadata=metadata,
+                file_changes=file_changes,
+                decisions=decisions
+            )
 
-        # Use current datetime as ISO-DATETIME prefix to prevent collisions
-        # Format: YYYY-MM-DDTHH-MM-SSZ-session-name.md
-        iso_datetime = datetime.now().strftime('%Y-%m-%dT%H-%M-%SZ')
-        session_filename = f"{iso_datetime}-{session_name}.md"
-        session_path = self.sessions_dir / session_filename
+            # Generate session filename with ISO-DATETIME prefix
+            if session_name is None:
+                # Extract from checkpoint filename or use metadata
+                session_name = self._generate_session_name(checkpoint_path, metadata)
 
-        # Write session file
-        session_path.write_text(session_content)
-        logger.info(f"Session exported to: {session_path}")
+            # Use current datetime as ISO-DATETIME prefix to prevent collisions
+            # Format: YYYY-MM-DDTHH-MM-SSZ-session-name.md
+            iso_datetime = datetime.now().strftime('%Y-%m-%dT%H-%M-%SZ')
+            session_filename = f"{iso_datetime}-{session_name}.md"
+            session_path = self.sessions_dir / session_filename
 
-        # Also create JSON export for programmatic access
-        json_path = self.exports_dir / session_filename.replace('.md', '.json')
-        self._export_json(
-            json_path,
-            conversation=conversation,
-            metadata=metadata,
-            file_changes=file_changes,
-            decisions=decisions
-        )
-        logger.info(f"JSON export created: {json_path}")
+            # Write session file
+            try:
+                session_path.write_text(session_content)
+                logger.info(f"Session exported to: {session_path}")
+            except IOError as e:
+                logger.error(f"Failed to write session file: {e}")
+                raise FileWriteError(f"Could not write session file: {e}") from e
 
-        return session_path
+            # Also create JSON export for programmatic access
+            json_path = self.exports_dir / session_filename.replace('.md', '.json')
+            try:
+                self._export_json(
+                    json_path,
+                    conversation=conversation,
+                    metadata=metadata,
+                    file_changes=file_changes,
+                    decisions=decisions
+                )
+                logger.info(f"JSON export created: {json_path}")
+            except Exception as e:
+                logger.warning(f"JSON export failed (session MD still created): {e}")
+
+            return session_path
+
+        except Exception as e:
+            logger.error(f"Session export failed: {e}")
+            raise
 
     def _find_latest_checkpoint(self) -> Optional[Path]:
         """Find the most recent checkpoint file."""
@@ -587,7 +673,12 @@ class SessionExporter:
 
 
 def main():
-    """CLI entry point."""
+    """
+    CLI entry point.
+
+    Returns:
+        Exit code (0 = success, 1 = failure)
+    """
     parser = argparse.ArgumentParser(
         description='CODITECT Session Export Engine - Export session context for MEMORY-CONTEXT system'
     )
@@ -628,6 +719,7 @@ def main():
     # Set logging level
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
+        logger.debug("Verbose logging enabled")
 
     try:
         # Initialize exporter
@@ -647,11 +739,52 @@ def main():
         print(f"\n💡 Load this context in your next session:")
         print(f"   python3 scripts/core/context_loader.py --session '{session_path.name}'")
 
+        logger.info("Session export completed successfully")
         return 0
+
+    except RepositoryNotFoundError as e:
+        print(f"\n❌ Repository Error: {e}")
+        print("\nRun this script from within a git repository or use --repo-root")
+        logger.error(f"Repository not found: {e}")
+        return 1
+
+    except CheckpointNotFoundError as e:
+        print(f"\n❌ Checkpoint Error: {e}")
+        print("\nCreate a checkpoint first with:")
+        print("   python3 scripts/core/create-checkpoint.py 'Session description'")
+        logger.error(f"Checkpoint not found: {e}")
+        return 1
+
+    except FileWriteError as e:
+        print(f"\n❌ File Write Error: {e}")
+        print("\nCheck directory permissions for MEMORY-CONTEXT/")
+        logger.error(f"File write failed: {e}")
+        return 1
+
+    except ExportFormatError as e:
+        print(f"\n❌ Export Format Error: {e}")
+        print("\nCheckpoint file may be corrupted or in unexpected format")
+        logger.error(f"Export format error: {e}")
+        return 1
+
+    except GitOperationError as e:
+        print(f"\n❌ Git Operation Error: {e}")
+        print("\nGit operations failed. Check git installation and repository state.")
+        logger.error(f"Git operation failed: {e}")
+        return 1
+
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Export interrupted by user")
+        logger.warning("Export interrupted by user")
+        return 1
 
     except Exception as e:
         logger.error(f"Session export failed: {e}", exc_info=args.verbose)
-        print(f"\n❌ Error: {e}")
+        print(f"\n❌ Unexpected Error: {e}")
+        print(f"\nLog file: {log_file}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
         return 1
 
 

@@ -33,9 +33,26 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('db_backup.log')
+    ]
 )
 logger = logging.getLogger(__name__)
+
+# Custom exceptions
+class DatabaseBackupError(Exception):
+    """Base exception for database backup errors"""
+    pass
+
+class BackupNotFoundError(DatabaseBackupError):
+    """Backup file or directory not found"""
+    pass
+
+class RestoreError(DatabaseBackupError):
+    """Error during restore operation"""
+    pass
 
 
 class DatabaseBackup:
@@ -130,13 +147,20 @@ class DatabaseBackup:
 
         Returns:
             Path to backup directory
+
+        Raises:
+            DatabaseBackupError: If backup creation fails
         """
+        backup_path = None
         try:
+            logger.info("Starting backup creation...")
+
             # Generate backup name
             backup_name = self.get_backup_name()
             backup_path = self.backup_dir / backup_name
 
             # Create backup directory
+            logger.debug(f"Creating backup directory: {backup_path}")
             backup_path.mkdir(parents=True, exist_ok=True)
 
             logger.info(f"Creating backup: {backup_name}")
@@ -166,9 +190,26 @@ class DatabaseBackup:
 
             return backup_path
 
+        except FileNotFoundError as e:
+            logger.error(f"File not found during backup: {e}")
+            # Clean up partial backup
+            if backup_path and backup_path.exists():
+                shutil.rmtree(backup_path)
+                logger.debug(f"Cleaned up partial backup: {backup_path}")
+            raise DatabaseBackupError(f"Backup failed - file not found: {e}")
+        except PermissionError as e:
+            logger.error(f"Permission denied during backup: {e}")
+            raise DatabaseBackupError(f"Backup failed - permission denied: {e}")
         except Exception as e:
-            logger.error(f"❌ Backup failed: {e}")
-            raise
+            logger.error(f"Unexpected error during backup: {e}", exc_info=True)
+            # Clean up partial backup
+            if backup_path and backup_path.exists():
+                try:
+                    shutil.rmtree(backup_path)
+                    logger.debug(f"Cleaned up partial backup: {backup_path}")
+                except Exception as cleanup_error:
+                    logger.warning(f"Could not clean up partial backup: {cleanup_error}")
+            raise DatabaseBackupError(f"Backup failed: {e}")
 
     def restore_sqlite(self, backup_path: Path) -> None:
         """
@@ -227,13 +268,20 @@ class DatabaseBackup:
             backup_name: Name of backup to restore
 
         Raises:
-            FileNotFoundError: If backup not found
+            BackupNotFoundError: If backup not found
+            RestoreError: If restore operation fails
         """
         try:
+            logger.info(f"Starting restore from backup: {backup_name}")
             backup_path = self.backup_dir / backup_name
 
             if not backup_path.exists():
-                raise FileNotFoundError(f"Backup not found: {backup_name}")
+                logger.error(f"Backup not found: {backup_name}")
+                raise BackupNotFoundError(f"Backup not found: {backup_name}")
+
+            if not backup_path.is_dir():
+                logger.error(f"Backup path is not a directory: {backup_path}")
+                raise BackupNotFoundError(f"Invalid backup path: {backup_name}")
 
             logger.info(f"Restoring from backup: {backup_name}")
 
@@ -247,9 +295,17 @@ class DatabaseBackup:
 
             logger.info(f"✅ Restore completed successfully")
 
-        except Exception as e:
-            logger.error(f"❌ Restore failed: {e}")
+        except BackupNotFoundError:
             raise
+        except FileNotFoundError as e:
+            logger.error(f"File not found during restore: {e}")
+            raise RestoreError(f"Restore failed - file not found: {e}")
+        except PermissionError as e:
+            logger.error(f"Permission denied during restore: {e}")
+            raise RestoreError(f"Restore failed - permission denied: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error during restore: {e}", exc_info=True)
+            raise RestoreError(f"Restore failed: {e}")
 
     def list_backups(self) -> List[dict]:
         """
@@ -317,59 +373,61 @@ class DatabaseBackup:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description='Backup and restore CODITECT MEMORY-CONTEXT database'
-    )
-    parser.add_argument(
-        'command',
-        choices=['backup', 'restore', 'list', 'cleanup'],
-        help='Command to execute'
-    )
-    parser.add_argument(
-        'backup_name',
-        nargs='?',
-        help='Backup name (required for restore)'
-    )
-    parser.add_argument(
-        '--days',
-        type=int,
-        default=30,
-        help='Delete backups older than N days (cleanup command)'
-    )
-    parser.add_argument(
-        '--db-path',
-        type=str,
-        default=None,
-        help='Custom database path'
-    )
-    parser.add_argument(
-        '--chroma-dir',
-        type=str,
-        default=None,
-        help='Custom ChromaDB directory'
-    )
-    parser.add_argument(
-        '--backup-dir',
-        type=str,
-        default=None,
-        help='Custom backup directory'
-    )
-
-    args = parser.parse_args()
-
-    # Determine paths
-    db_path = Path(args.db_path) if args.db_path else PROJECT_ROOT / "MEMORY-CONTEXT" / "memory-context.db"
-    chroma_dir = Path(args.chroma_dir) if args.chroma_dir else PROJECT_ROOT / "MEMORY-CONTEXT" / "chromadb"
-    backup_dir = Path(args.backup_dir) if args.backup_dir else PROJECT_ROOT / "MEMORY-CONTEXT" / "backups"
-
-    # Create backup handler
-    backup = DatabaseBackup(
-        db_path=db_path,
-        chroma_dir=chroma_dir,
-        backup_dir=backup_dir
-    )
-
     try:
+        parser = argparse.ArgumentParser(
+            description='Backup and restore CODITECT MEMORY-CONTEXT database'
+        )
+        parser.add_argument(
+            'command',
+            choices=['backup', 'restore', 'list', 'cleanup'],
+            help='Command to execute'
+        )
+        parser.add_argument(
+            'backup_name',
+            nargs='?',
+            help='Backup name (required for restore)'
+        )
+        parser.add_argument(
+            '--days',
+            type=int,
+            default=30,
+            help='Delete backups older than N days (cleanup command)'
+        )
+        parser.add_argument(
+            '--db-path',
+            type=str,
+            default=None,
+            help='Custom database path'
+        )
+        parser.add_argument(
+            '--chroma-dir',
+            type=str,
+            default=None,
+            help='Custom ChromaDB directory'
+        )
+        parser.add_argument(
+            '--backup-dir',
+            type=str,
+            default=None,
+            help='Custom backup directory'
+        )
+
+        args = parser.parse_args()
+
+        # Determine paths
+        db_path = Path(args.db_path) if args.db_path else PROJECT_ROOT / "MEMORY-CONTEXT" / "memory-context.db"
+        chroma_dir = Path(args.chroma_dir) if args.chroma_dir else PROJECT_ROOT / "MEMORY-CONTEXT" / "chromadb"
+        backup_dir = Path(args.backup_dir) if args.backup_dir else PROJECT_ROOT / "MEMORY-CONTEXT" / "backups"
+
+        logger.info(f"Starting {args.command} operation")
+
+        # Create backup handler
+        backup = DatabaseBackup(
+            db_path=db_path,
+            chroma_dir=chroma_dir,
+            backup_dir=backup_dir
+        )
+
         # Execute command
         if args.command == 'backup':
             backup_path = backup.create_backup()
@@ -380,13 +438,15 @@ def main():
             print()
             print(f"Backup location: {backup_path}")
             print()
+            return 0
 
         elif args.command == 'restore':
             if not args.backup_name:
-                print("Error: backup_name required for restore")
-                print("Usage: db_backup.py restore <backup_name>")
-                print("Run 'db_backup.py list' to see available backups")
-                sys.exit(1)
+                logger.error("Backup name required for restore")
+                print("❌ Error: backup_name required for restore", file=sys.stderr)
+                print("Usage: db_backup.py restore <backup_name>", file=sys.stderr)
+                print("Run 'db_backup.py list' to see available backups", file=sys.stderr)
+                return 1
 
             backup.restore_backup(args.backup_name)
             print()
@@ -394,6 +454,7 @@ def main():
             print("RESTORE COMPLETE")
             print("=" * 70)
             print()
+            return 0
 
         elif args.command == 'list':
             backups = backup.list_backups()
@@ -412,6 +473,7 @@ def main():
                     print(f"  Created: {b.get('timestamp', 'Unknown')}")
                     print(f"  Size: {b.get('size_mb', 0):.2f} MB")
                     print()
+            return 0
 
         elif args.command == 'cleanup':
             deleted = backup.cleanup_old_backups(days=args.days)
@@ -422,17 +484,53 @@ def main():
             print()
             print(f"Deleted {deleted} backups older than {args.days} days")
             print()
+            return 0
 
+    except BackupNotFoundError as e:
+        logger.error(f"Backup not found: {e}")
+        print()
+        print("=" * 70)
+        print("BACKUP NOT FOUND")
+        print("=" * 70)
+        print()
+        print(f"❌ Error: {e}")
+        print(f"See db_backup.log for details")
+        print()
+        return 1
+    except RestoreError as e:
+        logger.error(f"Restore error: {e}")
+        print()
+        print("=" * 70)
+        print("RESTORE FAILED")
+        print("=" * 70)
+        print()
+        print(f"❌ Error: {e}")
+        print(f"See db_backup.log for details")
+        print()
+        return 1
+    except DatabaseBackupError as e:
+        logger.error(f"Backup/restore error: {e}")
+        print()
+        print("=" * 70)
+        print("OPERATION FAILED")
+        print("=" * 70)
+        print()
+        print(f"❌ Error: {e}")
+        print(f"See db_backup.log for details")
+        print()
+        return 1
     except Exception as e:
+        logger.error(f"Unexpected error: {e}", exc_info=True)
         print()
         print("=" * 70)
-        print("COMMAND FAILED")
+        print("COMMAND FAILED - UNEXPECTED ERROR")
         print("=" * 70)
         print()
-        print(f"Error: {e}")
+        print(f"❌ Unexpected error: {e}")
+        print(f"See db_backup.log for details")
         print()
-        sys.exit(1)
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

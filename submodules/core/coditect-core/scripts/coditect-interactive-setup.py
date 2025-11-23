@@ -21,8 +21,52 @@ import os
 import sys
 import subprocess
 import shutil
+import logging
 from pathlib import Path
 from datetime import datetime
+from typing import Optional, Dict, Any
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('coditect-interactive-setup.log')
+    ]
+)
+logger = logging.getLogger(__name__)
+
+
+# Custom Exceptions
+class CoditectSetupError(Exception):
+    """Base exception for CODITECT setup errors"""
+    pass
+
+
+class PrerequisiteError(CoditectSetupError):
+    """Raised when required tools are missing"""
+    pass
+
+
+class DirectoryCreationError(CoditectSetupError):
+    """Raised when directory creation fails"""
+    pass
+
+
+class GitOperationError(CoditectSetupError):
+    """Raised when git operations fail"""
+    pass
+
+
+class FrameworkInstallError(CoditectSetupError):
+    """Raised when framework installation fails"""
+    pass
+
+
+class DocumentationError(CoditectSetupError):
+    """Raised when documentation creation fails"""
+    pass
 
 
 # ANSI color codes for pretty output
@@ -68,21 +112,37 @@ def print_warning(message):
 def run_command(cmd, cwd=None, check=True):
     """Run a shell command and return the result."""
     try:
+        logger.debug(f"Running command: {cmd} (cwd={cwd})")
         result = subprocess.run(
             cmd,
             shell=True,
             cwd=cwd,
             check=check,
             capture_output=True,
-            text=True
+            text=True,
+            timeout=300  # 5 minute timeout
         )
+        logger.debug(f"Command completed: returncode={result.returncode}")
         return result
+    except subprocess.TimeoutExpired as e:
+        logger.error(f"Command timed out after 5 minutes: {cmd}")
+        print_error(f"Command timed out: {cmd}")
+        if check:
+            raise GitOperationError(f"Command timed out: {cmd}")
+        return None
     except subprocess.CalledProcessError as e:
+        logger.error(f"Command failed: {cmd} - {e.stderr}")
         print_error(f"Command failed: {cmd}")
         print_error(f"Error: {e.stderr}")
         if check:
-            sys.exit(1)
+            raise GitOperationError(f"Command failed: {cmd}\n{e.stderr}")
         return e
+    except Exception as e:
+        logger.error(f"Unexpected error running command '{cmd}': {str(e)}")
+        print_error(f"Unexpected error: {str(e)}")
+        if check:
+            raise GitOperationError(f"Unexpected error running command: {str(e)}")
+        return None
 
 
 def check_prerequisites():
@@ -1036,51 +1096,153 @@ def print_next_steps(project_path, project_info):
 
 
 def main():
-    """Main setup workflow."""
-    print_header("CODITECT Interactive Project Setup")
-    print(f"{Colors.BOLD}Welcome to CODITECT!{Colors.ENDC}")
-    print(f"This script will set up a new CODITECT project with all necessary structure.\n")
+    """Main setup workflow with comprehensive error handling."""
+    project_path = None
+    created_resources = []
 
-    # Check prerequisites
-    check_prerequisites()
-
-    # Get project directory
-    project_path = get_project_directory()
-
-    # Get project information
-    project_info = get_project_info()
-
-    # Confirm before proceeding
-    print_header("Ready to Create Project")
-    print(f"{Colors.BOLD}Project Details:{Colors.ENDC}")
-    print(f"  Name: {project_info['name']}")
-    print(f"  Type: {project_info['project_type']}")
-    print(f"  Location: {project_path}")
-    print()
-
-    confirm = input(f"{Colors.BOLD}Proceed with setup? (y/n):{Colors.ENDC} ").strip().lower()
-    if confirm != 'y':
-        print_warning("Setup cancelled by user")
-        sys.exit(0)
-
-    # Execute setup steps
     try:
-        create_directory_structure(project_path)
-        install_coditect_framework(project_path)
-        create_initial_documentation(project_path, project_info)
-        create_gitignore(project_path)
-        initial_git_commit(project_path, project_info)
-        print_next_steps(project_path, project_info)
+        print_header("CODITECT Interactive Project Setup")
+        print(f"{Colors.BOLD}Welcome to CODITECT!{Colors.ENDC}")
+        print(f"This script will set up a new CODITECT project with all necessary structure.\n")
+        logger.info("Starting CODITECT interactive setup")
+
+        # Check prerequisites
+        try:
+            check_prerequisites()
+        except PrerequisiteError as e:
+            logger.error(f"Prerequisites check failed: {str(e)}")
+            print_error(f"\nPrerequisites not met: {str(e)}")
+            print_info("\nPlease install required tools and try again.")
+            return 1
+
+        # Get project directory
+        try:
+            project_path = get_project_directory()
+            logger.info(f"Project path selected: {project_path}")
+        except (KeyboardInterrupt, EOFError):
+            logger.info("User cancelled project directory selection")
+            print_warning("\nSetup cancelled by user")
+            return 130
+        except Exception as e:
+            logger.error(f"Failed to get project directory: {str(e)}")
+            print_error(f"\nFailed to select project directory: {str(e)}")
+            return 1
+
+        # Get project information
+        try:
+            project_info = get_project_info()
+            logger.info(f"Project info collected: {project_info['name']}")
+        except (KeyboardInterrupt, EOFError):
+            logger.info("User cancelled project info entry")
+            print_warning("\nSetup cancelled by user")
+            return 130
+        except Exception as e:
+            logger.error(f"Failed to get project info: {str(e)}")
+            print_error(f"\nFailed to collect project information: {str(e)}")
+            return 1
+
+        # Confirm before proceeding
+        print_header("Ready to Create Project")
+        print(f"{Colors.BOLD}Project Details:{Colors.ENDC}")
+        print(f"  Name: {project_info['name']}")
+        print(f"  Type: {project_info['project_type']}")
+        print(f"  Location: {project_path}")
+        print()
+
+        try:
+            confirm = input(f"{Colors.BOLD}Proceed with setup? (y/n):{Colors.ENDC} ").strip().lower()
+            if confirm != 'y':
+                logger.info("User cancelled setup at confirmation")
+                print_warning("Setup cancelled by user")
+                return 130
+        except (KeyboardInterrupt, EOFError):
+            logger.info("User cancelled setup at confirmation")
+            print_warning("\nSetup cancelled by user")
+            return 130
+
+        # Execute setup steps with individual error handling
+        try:
+            logger.info("Creating directory structure")
+            create_directory_structure(project_path)
+            created_resources.append("directory_structure")
+
+            logger.info("Installing CODITECT framework")
+            install_coditect_framework(project_path)
+            created_resources.append("framework")
+
+            logger.info("Creating initial documentation")
+            create_initial_documentation(project_path, project_info)
+            created_resources.append("documentation")
+
+            logger.info("Creating .gitignore")
+            create_gitignore(project_path)
+            created_resources.append("gitignore")
+
+            logger.info("Creating initial git commit")
+            initial_git_commit(project_path, project_info)
+            created_resources.append("git_commit")
+
+            logger.info("Setup completed successfully")
+            print_next_steps(project_path, project_info)
+            return 0
+
+        except DirectoryCreationError as e:
+            logger.error(f"Directory creation failed: {str(e)}")
+            print_error(f"\nDirectory creation failed: {str(e)}")
+            print_info("\nPlease check permissions and disk space.")
+            return 1
+
+        except FrameworkInstallError as e:
+            logger.error(f"Framework installation failed: {str(e)}")
+            print_error(f"\nFramework installation failed: {str(e)}")
+            print_info("\nYou may need to manually clone the framework:")
+            print_info("  git clone https://github.com/coditect-ai/coditect-core.git .coditect")
+            return 1
+
+        except GitOperationError as e:
+            logger.error(f"Git operation failed: {str(e)}")
+            print_error(f"\nGit operation failed: {str(e)}")
+            print_info("\nThe project structure was created but git initialization failed.")
+            print_info("You can manually initialize git in the project directory.")
+            return 1
+
+        except DocumentationError as e:
+            logger.error(f"Documentation creation failed: {str(e)}")
+            print_error(f"\nDocumentation creation failed: {str(e)}")
+            print_info("\nThe project structure was created but documentation generation failed.")
+            return 1
 
     except KeyboardInterrupt:
+        logger.info("Setup interrupted by user (Ctrl+C)")
         print_warning("\n\nSetup interrupted by user")
-        sys.exit(1)
+
+        # Attempt cleanup if project partially created
+        if project_path and created_resources:
+            print_info(f"\nPartially created resources: {', '.join(created_resources)}")
+            print_info(f"Project directory: {project_path}")
+            print_info("You may want to remove the partial setup manually.")
+
+        return 130
+
     except Exception as e:
-        print_error(f"\n\nSetup failed with error: {e}")
+        logger.exception("Unexpected error during setup")
+        print_error(f"\n\nSetup failed with unexpected error: {str(e)}")
+        print_info("\nPlease check the log file 'coditect-interactive-setup.log' for details.")
+
+        # Show created resources for cleanup
+        if created_resources:
+            print_info(f"\nPartially created resources: {', '.join(created_resources)}")
+
         import traceback
-        traceback.print_exc()
-        sys.exit(1)
+        logger.error(traceback.format_exc())
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        exit_code = main()
+        sys.exit(exit_code)
+    except Exception as e:
+        logger.exception("Fatal error in main")
+        print(f"\n{Colors.FAIL}Fatal error: {str(e)}{Colors.ENDC}")
+        sys.exit(1)

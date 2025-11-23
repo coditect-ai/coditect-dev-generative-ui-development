@@ -34,9 +34,26 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('db_seed.log')
+    ]
 )
 logger = logging.getLogger(__name__)
+
+# Custom exceptions
+class DatabaseSeedError(Exception):
+    """Base exception for database seeding errors"""
+    pass
+
+class ValidationError(DatabaseSeedError):
+    """Data validation error"""
+    pass
+
+class ConnectionError(DatabaseSeedError):
+    """Database connection error"""
+    pass
 
 
 class DatabaseSeeder:
@@ -49,6 +66,9 @@ class DatabaseSeeder:
         Args:
             db_path: Path to SQLite database file
             verbose: Enable verbose logging
+
+        Raises:
+            ValidationError: If database file doesn't exist
         """
         self.db_path = Path(db_path)
         self.verbose = verbose
@@ -56,18 +76,40 @@ class DatabaseSeeder:
         if self.verbose:
             logger.setLevel(logging.DEBUG)
 
+        logger.debug(f"Initializing seeder with database: {self.db_path}")
+
         if not self.db_path.exists():
-            raise FileNotFoundError(
+            logger.error(f"Database not found: {self.db_path}")
+            raise ValidationError(
                 f"Database not found: {self.db_path}\n"
                 f"Run db_init.py first to create database"
             )
 
+        logger.info("Database seeder initialized")
+
     def connect(self) -> sqlite3.Connection:
-        """Create database connection."""
-        conn = sqlite3.Connection(str(self.db_path))
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys = ON")
-        return conn
+        """
+        Create database connection.
+
+        Returns:
+            SQLite connection object
+
+        Raises:
+            ConnectionError: If database connection fails
+        """
+        try:
+            logger.debug(f"Connecting to database: {self.db_path}")
+            conn = sqlite3.Connection(str(self.db_path))
+            conn.row_factory = sqlite3.Row
+            conn.execute("PRAGMA foreign_keys = ON")
+            logger.info("Database connection established")
+            return conn
+        except sqlite3.Error as e:
+            logger.error(f"Database connection failed: {e}")
+            raise ConnectionError(f"Could not connect to database: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error connecting to database: {e}")
+            raise DatabaseSeedError(f"Database connection error: {e}")
 
     def clear_data(self, conn: sqlite3.Connection) -> None:
         """
@@ -504,8 +546,13 @@ class DatabaseSeeder:
 
         Args:
             reset: Clear existing data before seeding
+
+        Raises:
+            DatabaseSeedError: If seeding operation fails
         """
+        conn = None
         try:
+            logger.info("Starting database seeding...")
             conn = self.connect()
             logger.info(f"Connected to database: {self.db_path}")
 
@@ -522,9 +569,6 @@ class DatabaseSeeder:
             session_ids = self.seed_sessions(conn, checkpoint_ids, tag_ids)
             pattern_ids = self.seed_patterns(conn, session_ids, tag_ids)
 
-            # Close connection
-            conn.close()
-
             # Success
             logger.info("✅ Database seeded successfully")
             logger.info(f"  - {len(tag_ids)} tags")
@@ -532,49 +576,66 @@ class DatabaseSeeder:
             logger.info(f"  - {len(session_ids)} sessions")
             logger.info(f"  - {len(pattern_ids)} patterns")
 
-        except Exception as e:
-            logger.error(f"❌ Database seeding failed: {e}")
+        except ConnectionError as e:
+            logger.error(f"Connection error: {e}")
             raise
+        except sqlite3.Error as e:
+            logger.error(f"Database error during seeding: {e}")
+            raise DatabaseSeedError(f"Database error: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error during seeding: {e}", exc_info=True)
+            raise DatabaseSeedError(f"Database seeding failed: {e}")
+        finally:
+            # Always close connection
+            if conn:
+                try:
+                    conn.close()
+                    logger.debug("Database connection closed")
+                except Exception as e:
+                    logger.warning(f"Error closing connection: {e}")
 
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description='Seed CODITECT MEMORY-CONTEXT database with sample data'
-    )
-    parser.add_argument(
-        '--reset',
-        action='store_true',
-        help='Clear existing data before seeding'
-    )
-    parser.add_argument(
-        '--verbose',
-        action='store_true',
-        help='Show detailed progress'
-    )
-    parser.add_argument(
-        '--db-path',
-        type=str,
-        default=None,
-        help='Custom database path (default: MEMORY-CONTEXT/memory-context.db)'
-    )
-
-    args = parser.parse_args()
-
-    # Determine database path
-    if args.db_path:
-        db_path = Path(args.db_path)
-    else:
-        db_path = PROJECT_ROOT / "MEMORY-CONTEXT" / "memory-context.db"
-
-    # Seed database
-    seeder = DatabaseSeeder(
-        db_path=db_path,
-        verbose=args.verbose
-    )
-
     try:
+        parser = argparse.ArgumentParser(
+            description='Seed CODITECT MEMORY-CONTEXT database with sample data'
+        )
+        parser.add_argument(
+            '--reset',
+            action='store_true',
+            help='Clear existing data before seeding'
+        )
+        parser.add_argument(
+            '--verbose',
+            action='store_true',
+            help='Show detailed progress'
+        )
+        parser.add_argument(
+            '--db-path',
+            type=str,
+            default=None,
+            help='Custom database path (default: MEMORY-CONTEXT/memory-context.db)'
+        )
+
+        args = parser.parse_args()
+
+        # Determine database path
+        if args.db_path:
+            db_path = Path(args.db_path)
+        else:
+            db_path = PROJECT_ROOT / "MEMORY-CONTEXT" / "memory-context.db"
+
+        logger.info(f"Starting seeding operation for: {db_path}")
+
+        # Seed database
+        seeder = DatabaseSeeder(
+            db_path=db_path,
+            verbose=args.verbose
+        )
+
         seeder.seed(reset=args.reset)
+
         print()
         print("=" * 70)
         print("DATABASE SEEDING COMPLETE")
@@ -593,17 +654,53 @@ def main():
         print("  2. Test views: SELECT * FROM v_active_sessions;")
         print("  3. Setup ChromaDB: python3 scripts/core/chromadb_setup.py")
         print()
+        return 0
 
-    except Exception as e:
+    except ValidationError as e:
+        logger.error(f"Validation error: {e}")
+        print()
+        print("=" * 70)
+        print("DATABASE SEEDING FAILED - VALIDATION ERROR")
+        print("=" * 70)
+        print()
+        print(f"❌ Error: {e}")
+        print(f"See db_seed.log for details")
+        print()
+        return 1
+    except ConnectionError as e:
+        logger.error(f"Connection error: {e}")
+        print()
+        print("=" * 70)
+        print("DATABASE SEEDING FAILED - CONNECTION ERROR")
+        print("=" * 70)
+        print()
+        print(f"❌ Error: {e}")
+        print(f"See db_seed.log for details")
+        print()
+        return 1
+    except DatabaseSeedError as e:
+        logger.error(f"Seeding error: {e}")
         print()
         print("=" * 70)
         print("DATABASE SEEDING FAILED")
         print("=" * 70)
         print()
-        print(f"Error: {e}")
+        print(f"❌ Error: {e}")
+        print(f"See db_seed.log for details")
         print()
-        sys.exit(1)
+        return 1
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}", exc_info=True)
+        print()
+        print("=" * 70)
+        print("DATABASE SEEDING FAILED - UNEXPECTED ERROR")
+        print("=" * 70)
+        print()
+        print(f"❌ Unexpected error: {e}")
+        print(f"See db_seed.log for details")
+        print()
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -16,7 +16,7 @@ Exit Codes:
     2 - Configuration error (missing API key)
     3 - Task specification error
 
-Copyright � 2025 AZ1.AI INC. All rights reserved.
+Copyright (c) 2025 AZ1.AI INC. All rights reserved.
 Developer: Hal Casteel, CEO/CTO
 Email: 1@az1.ai
 """

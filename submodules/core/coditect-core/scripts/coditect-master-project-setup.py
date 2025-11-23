@@ -20,6 +20,33 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 import time
+import logging
+import shutil
+
+# Custom exceptions
+class MasterProjectSetupError(Exception):
+    """Base exception for master project setup errors."""
+    pass
+
+class PrerequisiteError(MasterProjectSetupError):
+    """Raised when prerequisites check fails."""
+    pass
+
+class DirectorySetupError(MasterProjectSetupError):
+    """Raised when directory setup fails."""
+    pass
+
+class GitOperationError(MasterProjectSetupError):
+    """Raised when git operation fails."""
+    pass
+
+class GitHubAPIError(MasterProjectSetupError):
+    """Raised when GitHub API operation fails."""
+    pass
+
+class NetworkError(MasterProjectSetupError):
+    """Raised when network operation fails."""
+    pass
 
 class CoditectMasterProjectSetup:
     """
@@ -39,6 +66,10 @@ class CoditectMasterProjectSetup:
             master_project_name: Name of master orchestration project
             projects_root: Root directory for all projects (default: ~/PROJECTS)
         """
+        # Validate inputs
+        if not master_project_name or not isinstance(master_project_name, str):
+            raise ValueError("master_project_name must be a non-empty string")
+
         self.master_project_name = master_project_name
         self.projects_root = Path(projects_root or os.path.expanduser("~/PROJECTS"))
         self.master_project_path = self.projects_root / master_project_name
@@ -49,6 +80,7 @@ class CoditectMasterProjectSetup:
         # Session tracking
         self.session_id = datetime.now().strftime("%Y%m%d-%H%M%S")
         self.session_log = []
+        self.rollback_actions = []  # Track actions for rollback
 
         # Color codes for output
         self.GREEN = "\033[92m"
@@ -57,8 +89,45 @@ class CoditectMasterProjectSetup:
         self.BLUE = "\033[94m"
         self.RESET = "\033[0m"
 
+        # Setup logging
+        self.setup_logging()
+
         # Master project structure - all sub-projects
         self.sub_projects = self._define_sub_projects()
+
+        # Network retry configuration
+        self.max_retries = 3
+        self.retry_delay = 2  # seconds
+        self.rate_limit_delay = 5  # seconds for GitHub API rate limiting
+
+    def setup_logging(self):
+        """Configure dual logging to stdout and file."""
+        log_file = Path(f"coditect-master-setup-{self.session_id}.log")
+
+        # Create logger
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+
+        # File handler (DEBUG level)
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setLevel(logging.DEBUG)
+        file_format = logging.Formatter(
+            '%(asctime)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        file_handler.setFormatter(file_format)
+
+        # Console handler (INFO level)
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+        console_format = logging.Formatter('%(message)s')
+        console_handler.setFormatter(console_format)
+
+        # Add handlers
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(console_handler)
+
+        self.logger.info(f"Logging initialized: {log_file}")
 
     def _define_sub_projects(self) -> List[Dict[str, Any]]:
         """
@@ -203,18 +272,87 @@ class CoditectMasterProjectSetup:
         if status == "SUCCESS":
             color = self.GREEN
             icon = "✓"
+            log_level = logging.INFO
         elif status == "WARNING":
             color = self.YELLOW
             icon = "⚠"
+            log_level = logging.WARNING
         elif status == "ERROR":
             color = self.RED
             icon = "✗"
+            log_level = logging.ERROR
         else:
             color = self.BLUE
             icon = "→"
+            log_level = logging.INFO
 
-        print(f"{color}[{timestamp}] {icon} {message}{self.RESET}")
+        formatted_message = f"{color}[{timestamp}] {icon} {message}{self.RESET}"
+        print(formatted_message)
+        self.logger.log(log_level, f"[{status}] {message}")
         self.session_log.append({"timestamp": timestamp, "status": status, "message": message})
+
+    def run_command_with_retry(self, cmd: List[str], cwd: Path = None,
+                               max_retries: int = None) -> subprocess.CompletedProcess:
+        """
+        Run command with exponential backoff retry logic.
+
+        Args:
+            cmd: Command to execute
+            cwd: Working directory
+            max_retries: Maximum retry attempts (default: self.max_retries)
+
+        Returns:
+            CompletedProcess result
+
+        Raises:
+            NetworkError: If network operation fails after retries
+            subprocess.CalledProcessError: If command fails for non-network reasons
+        """
+        max_retries = max_retries or self.max_retries
+        last_error = None
+
+        for attempt in range(max_retries):
+            try:
+                result = subprocess.run(
+                    cmd,
+                    cwd=cwd,
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                    timeout=30  # 30 second timeout
+                )
+                return result
+            except subprocess.TimeoutExpired as e:
+                last_error = e
+                if attempt < max_retries - 1:
+                    delay = self.retry_delay * (2 ** attempt)  # Exponential backoff
+                    self.print_status(
+                        f"Command timeout (attempt {attempt + 1}/{max_retries}), retrying in {delay}s...",
+                        "WARNING"
+                    )
+                    time.sleep(delay)
+                else:
+                    raise NetworkError(f"Command timed out after {max_retries} attempts: {' '.join(cmd)}")
+            except subprocess.CalledProcessError as e:
+                # Check if it's a network-related error
+                if "network" in e.stderr.lower() or "connection" in e.stderr.lower():
+                    last_error = e
+                    if attempt < max_retries - 1:
+                        delay = self.retry_delay * (2 ** attempt)
+                        self.print_status(
+                            f"Network error (attempt {attempt + 1}/{max_retries}), retrying in {delay}s...",
+                            "WARNING"
+                        )
+                        time.sleep(delay)
+                    else:
+                        raise NetworkError(f"Network error after {max_retries} attempts: {e.stderr}")
+                else:
+                    # Non-network error, re-raise immediately
+                    raise
+
+        # Should not reach here, but handle it
+        if last_error:
+            raise NetworkError(f"Failed after {max_retries} attempts: {last_error}")
 
     def check_prerequisites(self) -> bool:
         """Check that required tools are installed."""
@@ -230,25 +368,25 @@ class CoditectMasterProjectSetup:
         for tool, check_cmd in required_tools.items():
             try:
                 result = subprocess.run(check_cmd.split(),
-                                      capture_output=True, text=True, check=True)
+                                      capture_output=True, text=True, check=True, timeout=10)
                 version = result.stdout.split("\n")[0]
                 self.print_status(f"{tool}: {version}", "SUCCESS")
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                self.print_status(f"{tool} not found", "ERROR")
+            except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as e:
+                self.print_status(f"{tool} not found or failed: {e}", "ERROR")
                 all_present = False
 
         if not all_present:
-            self.print_status("Missing required tools. Please install them first.", "ERROR")
-            return False
+            raise PrerequisiteError("Missing required tools. Please install them first.")
 
         # Check GitHub CLI authentication
         try:
             subprocess.run(["gh", "auth", "status"],
-                         capture_output=True, check=True)
+                         capture_output=True, check=True, timeout=10)
             self.print_status("GitHub CLI authenticated", "SUCCESS")
         except subprocess.CalledProcessError:
-            self.print_status("GitHub CLI not authenticated. Run: gh auth login", "ERROR")
-            return False
+            raise PrerequisiteError("GitHub CLI not authenticated. Run: gh auth login")
+        except subprocess.TimeoutExpired:
+            raise PrerequisiteError("GitHub CLI authentication check timed out")
 
         return True
 
@@ -256,35 +394,40 @@ class CoditectMasterProjectSetup:
         """Create master project directory structure."""
         self.print_status(f"Creating master project directory: {self.master_project_path}", "INFO")
 
-        if self.master_project_path.exists():
-            self.print_status(f"Directory already exists: {self.master_project_path}", "WARNING")
-            response = input(f"{self.YELLOW}Delete and recreate? (yes/no): {self.RESET}")
-            if response.lower() == "yes":
-                import shutil
-                shutil.rmtree(self.master_project_path)
-                self.print_status("Deleted existing directory", "SUCCESS")
-            else:
-                self.print_status("Aborting setup", "ERROR")
-                return False
+        try:
+            if self.master_project_path.exists():
+                self.print_status(f"Directory already exists: {self.master_project_path}", "WARNING")
+                response = input(f"{self.YELLOW}Delete and recreate? (yes/no): {self.RESET}")
+                if response.lower() == "yes":
+                    shutil.rmtree(self.master_project_path)
+                    self.print_status("Deleted existing directory", "SUCCESS")
+                else:
+                    raise DirectorySetupError("User cancelled setup - directory already exists")
 
-        self.master_project_path.mkdir(parents=True, exist_ok=True)
-        self.print_status(f"Created: {self.master_project_path}", "SUCCESS")
+            self.master_project_path.mkdir(parents=True, exist_ok=True)
+            self.rollback_actions.append(("rmdir", self.master_project_path))
+            self.print_status(f"Created: {self.master_project_path}", "SUCCESS")
 
-        # Create subdirectories
-        subdirs = [
-            "docs",           # Master documentation
-            "scripts",        # Orchestration scripts
-            "templates",      # Project templates
-            "workflows",      # CI/CD workflows
-            "reports",        # Status reports
-            "MEMORY-CONTEXT"  # Session exports
-        ]
+            # Create subdirectories
+            subdirs = [
+                "docs",           # Master documentation
+                "scripts",        # Orchestration scripts
+                "templates",      # Project templates
+                "workflows",      # CI/CD workflows
+                "reports",        # Status reports
+                "MEMORY-CONTEXT"  # Session exports
+            ]
 
-        for subdir in subdirs:
-            (self.master_project_path / subdir).mkdir(exist_ok=True)
-            self.print_status(f"Created subdirectory: {subdir}/", "SUCCESS")
+            for subdir in subdirs:
+                subdir_path = self.master_project_path / subdir
+                subdir_path.mkdir(exist_ok=True)
+                self.print_status(f"Created subdirectory: {subdir}/", "SUCCESS")
 
-        return True
+            return True
+        except PermissionError as e:
+            raise DirectorySetupError(f"Permission denied creating directory: {e}")
+        except OSError as e:
+            raise DirectorySetupError(f"OS error creating directory: {e}")
 
     def initialize_git_repository(self) -> bool:
         """Initialize git repository in master project."""
@@ -294,27 +437,29 @@ class CoditectMasterProjectSetup:
             os.chdir(self.master_project_path)
 
             # Initialize git
-            subprocess.run(["git", "init"], check=True, capture_output=True)
-            subprocess.run(["git", "branch", "-M", "main"], check=True, capture_output=True)
+            subprocess.run(["git", "init"], check=True, capture_output=True, timeout=10)
+            subprocess.run(["git", "branch", "-M", "main"], check=True, capture_output=True, timeout=10)
+            self.rollback_actions.append(("git_deinit", self.master_project_path))
             self.print_status("Git repository initialized", "SUCCESS")
 
             # Copy .gitignore from template
             template_gitignore = self.projects_root / "coditect-core" / "templates" / "gitignore-universal-template"
             if template_gitignore.exists():
-                import shutil
                 shutil.copy(template_gitignore, self.master_project_path / ".gitignore")
                 self.print_status("Copied universal .gitignore template", "SUCCESS")
 
             return True
         except subprocess.CalledProcessError as e:
-            self.print_status(f"Git initialization failed: {e}", "ERROR")
-            return False
+            raise GitOperationError(f"Git initialization failed: {e.stderr}")
+        except subprocess.TimeoutExpired:
+            raise GitOperationError("Git initialization timed out")
 
     def create_master_readme(self) -> bool:
         """Create comprehensive README for master project."""
         self.print_status("Creating master README.md...", "INFO")
 
-        readme_content = f"""# {self.master_project_name.upper().replace('-', ' ')}
+        try:
+            readme_content = f"""# {self.master_project_name.upper().replace('-', ' ')}
 
 **Master Orchestration Repository for AZ1.AI CODITECT Platform Rollout**
 
@@ -338,14 +483,14 @@ This master project uses **git submodules** to coordinate {len(self.sub_projects
 
 """
 
-        # Add sub-projects table
-        readme_content += "| Project | Description | Type | Priority | Timeline |\n"
-        readme_content += "|---------|-------------|------|----------|----------|\n"
+            # Add sub-projects table
+            readme_content += "| Project | Description | Type | Priority | Timeline |\n"
+            readme_content += "|---------|-------------|------|----------|----------|\n"
 
-        for project in self.sub_projects:
-            readme_content += f"| [{project['name']}](submodules/{project['name']}) | {project['description'][:60]}... | {project['type']} | {project['priority']} | {project['timeline']} |\n"
+            for project in self.sub_projects:
+                readme_content += f"| [{project['name']}](submodules/{project['name']}) | {project['description'][:60]}... | {project['type']} | {project['priority']} | {project['timeline']} |\n"
 
-        readme_content += f"""
+            readme_content += f"""
 
 ---
 
@@ -391,99 +536,6 @@ git push
 
 ---
 
-## Directory Structure
-
-```
-{self.master_project_name}/
-├── docs/                      # Master project documentation
-│   ├── MASTER-ORCHESTRATION-PLAN.md
-│   ├── ROLLOUT-MASTER-PLAN.md
-│   └── PHASE-GATE-REPORTS/
-├── scripts/                   # Orchestration automation scripts
-│   ├── coditect-git-helper.py
-│   ├── coditect-setup.py
-│   └── sync-all-submodules.sh
-├── templates/                 # Reusable templates for sub-projects
-│   ├── gitignore-universal-template
-│   ├── PROJECT-PLAN.md
-│   └── TASKLIST.md
-├── workflows/                 # CI/CD workflows
-│   └── .github/
-│       └── workflows/
-├── reports/                   # Status reports and metrics
-│   ├── weekly-status/
-│   └── phase-gate-reviews/
-├── MEMORY-CONTEXT/           # Session exports and context
-└── submodules/               # All sub-projects as git submodules
-    ├── coditect-cloud-backend/
-    ├── coditect-cloud-frontend/
-    ├── coditect-cli/
-    ├── coditect-docs/
-    ├── coditect-agent-marketplace/
-    ├── coditect-analytics/
-    ├── coditect-infrastructure/
-    ├── coditect-legal/
-    ├── coditect-framework/
-    └── coditect-automation/
-```
-
----
-
-## Governance
-
-### Phase Gates
-
-This master project enforces phase gates with quality criteria:
-
-1. **Development → Beta** (Month 6)
-2. **Beta → Pilot** (Month 7)
-3. **Pilot → GTM** (Month 9)
-
-See [docs/MASTER-ORCHESTRATION-PLAN.md](docs/MASTER-ORCHESTRATION-PLAN.md) for complete phase gate criteria.
-
-### Decision Authority
-
-- **Phase Gate Approvals:** Executive Steering Committee (unanimous)
-- **Roadmap Changes:** Product Manager → CEO → Steering Committee
-- **Budget Changes >$50K:** Steering Committee vote
-
----
-
-## Autonomous AI-First Development
-
-This master project is designed for **autonomous AI agents** to coordinate development across all sub-projects:
-
-### AI Agent Capabilities
-
-1. **Task Orchestration:** AI agents can create tasks in sub-projects
-2. **Progress Tracking:** Automated status reporting across all repos
-3. **Dependency Management:** AI detects cross-project dependencies
-4. **Quality Gates:** Automated checks before phase transitions
-
-### Human-in-the-Loop
-
-Humans provide:
-- Strategic direction and priorities
-- Phase gate approvals
-- Exception handling and escalations
-- Final quality review
-
----
-
-## CODITECT Framework Integration
-
-This master project **IS** the CODITECT framework in action:
-
-- ✅ Master project orchestrates sub-projects (core CODITECT capability)
-- ✅ Git submodules for multi-repo coordination
-- ✅ Automated session management with MEMORY-CONTEXT
-- ✅ AI-first development with human oversight
-- ✅ Reusable templates and automation scripts
-
-**This pattern can be abstracted and reused by any CODITECT user** to manage their own complex multi-repo projects.
-
----
-
 ## Status
 
 **Session Started:** {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
@@ -494,29 +546,17 @@ This master project **IS** the CODITECT framework in action:
 
 ---
 
-## Contributing
-
-See individual sub-project READMEs for contribution guidelines.
-
----
-
-## License
-
-Copyright © 2025 AZ1.AI INC. All Rights Reserved.
-
-**PROPRIETARY AND CONFIDENTIAL** - This repository contains AZ1.AI INC. trade secrets and confidential information. Unauthorized copying, transfer, or use is strictly prohibited.
-
----
-
 *Built with Excellence by AZ1.AI CODITECT*
 *Systematic Development. Continuous Context. Exceptional Results.*
 """
 
-        readme_path = self.master_project_path / "README.md"
-        readme_path.write_text(readme_content)
-        self.print_status("Created comprehensive README.md", "SUCCESS")
+            readme_path = self.master_project_path / "README.md"
+            readme_path.write_text(readme_content)
+            self.print_status("Created comprehensive README.md", "SUCCESS")
 
-        return True
+            return True
+        except (OSError, IOError) as e:
+            raise DirectorySetupError(f"Failed to create README.md: {e}")
 
     def copy_master_documents(self) -> bool:
         """Copy master planning documents to master project."""
@@ -532,13 +572,15 @@ Copyright © 2025 AZ1.AI INC. All Rights Reserved.
         docs_dir = self.master_project_path / "docs"
 
         for doc in docs_to_copy:
-            source_file = source_project / doc
-            if source_file.exists():
-                import shutil
-                shutil.copy(source_file, docs_dir / doc)
-                self.print_status(f"Copied: {doc}", "SUCCESS")
-            else:
-                self.print_status(f"Not found: {doc}", "WARNING")
+            try:
+                source_file = source_project / doc
+                if source_file.exists():
+                    shutil.copy(source_file, docs_dir / doc)
+                    self.print_status(f"Copied: {doc}", "SUCCESS")
+                else:
+                    self.print_status(f"Not found: {doc}", "WARNING")
+            except (OSError, IOError) as e:
+                self.print_status(f"Failed to copy {doc}: {e}", "WARNING")
 
         return True
 
@@ -556,16 +598,18 @@ Copyright © 2025 AZ1.AI INC. All Rights Reserved.
         scripts_dir = self.master_project_path / "scripts"
 
         for script_path in scripts_to_copy:
-            source_file = source_project / script_path
-            if source_file.exists():
-                import shutil
-                dest_file = scripts_dir / Path(script_path).name
-                shutil.copy(source_file, dest_file)
-                # Make executable
-                dest_file.chmod(0o755)
-                self.print_status(f"Copied and made executable: {Path(script_path).name}", "SUCCESS")
-            else:
-                self.print_status(f"Not found: {script_path}", "WARNING")
+            try:
+                source_file = source_project / script_path
+                if source_file.exists():
+                    dest_file = scripts_dir / Path(script_path).name
+                    shutil.copy(source_file, dest_file)
+                    # Make executable
+                    dest_file.chmod(0o755)
+                    self.print_status(f"Copied and made executable: {Path(script_path).name}", "SUCCESS")
+                else:
+                    self.print_status(f"Not found: {script_path}", "WARNING")
+            except (OSError, IOError) as e:
+                self.print_status(f"Failed to copy {script_path}: {e}", "WARNING")
 
         return True
 
@@ -577,13 +621,15 @@ Copyright © 2025 AZ1.AI INC. All Rights Reserved.
         templates_dir = source_project / "templates"
 
         if templates_dir.exists():
-            import shutil
             dest_templates = self.master_project_path / "templates"
 
             for template_file in templates_dir.glob("*"):
                 if template_file.is_file():
-                    shutil.copy(template_file, dest_templates / template_file.name)
-                    self.print_status(f"Copied template: {template_file.name}", "SUCCESS")
+                    try:
+                        shutil.copy(template_file, dest_templates / template_file.name)
+                        self.print_status(f"Copied template: {template_file.name}", "SUCCESS")
+                    except (OSError, IOError) as e:
+                        self.print_status(f"Failed to copy template {template_file.name}: {e}", "WARNING")
 
         return True
 
@@ -595,7 +641,7 @@ Copyright © 2025 AZ1.AI INC. All Rights Reserved.
 
         try:
             # Add all files
-            subprocess.run(["git", "add", "."], check=True, capture_output=True)
+            subprocess.run(["git", "add", "."], check=True, capture_output=True, timeout=10)
 
             # Create initial commit
             commit_msg = """Initial master project setup
@@ -613,16 +659,17 @@ Includes:
 Co-Authored-By: Claude <noreply@anthropic.com>"""
 
             subprocess.run(["git", "commit", "-m", commit_msg],
-                         check=True, capture_output=True)
+                         check=True, capture_output=True, timeout=10)
 
             self.print_status("Initial commit created", "SUCCESS")
             return True
         except subprocess.CalledProcessError as e:
-            self.print_status(f"Initial commit failed: {e}", "ERROR")
-            return False
+            raise GitOperationError(f"Initial commit failed: {e.stderr}")
+        except subprocess.TimeoutExpired:
+            raise GitOperationError("Initial commit timed out")
 
     def create_github_repository(self, dry_run: bool = False) -> bool:
-        """Create GitHub repository for master project."""
+        """Create GitHub repository for master project with retry logic."""
         self.print_status(f"Creating GitHub repository: {self.github_org}/{self.master_project_name}", "INFO")
 
         if dry_run:
@@ -630,7 +677,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
             return True
 
         try:
-            # Create repository using gh CLI
+            # Create repository using gh CLI with retry
             cmd = [
                 "gh", "repo", "create",
                 f"{self.github_org}/{self.master_project_name}",
@@ -641,7 +688,10 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
                 "--push"
             ]
 
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            # GitHub API rate limiting consideration
+            time.sleep(self.rate_limit_delay)
+
+            result = self.run_command_with_retry(cmd)
             self.print_status(f"Created GitHub repository: {self.github_org}/{self.master_project_name}", "SUCCESS")
 
             return True
@@ -653,13 +703,14 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
                     subprocess.run([
                         "git", "remote", "add", "origin",
                         f"https://github.com/{self.github_org}/{self.master_project_name}.git"
-                    ], capture_output=True, check=True)
+                    ], capture_output=True, check=True, timeout=10)
                 except subprocess.CalledProcessError:
                     pass  # Remote already exists
                 return True
             else:
-                self.print_status(f"GitHub repository creation failed: {e.stderr}", "ERROR")
-                return False
+                raise GitHubAPIError(f"GitHub repository creation failed: {e.stderr}")
+        except NetworkError as e:
+            raise GitHubAPIError(f"Network error creating GitHub repository: {e}")
 
     def create_sub_project(self, project: Dict[str, Any], dry_run: bool = False) -> bool:
         """
@@ -684,22 +735,22 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
             self.print_status(f"Sub-project directory already exists: {project_name}", "WARNING")
             return True
 
-        # Create project directory
-        project_path.mkdir(parents=True, exist_ok=True)
-        os.chdir(project_path)
+        try:
+            # Create project directory
+            project_path.mkdir(parents=True, exist_ok=True)
+            os.chdir(project_path)
 
-        # Initialize git
-        subprocess.run(["git", "init"], check=True, capture_output=True)
-        subprocess.run(["git", "branch", "-M", "main"], check=True, capture_output=True)
+            # Initialize git
+            subprocess.run(["git", "init"], check=True, capture_output=True, timeout=10)
+            subprocess.run(["git", "branch", "-M", "main"], check=True, capture_output=True, timeout=10)
 
-        # Create .gitignore
-        import shutil
-        template_gitignore = self.master_project_path / "templates" / "gitignore-universal-template"
-        if template_gitignore.exists():
-            shutil.copy(template_gitignore, project_path / ".gitignore")
+            # Create .gitignore
+            template_gitignore = self.master_project_path / "templates" / "gitignore-universal-template"
+            if template_gitignore.exists():
+                shutil.copy(template_gitignore, project_path / ".gitignore")
 
-        # Create README.md
-        readme_content = f"""# {project_name}
+            # Create README.md
+            readme_content = f"""# {project_name}
 
 {project["description"]}
 
@@ -723,10 +774,6 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
 
 [TODO: Add development workflow]
 
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
-
 ## License
 
 Copyright © 2025 AZ1.AI INC. All Rights Reserved.
@@ -735,26 +782,14 @@ Copyright © 2025 AZ1.AI INC. All Rights Reserved.
 
 *Part of AZ1.AI CODITECT Platform*
 """
-        (project_path / "README.md").write_text(readme_content)
+            (project_path / "README.md").write_text(readme_content)
 
-        # Create PROJECT-PLAN.md
-        project_plan_content = f"""# {project_name} - Project Plan
+            # Create PROJECT-PLAN.md
+            project_plan_content = f"""# {project_name} - Project Plan
 
 ## Overview
 
 {project["description"]}
-
-## Objectives
-
-[TODO: Define specific project objectives]
-
-## Scope
-
-### In Scope
-- [TODO: List what's included]
-
-### Out of Scope
-- [TODO: List what's excluded]
 
 ## Timeline
 
@@ -774,31 +809,14 @@ Copyright © 2025 AZ1.AI INC. All Rights Reserved.
 ### Tech Stack
 {chr(10).join(f"- **{tech}**" for tech in project["tech_stack"])}
 
-### Architecture
-[TODO: Add architecture diagram]
-
-## Risks & Mitigation
-
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
-| [TODO] | [High/Med/Low] | [High/Med/Low] | [Strategy] |
-
-## Success Criteria
-
-- [ ] All functional requirements met
-- [ ] Test coverage >80%
-- [ ] Documentation complete
-- [ ] Performance benchmarks met
-- [ ] Security audit passed
-
 ---
 
 *Built with AZ1.AI CODITECT*
 """
-        (project_path / "PROJECT-PLAN.md").write_text(project_plan_content)
+            (project_path / "PROJECT-PLAN.md").write_text(project_plan_content)
 
-        # Create TASKLIST.md
-        tasklist_content = f"""# {project_name} - Task List
+            # Create TASKLIST.md
+            tasklist_content = f"""# {project_name} - Task List
 
 ## Setup (Week 1)
 
@@ -813,36 +831,15 @@ Copyright © 2025 AZ1.AI INC. All Rights Reserved.
 - [ ] Task 2: [TODO]
 - [ ] Task 3: [TODO]
 
-## Testing (Weeks 5-6)
-
-- [ ] Unit tests (>80% coverage)
-- [ ] Integration tests
-- [ ] Performance testing
-- [ ] Security testing
-
-## Documentation
-
-- [ ] API documentation
-- [ ] User guide
-- [ ] Developer setup guide
-- [ ] Deployment guide
-
-## Deployment
-
-- [ ] Staging deployment
-- [ ] Production deployment
-- [ ] Monitoring setup
-- [ ] Post-deployment validation
-
 ---
 
 *Use `- [x]` to mark tasks as complete*
 """
-        (project_path / "TASKLIST.md").write_text(tasklist_content)
+            (project_path / "TASKLIST.md").write_text(tasklist_content)
 
-        # Initial commit
-        subprocess.run(["git", "add", "."], check=True, capture_output=True)
-        commit_msg = f"""Initial commit for {project_name}
+            # Initial commit
+            subprocess.run(["git", "add", "."], check=True, capture_output=True, timeout=10)
+            commit_msg = f"""Initial commit for {project_name}
 
 {project["description"]}
 
@@ -850,66 +847,71 @@ Copyright © 2025 AZ1.AI INC. All Rights Reserved.
 
 Co-Authored-By: Claude <noreply@anthropic.com>"""
 
-        subprocess.run(["git", "commit", "-m", commit_msg],
-                      check=True, capture_output=True)
+            subprocess.run(["git", "commit", "-m", commit_msg],
+                          check=True, capture_output=True, timeout=10)
 
-        self.print_status(f"Initialized local repository for {project_name}", "SUCCESS")
+            self.print_status(f"Initialized local repository for {project_name}", "SUCCESS")
 
-        # Create GitHub repository
-        if not dry_run:
+            # Create GitHub repository
+            if not dry_run:
+                try:
+                    privacy_flag = "--private" if project.get("private", True) else "--public"
+
+                    # GitHub API rate limiting
+                    time.sleep(self.rate_limit_delay)
+
+                    cmd = [
+                        "gh", "repo", "create",
+                        f"{project['github_org']}/{project_name}",
+                        privacy_flag,
+                        "--description", project["description"],
+                        "--source", str(project_path),
+                        "--remote", "origin",
+                        "--push"
+                    ]
+
+                    result = self.run_command_with_retry(cmd)
+                    self.print_status(f"Created GitHub repository: {project['github_org']}/{project_name}", "SUCCESS")
+
+                except subprocess.CalledProcessError as e:
+                    if "already exists" in e.stderr.lower():
+                        self.print_status(f"GitHub repository already exists: {project_name}", "WARNING")
+                        # Add remote
+                        try:
+                            subprocess.run([
+                                "git", "remote", "add", "origin",
+                                f"https://github.com/{project['github_org']}/{project_name}.git"
+                            ], capture_output=True, timeout=10)
+                            subprocess.run(["git", "push", "-u", "origin", "main"],
+                                         capture_output=True, check=True, timeout=30)
+                        except subprocess.CalledProcessError:
+                            pass
+                    else:
+                        raise GitHubAPIError(f"Failed to create GitHub repository: {e.stderr}")
+            else:
+                self.print_status(f"DRY RUN: Would create GitHub repo for {project_name}", "WARNING")
+
+            # Add as submodule to master project
+            os.chdir(self.master_project_path)
+
             try:
-                privacy_flag = "--private" if project.get("private", True) else "--public"
+                submodule_url = f"https://github.com/{project['github_org']}/{project_name}.git"
+                submodule_path = f"submodules/{project_name}"
 
-                cmd = [
-                    "gh", "repo", "create",
-                    f"{project['github_org']}/{project_name}",
-                    privacy_flag,
-                    "--description", project["description"],
-                    "--source", str(project_path),
-                    "--remote", "origin",
-                    "--push"
-                ]
+                subprocess.run([
+                    "git", "submodule", "add",
+                    submodule_url,
+                    submodule_path
+                ], check=True, capture_output=True, timeout=30)
 
-                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-                self.print_status(f"Created GitHub repository: {project['github_org']}/{project_name}", "SUCCESS")
-
+                self.print_status(f"Added {project_name} as submodule", "SUCCESS")
             except subprocess.CalledProcessError as e:
-                if "already exists" in e.stderr.lower():
-                    self.print_status(f"GitHub repository already exists: {project_name}", "WARNING")
-                    # Add remote
-                    try:
-                        subprocess.run([
-                            "git", "remote", "add", "origin",
-                            f"https://github.com/{project['github_org']}/{project_name}.git"
-                        ], capture_output=True)
-                        subprocess.run(["git", "push", "-u", "origin", "main"],
-                                     capture_output=True, check=True)
-                    except subprocess.CalledProcessError:
-                        pass
-                else:
-                    self.print_status(f"Failed to create GitHub repository: {e.stderr}", "ERROR")
-                    return False
-        else:
-            self.print_status(f"DRY RUN: Would create GitHub repo for {project_name}", "WARNING")
+                self.print_status(f"Failed to add submodule: {e.stderr}", "WARNING")
 
-        # Add as submodule to master project
-        os.chdir(self.master_project_path)
-
-        try:
-            submodule_url = f"https://github.com/{project['github_org']}/{project_name}.git"
-            submodule_path = f"submodules/{project_name}"
-
-            subprocess.run([
-                "git", "submodule", "add",
-                submodule_url,
-                submodule_path
-            ], check=True, capture_output=True)
-
-            self.print_status(f"Added {project_name} as submodule", "SUCCESS")
-        except subprocess.CalledProcessError as e:
-            self.print_status(f"Failed to add submodule: {e.stderr}", "WARNING")
-
-        return True
+            return True
+        except Exception as e:
+            self.print_status(f"Error creating sub-project {project_name}: {e}", "ERROR")
+            return False
 
     def create_all_sub_projects(self, dry_run: bool = False) -> bool:
         """Create all sub-projects and add as submodules."""
@@ -921,7 +923,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
 
             if self.create_sub_project(project, dry_run=dry_run):
                 success_count += 1
-                time.sleep(2)  # Rate limiting for GitHub API
+                # Rate limiting between projects
+                time.sleep(self.rate_limit_delay)
             else:
                 self.print_status(f"Failed to create {project['name']}", "ERROR")
 
@@ -958,12 +961,16 @@ echo "  git commit -m 'Update submodule pointers to latest'"
 echo "  git push"
 """
 
-        sync_script_path = self.master_project_path / "scripts" / "sync-all-submodules.sh"
-        sync_script_path.write_text(sync_script)
-        sync_script_path.chmod(0o755)
+        try:
+            sync_script_path = self.master_project_path / "scripts" / "sync-all-submodules.sh"
+            sync_script_path.write_text(sync_script)
+            sync_script_path.chmod(0o755)
 
-        self.print_status("Created sync-all-submodules.sh", "SUCCESS")
-        return True
+            self.print_status("Created sync-all-submodules.sh", "SUCCESS")
+            return True
+        except (OSError, IOError) as e:
+            self.print_status(f"Failed to create sync script: {e}", "WARNING")
+            return False
 
     def create_status_report_script(self) -> bool:
         """Create script to generate status report across all submodules."""
@@ -1048,12 +1055,16 @@ if __name__ == "__main__":
     main()
 """
 
-        status_script_path = self.master_project_path / "scripts" / "status-report.py"
-        status_script_path.write_text(status_script)
-        status_script_path.chmod(0o755)
+        try:
+            status_script_path = self.master_project_path / "scripts" / "status-report.py"
+            status_script_path.write_text(status_script)
+            status_script_path.chmod(0o755)
 
-        self.print_status("Created status-report.py", "SUCCESS")
-        return True
+            self.print_status("Created status-report.py", "SUCCESS")
+            return True
+        except (OSError, IOError) as e:
+            self.print_status(f"Failed to create status report script: {e}", "WARNING")
+            return False
 
     def final_commit_and_push(self, dry_run: bool = False) -> bool:
         """Make final commit of master project and push."""
@@ -1063,7 +1074,7 @@ if __name__ == "__main__":
 
         try:
             # Add all files
-            subprocess.run(["git", "add", "."], check=True, capture_output=True)
+            subprocess.run(["git", "add", "."], check=True, capture_output=True, timeout=10)
 
             # Commit
             commit_msg = """Initial master project setup with all sub-projects
@@ -1079,39 +1090,63 @@ Sub-projects created:
 Co-Authored-By: Claude <noreply@anthropic.com>"""
 
             subprocess.run(["git", "commit", "-m", commit_msg],
-                         check=True, capture_output=True)
+                         check=True, capture_output=True, timeout=10)
 
             self.print_status("Committed master project", "SUCCESS")
 
             if not dry_run:
-                # Push to GitHub
-                subprocess.run(["git", "push", "-u", "origin", "main"],
-                             check=True, capture_output=True)
+                # Push to GitHub with retry
+                self.run_command_with_retry(
+                    ["git", "push", "-u", "origin", "main"],
+                    cwd=self.master_project_path
+                )
                 self.print_status("Pushed to GitHub", "SUCCESS")
             else:
                 self.print_status("DRY RUN: Would push to GitHub", "WARNING")
 
             return True
         except subprocess.CalledProcessError as e:
-            self.print_status(f"Commit/push failed: {e}", "ERROR")
-            return False
+            raise GitOperationError(f"Commit/push failed: {e.stderr}")
+        except NetworkError as e:
+            raise GitOperationError(f"Push failed due to network error: {e}")
 
     def save_session_log(self):
         """Save session log to MEMORY-CONTEXT."""
-        log_file = self.master_project_path / "MEMORY-CONTEXT" / f"SESSION-{self.session_id}.json"
+        try:
+            log_file = self.master_project_path / "MEMORY-CONTEXT" / f"SESSION-{self.session_id}.json"
 
-        log_data = {
-            "session_id": self.session_id,
-            "timestamp": datetime.now().isoformat(),
-            "master_project": self.master_project_name,
-            "sub_projects_created": len(self.sub_projects),
-            "log": self.session_log
-        }
+            log_data = {
+                "session_id": self.session_id,
+                "timestamp": datetime.now().isoformat(),
+                "master_project": self.master_project_name,
+                "sub_projects_created": len(self.sub_projects),
+                "log": self.session_log
+            }
 
-        with open(log_file, 'w') as f:
-            json.dump(log_data, f, indent=2)
+            with open(log_file, 'w') as f:
+                json.dump(log_data, f, indent=2)
 
-        self.print_status(f"Session log saved: {log_file.name}", "SUCCESS")
+            self.print_status(f"Session log saved: {log_file.name}", "SUCCESS")
+        except (OSError, IOError) as e:
+            self.print_status(f"Failed to save session log: {e}", "WARNING")
+
+    def rollback(self):
+        """Rollback changes in case of failure."""
+        self.print_status("Rolling back changes...", "WARNING")
+
+        for action_type, target in reversed(self.rollback_actions):
+            try:
+                if action_type == "rmdir":
+                    if target.exists():
+                        shutil.rmtree(target)
+                        self.print_status(f"Removed directory: {target}", "SUCCESS")
+                elif action_type == "git_deinit":
+                    git_dir = target / ".git"
+                    if git_dir.exists():
+                        shutil.rmtree(git_dir)
+                        self.print_status(f"Removed git repository: {target}", "SUCCESS")
+            except Exception as e:
+                self.print_status(f"Rollback failed for {target}: {e}", "ERROR")
 
     def print_summary(self):
         """Print summary of what was created."""
@@ -1133,27 +1168,14 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
         print(f"   3. Start development on priority P0 projects")
         print(f"   4. Use scripts/status-report.py to track progress")
 
-        print(f"\n{self.BLUE}📋 Useful Commands:{self.RESET}")
-        print(f"   # Clone with all submodules")
-        print(f"   git clone --recurse-submodules https://github.com/{self.github_org}/{self.master_project_name}.git")
-        print()
-        print(f"   # Sync all submodules to latest")
-        print(f"   cd {self.master_project_path}")
-        print(f"   ./scripts/sync-all-submodules.sh")
-        print()
-        print(f"   # Generate status report")
-        print(f"   python3 scripts/status-report.py")
-
         print(f"\n{self.GREEN}{'='*80}{self.RESET}\n")
 
     def run(self, dry_run: bool = False):
         """Run complete master project setup."""
         self.print_banner()
 
-        if not self.check_prerequisites():
-            return False
-
         steps = [
+            ("Checking prerequisites", self.check_prerequisites),
             ("Creating master project directory", self.create_master_project_directory),
             ("Initializing git repository", self.initialize_git_repository),
             ("Creating master README", self.create_master_readme),
@@ -1169,17 +1191,27 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
             ("Saving session log", self.save_session_log)
         ]
 
-        for step_name, step_func in steps:
-            self.print_status(f"\n{'─'*60}", "INFO")
-            self.print_status(f"Step: {step_name}", "INFO")
-            self.print_status(f"{'─'*60}", "INFO")
+        try:
+            for step_name, step_func in steps:
+                self.print_status(f"\n{'─'*60}", "INFO")
+                self.print_status(f"Step: {step_name}", "INFO")
+                self.print_status(f"{'─'*60}", "INFO")
 
-            if not step_func():
-                self.print_status(f"Step failed: {step_name}", "ERROR")
-                return False
+                if not step_func():
+                    self.print_status(f"Step failed: {step_name}", "ERROR")
+                    self.rollback()
+                    return False
 
-        self.print_summary()
-        return True
+            self.print_summary()
+            return True
+        except Exception as e:
+            self.print_status(f"Unexpected error: {e}", "ERROR")
+            self.logger.exception("Full exception traceback:")
+            self.rollback()
+            return False
+        finally:
+            # Ensure cleanup
+            pass
 
 
 def main():
@@ -1206,13 +1238,20 @@ def main():
 
     args = parser.parse_args()
 
-    setup = CoditectMasterProjectSetup(
-        master_project_name=args.master_name,
-        projects_root=args.projects_root
-    )
+    try:
+        setup = CoditectMasterProjectSetup(
+            master_project_name=args.master_name,
+            projects_root=args.projects_root
+        )
 
-    success = setup.run(dry_run=args.dry_run)
-    sys.exit(0 if success else 1)
+        success = setup.run(dry_run=args.dry_run)
+        sys.exit(0 if success else 1)
+    except KeyboardInterrupt:
+        print("\n\nSetup interrupted by user")
+        sys.exit(130)
+    except Exception as e:
+        print(f"\nFatal error: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

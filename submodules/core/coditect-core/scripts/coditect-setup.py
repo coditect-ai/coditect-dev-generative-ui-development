@@ -20,12 +20,45 @@ import subprocess
 import json
 import hashlib
 import platform
+import logging
 from pathlib import Path
 from typing import Optional, Dict, Any
 import urllib.request
 import urllib.parse
 import urllib.error
 from datetime import datetime
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('coditect-setup.log')
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Custom exceptions
+class CoditectSetupError(Exception):
+    """Base exception for CODITECT setup errors"""
+    pass
+
+class ValidationError(CoditectSetupError):
+    """Input validation error"""
+    pass
+
+class NetworkError(CoditectSetupError):
+    """Network connectivity error"""
+    pass
+
+class AuthenticationError(CoditectSetupError):
+    """User authentication error"""
+    pass
+
+class WorkspaceError(CoditectSetupError):
+    """Workspace creation/configuration error"""
+    pass
 
 # Configuration
 CLOUD_PLATFORM_URL = os.getenv("CODITECT_CLOUD_URL", "https://api.cloud.coditect.ai/v1")
@@ -55,17 +88,37 @@ class CoditectSetup:
 
     def load_config(self) -> Dict[str, Any]:
         """Load existing configuration if available"""
-        if CONFIG_FILE.exists():
-            with open(CONFIG_FILE, 'r') as f:
-                return json.load(f)
-        return {}
+        try:
+            if CONFIG_FILE.exists():
+                logger.debug(f"Loading configuration from {CONFIG_FILE}")
+                with open(CONFIG_FILE, 'r') as f:
+                    config = json.load(f)
+                logger.info("Configuration loaded successfully")
+                return config
+            logger.debug("No existing configuration found")
+            return {}
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in config file: {e}")
+            raise ValidationError(f"Configuration file is corrupted: {e}")
+        except Exception as e:
+            logger.error(f"Failed to load configuration: {e}")
+            raise CoditectSetupError(f"Could not load configuration: {e}")
 
     def save_config(self):
         """Save configuration to disk"""
-        CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with open(CONFIG_FILE, 'w') as f:
-            json.dump(self.config, f, indent=2)
-        os.chmod(CONFIG_FILE, 0o600)  # Restrict permissions
+        try:
+            logger.debug(f"Saving configuration to {CONFIG_FILE}")
+            CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+            with open(CONFIG_FILE, 'w') as f:
+                json.dump(self.config, f, indent=2)
+            os.chmod(CONFIG_FILE, 0o600)  # Restrict permissions
+            logger.info("Configuration saved successfully")
+        except PermissionError as e:
+            logger.error(f"Permission denied writing config: {e}")
+            raise ValidationError(f"Cannot write to {CONFIG_FILE}: Permission denied")
+        except Exception as e:
+            logger.error(f"Failed to save configuration: {e}")
+            raise CoditectSetupError(f"Could not save configuration: {e}")
 
     def print_header(self):
         """Print welcome header"""
@@ -716,35 +769,77 @@ Copyright © 2025 AZ1.AI INC. All Rights Reserved."""
 
     def run(self) -> int:
         """Main setup flow"""
-        self.print_header()
+        try:
+            logger.info("Starting CODITECT setup...")
+            self.print_header()
 
-        steps = [
-            ("Prerequisites", self.check_prerequisites),
-            ("Authentication", self.authenticate_user),
-            ("License Acceptance", self.accept_licenses),
-            ("Workspace Creation", self.create_workspace),
-            ("Framework Download", self.download_framework),
-            ("Dependencies", self.install_dependencies),  # NEW: Install venv + GitPython
-            ("LLM Symlinks", self.setup_llm_symlinks),
-            ("MEMORY-CONTEXT", self.create_memory_context),
-            ("Gitignore", self.configure_gitignore),
-            ("README", self.create_workspace_readme),
-            ("Git Commit", self.commit_structure),
-        ]
+            steps = [
+                ("Prerequisites", self.check_prerequisites),
+                ("Authentication", self.authenticate_user),
+                ("License Acceptance", self.accept_licenses),
+                ("Workspace Creation", self.create_workspace),
+                ("Framework Download", self.download_framework),
+                ("Dependencies", self.install_dependencies),  # NEW: Install venv + GitPython
+                ("LLM Symlinks", self.setup_llm_symlinks),
+                ("MEMORY-CONTEXT", self.create_memory_context),
+                ("Gitignore", self.configure_gitignore),
+                ("README", self.create_workspace_readme),
+                ("Git Commit", self.commit_structure),
+            ]
 
-        for step_name, step_func in steps:
-            if not step_func():
-                print(f"\n{Colors.RED}✗ Setup failed at: {step_name}{Colors.END}")
-                return 1
+            for step_name, step_func in steps:
+                try:
+                    logger.info(f"Running step: {step_name}")
+                    if not step_func():
+                        logger.error(f"Step failed: {step_name}")
+                        print(f"\n{Colors.RED}✗ Setup failed at: {step_name}{Colors.END}")
+                        return 1
+                    logger.info(f"Step completed: {step_name}")
+                except Exception as e:
+                    logger.error(f"Exception in step {step_name}: {e}", exc_info=True)
+                    print(f"\n{Colors.RED}✗ Setup failed at: {step_name}{Colors.END}")
+                    print(f"{Colors.RED}Error: {e}{Colors.END}")
+                    print(f"See coditect-setup.log for details", file=sys.stderr)
+                    return 1
 
-        self.launch_tutorial()
-        return 0
+            self.launch_tutorial()
+            logger.info("CODITECT setup completed successfully")
+            return 0
+
+        except ValidationError as e:
+            logger.error(f"Validation error: {e}")
+            print(f"\n{Colors.RED}✗ Setup failed: {e}{Colors.END}", file=sys.stderr)
+            return 1
+        except NetworkError as e:
+            logger.error(f"Network error: {e}")
+            print(f"\n{Colors.RED}✗ Network error: {e}{Colors.END}", file=sys.stderr)
+            print(f"Check your internet connection and try again", file=sys.stderr)
+            return 1
+        except AuthenticationError as e:
+            logger.error(f"Authentication error: {e}")
+            print(f"\n{Colors.RED}✗ Authentication failed: {e}{Colors.END}", file=sys.stderr)
+            return 1
+        except WorkspaceError as e:
+            logger.error(f"Workspace error: {e}")
+            print(f"\n{Colors.RED}✗ Workspace error: {e}{Colors.END}", file=sys.stderr)
+            return 1
+        except Exception as e:
+            logger.error(f"Unexpected error during setup: {e}", exc_info=True)
+            print(f"\n{Colors.RED}✗ Unexpected error: {e}{Colors.END}", file=sys.stderr)
+            print(f"See coditect-setup.log for details", file=sys.stderr)
+            return 1
 
 
 def main():
     """Entry point"""
-    setup = CoditectSetup()
-    sys.exit(setup.run())
+    try:
+        setup = CoditectSetup()
+        sys.exit(setup.run())
+    except Exception as e:
+        logger.error(f"Fatal error initializing setup: {e}", exc_info=True)
+        print(f"❌ Fatal error: {e}", file=sys.stderr)
+        print(f"See coditect-setup.log for details", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == '__main__':

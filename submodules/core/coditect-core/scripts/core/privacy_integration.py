@@ -31,18 +31,34 @@ from datetime import datetime, timezone
 sys.path.insert(0, str(Path(__file__).parent))
 
 try:
-    from privacy_manager import PrivacyManager, PrivacyLevel, PIIDetection
-except ImportError:
-    print("ERROR: Cannot import privacy_manager.py")
+    from privacy_manager import (PrivacyManager, PrivacyLevel, PIIDetection,
+                                 PrivacyError, ConfigLoadError, PIIDetectionError, RedactionError)
+except ImportError as e:
+    print(f"❌ ERROR: Cannot import privacy_manager.py: {e}")
     print("Make sure privacy_manager.py is in the same directory")
     sys.exit(1)
 
-# Setup logging
+# Configure logging to output to both stdout and file
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('coditect-privacy-integration.log')
+    ]
 )
 logger = logging.getLogger(__name__)
+
+
+# Custom exception hierarchy for better error handling
+class PrivacyIntegrationError(Exception):
+    """Base exception for privacy integration errors."""
+    pass
+
+
+class ProcessingError(PrivacyIntegrationError):
+    """Raised when content processing fails."""
+    pass
 
 
 class PrivacyIntegration:
@@ -54,28 +70,59 @@ class PrivacyIntegration:
 
         Args:
             repo_root: Repository root directory
+
+        Raises:
+            PrivacyIntegrationError: If initialization fails
         """
-        if repo_root is None:
-            # Try to find repo root
-            current = Path.cwd()
-            while current != current.parent:
-                if (current / ".git").exists():
-                    repo_root = current
-                    break
-                current = current.parent
-
+        try:
             if repo_root is None:
-                repo_root = Path.cwd()
+                # Try to find repo root
+                current = Path.cwd()
+                while current != current.parent:
+                    if (current / ".git").exists():
+                        repo_root = current
+                        logger.debug(f"Found git root: {repo_root}")
+                        break
+                    current = current.parent
 
-        self.repo_root = Path(repo_root)
-        self.memory_context_dir = self.repo_root / "MEMORY-CONTEXT"
-        self.audit_dir = self.memory_context_dir / "audit"
-        self.audit_dir.mkdir(parents=True, exist_ok=True)
+                if repo_root is None:
+                    repo_root = Path.cwd()
+                    logger.warning(f"Git root not found, using current directory: {repo_root}")
 
-        # Initialize privacy manager
-        self.privacy_manager = PrivacyManager(repo_root=self.repo_root)
+            self.repo_root = Path(repo_root)
 
-        logger.info(f"Privacy integration initialized for: {self.repo_root}")
+            # Validate repo_root exists
+            if not self.repo_root.exists():
+                error_msg = f"Repository root does not exist: {self.repo_root}"
+                logger.error(error_msg)
+                raise PrivacyIntegrationError(error_msg)
+
+            self.memory_context_dir = self.repo_root / "MEMORY-CONTEXT"
+            self.audit_dir = self.memory_context_dir / "audit"
+
+            # Create audit directory
+            try:
+                self.audit_dir.mkdir(parents=True, exist_ok=True)
+            except OSError as e:
+                logger.warning(f"Cannot create audit directory: {e}")
+                # Non-fatal, continue without audit directory
+
+            # Initialize privacy manager
+            try:
+                self.privacy_manager = PrivacyManager(repo_root=self.repo_root)
+            except (PrivacyError, ConfigLoadError) as e:
+                error_msg = f"Failed to initialize PrivacyManager: {e}"
+                logger.error(error_msg)
+                raise PrivacyIntegrationError(error_msg) from e
+
+            logger.info(f"Privacy integration initialized for: {self.repo_root}")
+
+        except PrivacyIntegrationError:
+            raise
+        except Exception as e:
+            error_msg = f"Unexpected error initializing privacy integration: {e}"
+            logger.error(error_msg, exc_info=True)
+            raise PrivacyIntegrationError(error_msg) from e
 
     def process_content(
         self,
@@ -251,7 +298,12 @@ def process_session_with_privacy(
 
 
 def main():
-    """CLI interface for privacy integration."""
+    """
+    CLI interface for privacy integration.
+
+    Returns:
+        Exit code (0 for success, 1 for failure)
+    """
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -268,52 +320,89 @@ def main():
                         help='Only detect PII, do not redact')
     parser.add_argument('--output', type=str, help='Output file (default: stdout)')
 
-    args = parser.parse_args()
+    try:
+        args = parser.parse_args()
 
-    # Get content
-    if args.file:
-        with open(args.file, 'r') as f:
-            content = f.read()
-    elif args.text:
-        content = args.text
-    else:
-        print("ERROR: Must provide --file or --text")
-        sys.exit(1)
+        # Get content
+        content = None
+        if args.file:
+            try:
+                with open(args.file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+            except FileNotFoundError:
+                print(f"❌ File not found: {args.file}", file=sys.stderr)
+                return 1
+            except OSError as e:
+                print(f"❌ Cannot read file: {e}", file=sys.stderr)
+                return 1
+        elif args.text:
+            content = args.text
+        else:
+            print("❌ ERROR: Must provide --file or --text", file=sys.stderr)
+            parser.print_help()
+            return 1
 
-    # Process content
-    integration = PrivacyIntegration()
-    processed_content, report = integration.process_content(
-        content,
-        content_type=args.type,
-        privacy_level=args.level,
-        detect_only=args.detect_only
-    )
+        # Initialize privacy integration
+        try:
+            integration = PrivacyIntegration()
+        except PrivacyIntegrationError as e:
+            print(f"❌ Failed to initialize privacy integration: {e}", file=sys.stderr)
+            return 1
 
-    # Output
-    if args.output:
-        with open(args.output, 'w') as f:
-            f.write(processed_content)
-        print(f"✅ Processed content written to: {args.output}")
-    else:
-        print(processed_content)
+        # Process content
+        try:
+            processed_content, report = integration.process_content(
+                content,
+                content_type=args.type,
+                privacy_level=args.level,
+                detect_only=args.detect_only
+            )
+        except ProcessingError as e:
+            print(f"❌ Content processing failed: {e}", file=sys.stderr)
+            return 1
 
-    # Print report
-    print("\n" + "="*80)
-    print("PRIVACY REPORT")
-    print("="*80)
-    print(f"Content Type: {report['content_type']}")
-    print(f"Privacy Level: {report['privacy_level']}")
-    print(f"PII Detections: {report['pii_detections']}")
-    if report['detection_types']:
-        print("\nDetection Breakdown:")
-        for pii_type, count in report['detection_types'].items():
-            print(f"  - {pii_type}: {count}")
-    print(f"Redacted: {'Yes' if report['redacted'] else 'No (detect-only mode)'}")
-    if report.get('safe_for_level') is not None:
-        safe_status = "✅ SAFE" if report['safe_for_level'] else "⚠️ MAY NOT BE SAFE"
-        print(f"Safe for {report['privacy_level']}: {safe_status}")
-    print("="*80)
+        # Output
+        if args.output:
+            try:
+                with open(args.output, 'w', encoding='utf-8') as f:
+                    f.write(processed_content)
+                print(f"✅ Processed content written to: {args.output}")
+            except OSError as e:
+                print(f"❌ Cannot write output file: {e}", file=sys.stderr)
+                return 1
+        else:
+            print(processed_content)
+
+        # Print report
+        print("\n" + "="*80)
+        print("PRIVACY REPORT")
+        print("="*80)
+        print(f"Content Type: {report['content_type']}")
+        print(f"Privacy Level: {report['privacy_level']}")
+        print(f"PII Detections: {report['pii_detections']}")
+        if report['detection_types']:
+            print("\nDetection Breakdown:")
+            for pii_type, count in report['detection_types'].items():
+                print(f"  - {pii_type}: {count}")
+        else:
+            print("\n✅ No PII detected")
+        print(f"Redacted: {'Yes' if report['redacted'] else 'No (detect-only mode)'}")
+        if report.get('safe_for_level') is not None:
+            safe_status = "✅ SAFE" if report['safe_for_level'] else "⚠️ MAY NOT BE SAFE"
+            print(f"Safe for {report['privacy_level']}: {safe_status}")
+        print("="*80)
+
+        return 0
+
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Operation cancelled by user", file=sys.stderr)
+        return 130
+
+    except Exception as e:
+        print(f"\n❌ Unexpected error: {e}", file=sys.stderr)
+        logger.error("Unexpected error in main", exc_info=True)
+        return 1
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

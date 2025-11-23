@@ -48,14 +48,39 @@ from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 
 # Import core utilities
-from utils import find_git_root
+from utils import find_git_root, GitRepositoryNotFoundError, InvalidPathError
 
-# Setup logging
+# Configure logging to output to both stdout and file
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('coditect-privacy-manager.log')
+    ]
 )
 logger = logging.getLogger(__name__)
+
+
+# Custom exception hierarchy for better error handling
+class PrivacyError(Exception):
+    """Base exception for privacy management errors."""
+    pass
+
+
+class PIIDetectionError(PrivacyError):
+    """Raised when PII detection fails."""
+    pass
+
+
+class RedactionError(PrivacyError):
+    """Raised when redaction operation fails."""
+    pass
+
+
+class ConfigLoadError(PrivacyError):
+    """Raised when privacy configuration cannot be loaded."""
+    pass
 
 
 class PrivacyLevel(Enum):
@@ -158,72 +183,141 @@ class PrivacyManager:
         Args:
             repo_root: Repository root directory
             config: Privacy configuration (uses defaults if not provided)
+
+        Raises:
+            ConfigLoadError: If configuration cannot be loaded
+            InvalidPathError: If repo_root is invalid
         """
-        if repo_root is None:
-            # Auto-detect repo root using utility
-            try:
-                repo_root = find_git_root()
-            except ValueError:
-                # Fallback to current directory if not in git repo
-                repo_root = Path.cwd()
+        try:
+            if repo_root is None:
+                # Auto-detect repo root using utility
+                try:
+                    repo_root = find_git_root()
+                    logger.debug(f"Auto-detected repo root: {repo_root}")
+                except (GitRepositoryNotFoundError, InvalidPathError) as e:
+                    # Fallback to current directory if not in git repo
+                    repo_root = Path.cwd()
+                    logger.warning(f"Git root not found, using current directory: {repo_root}")
 
-        self.repo_root = Path(repo_root)
-        self.memory_context_dir = self.repo_root / "MEMORY-CONTEXT"
-        self.config_path = self.memory_context_dir / "privacy.config.json"
+            self.repo_root = Path(repo_root)
 
-        # Load or create configuration
-        if config is None:
-            self.config = self._load_or_create_config()
-        else:
-            self.config = config
+            # Validate repo_root exists and is accessible
+            if not self.repo_root.exists():
+                error_msg = f"Repository root does not exist: {self.repo_root}"
+                logger.error(error_msg)
+                raise InvalidPathError(error_msg)
 
-        # Audit log
-        self.audit_log_path = self.memory_context_dir / "archive" / "privacy_audit.log"
+            self.memory_context_dir = self.repo_root / "MEMORY-CONTEXT"
+            self.config_path = self.memory_context_dir / "privacy.config.json"
 
-        logger.info(f"PrivacyManager initialized (level: {self.config.default_level.value})")
+            # Load or create configuration
+            if config is None:
+                self.config = self._load_or_create_config()
+            else:
+                self.config = config
+
+            # Audit log setup
+            self.audit_log_path = self.memory_context_dir / "archive" / "privacy_audit.log"
+
+            # Ensure audit directory exists
+            if self.config.audit_enabled:
+                try:
+                    self.audit_log_path.parent.mkdir(parents=True, exist_ok=True)
+                except OSError as e:
+                    logger.warning(f"Cannot create audit log directory: {e}")
+                    # Non-fatal, continue without audit logging
+
+            logger.info(f"PrivacyManager initialized (level: {self.config.default_level.value})")
+
+        except (ConfigLoadError, InvalidPathError):
+            raise
+        except Exception as e:
+            error_msg = f"Failed to initialize PrivacyManager: {e}"
+            logger.error(error_msg, exc_info=True)
+            raise PrivacyError(error_msg) from e
 
     def _load_or_create_config(self) -> PrivacyConfig:
-        """Load existing config or create default."""
-        if self.config_path.exists():
-            with open(self.config_path, 'r') as f:
-                data = json.load(f)
+        """
+        Load existing config or create default.
 
-            return PrivacyConfig(
-                default_level=PrivacyLevel(data['default_level']),
-                auto_redact=data['auto_redact'],
-                pii_types_to_detect=[PIIType(t) for t in data['pii_types_to_detect']],
-                redaction_char=data['redaction_char'],
-                preserve_format=data['preserve_format'],
-                audit_enabled=data['audit_enabled'],
-                gdpr_mode=data['gdpr_mode']
-            )
-        else:
-            # Create default config
-            config = PrivacyConfig(
-                default_level=PrivacyLevel.TEAM,
-                auto_redact=True,
-                pii_types_to_detect=[
-                    PIIType.EMAIL,
-                    PIIType.PHONE,
-                    PIIType.SSN,
-                    PIIType.CREDIT_CARD,
-                    PIIType.IP_ADDRESS,
-                    PIIType.API_KEY,
-                    PIIType.AWS_KEY,
-                    PIIType.GITHUB_TOKEN,
-                    PIIType.GITHUB_PAT,
-                    PIIType.GITHUB_OAUTH,
-                    PIIType.PASSWORD
-                ],
-                redaction_char='*',
-                preserve_format=True,
-                audit_enabled=True,
-                gdpr_mode=True
-            )
+        Returns:
+            PrivacyConfig instance
 
-            # Save default config
-            self._save_config(config)
-            return config
+        Raises:
+            ConfigLoadError: If configuration cannot be loaded
+        """
+        try:
+            if self.config_path.exists():
+                try:
+                    with open(self.config_path, 'r') as f:
+                        data = json.load(f)
+
+                    # Validate required fields
+                    required_fields = ['default_level', 'auto_redact', 'pii_types_to_detect',
+                                     'redaction_char', 'preserve_format', 'audit_enabled', 'gdpr_mode']
+                    missing_fields = [f for f in required_fields if f not in data]
+                    if missing_fields:
+                        error_msg = f"Missing required config fields: {missing_fields}"
+                        logger.error(error_msg)
+                        raise ConfigLoadError(error_msg)
+
+                    return PrivacyConfig(
+                        default_level=PrivacyLevel(data['default_level']),
+                        auto_redact=data['auto_redact'],
+                        pii_types_to_detect=[PIIType(t) for t in data['pii_types_to_detect']],
+                        redaction_char=data['redaction_char'],
+                        preserve_format=data['preserve_format'],
+                        audit_enabled=data['audit_enabled'],
+                        gdpr_mode=data['gdpr_mode']
+                    )
+
+                except json.JSONDecodeError as e:
+                    error_msg = f"Invalid JSON in privacy config: {e}"
+                    logger.error(error_msg)
+                    raise ConfigLoadError(error_msg) from e
+                except (ValueError, KeyError) as e:
+                    error_msg = f"Invalid privacy config values: {e}"
+                    logger.error(error_msg)
+                    raise ConfigLoadError(error_msg) from e
+                except OSError as e:
+                    error_msg = f"Cannot read privacy config file: {e}"
+                    logger.error(error_msg)
+                    raise ConfigLoadError(error_msg) from e
+
+            else:
+                # Create default config
+                config = PrivacyConfig(
+                    default_level=PrivacyLevel.TEAM,
+                    auto_redact=True,
+                    pii_types_to_detect=[
+                        PIIType.EMAIL,
+                        PIIType.PHONE,
+                        PIIType.SSN,
+                        PIIType.CREDIT_CARD,
+                        PIIType.IP_ADDRESS,
+                        PIIType.API_KEY,
+                        PIIType.AWS_KEY,
+                        PIIType.GITHUB_TOKEN,
+                        PIIType.GITHUB_PAT,
+                        PIIType.GITHUB_OAUTH,
+                        PIIType.PASSWORD
+                    ],
+                    redaction_char='*',
+                    preserve_format=True,
+                    audit_enabled=True,
+                    gdpr_mode=True
+                )
+
+                # Save default config
+                self._save_config(config)
+                return config
+
+        except ConfigLoadError:
+            raise
+        except Exception as e:
+            error_msg = f"Unexpected error loading privacy config: {e}"
+            logger.error(error_msg, exc_info=True)
+            raise ConfigLoadError(error_msg) from e
 
     def _save_config(self, config: PrivacyConfig) -> None:
         """Save configuration to file."""
@@ -518,7 +612,12 @@ class PrivacyManager:
 
 
 def main():
-    """CLI entry point for testing."""
+    """
+    CLI entry point for testing.
+
+    Returns:
+        Exit code (0 for success, 1 for failure)
+    """
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -551,44 +650,81 @@ def main():
         help='Only detect PII, do not redact'
     )
 
-    args = parser.parse_args()
+    try:
+        args = parser.parse_args()
 
-    # Get text to analyze
-    if args.file:
-        with open(args.file, 'r') as f:
-            text = f.read()
-    elif args.text:
-        text = args.text
-    else:
-        print("Error: Provide --text or --file")
-        return 1
+        # Get text to analyze
+        text = None
+        if args.file:
+            try:
+                with open(args.file, 'r', encoding='utf-8') as f:
+                    text = f.read()
+            except FileNotFoundError:
+                print(f"❌ File not found: {args.file}", file=sys.stderr)
+                return 1
+            except OSError as e:
+                print(f"❌ Cannot read file: {e}", file=sys.stderr)
+                return 1
+        elif args.text:
+            text = args.text
+        else:
+            print("❌ Error: Provide --text or --file", file=sys.stderr)
+            parser.print_help()
+            return 1
 
-    # Initialize privacy manager
-    pm = PrivacyManager()
+        # Initialize privacy manager
+        try:
+            pm = PrivacyManager()
+        except (ConfigLoadError, InvalidPathError, PrivacyError) as e:
+            print(f"❌ Failed to initialize PrivacyManager: {e}", file=sys.stderr)
+            return 1
 
-    # Detect PII
-    print("\n" + "="*80)
-    print("PRIVACY ANALYSIS")
-    print("="*80)
-
-    summary = pm.get_privacy_summary(text)
-    print(f"\nTotal PII found: {summary['total_pii_found']}")
-    print(f"Safest privacy level: {summary['safest_level'].upper()}")
-    print(f"\nPII by type:")
-    for pii_type, count in summary['pii_by_type'].items():
-        print(f"  - {pii_type}: {count}")
-
-    if not args.detect_only:
-        # Redact
-        level = PrivacyLevel(args.level)
-        redacted_text = pm.redact(text, level)
-
+        # Detect PII
         print("\n" + "="*80)
-        print(f"REDACTED TEXT (Level: {level.value.upper()})")
+        print("PRIVACY ANALYSIS")
         print("="*80)
-        print(redacted_text)
 
-    return 0
+        try:
+            summary = pm.get_privacy_summary(text)
+            print(f"\n✅ Total PII found: {summary['total_pii_found']}")
+            print(f"✅ Safest privacy level: {summary['safest_level'].upper()}")
+
+            if summary['pii_by_type']:
+                print(f"\nPII by type:")
+                for pii_type, count in summary['pii_by_type'].items():
+                    print(f"  - {pii_type}: {count}")
+            else:
+                print("\n✅ No PII detected - content is safe for public sharing")
+
+        except PIIDetectionError as e:
+            print(f"\n❌ PII detection failed: {e}", file=sys.stderr)
+            return 1
+
+        if not args.detect_only:
+            # Redact
+            try:
+                level = PrivacyLevel(args.level)
+                redacted_text = pm.redact(text, level)
+
+                print("\n" + "="*80)
+                print(f"REDACTED TEXT (Level: {level.value.upper()})")
+                print("="*80)
+                print(redacted_text)
+
+            except RedactionError as e:
+                print(f"\n❌ Redaction failed: {e}", file=sys.stderr)
+                return 1
+
+        return 0
+
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Operation cancelled by user", file=sys.stderr)
+        return 130
+
+    except Exception as e:
+        print(f"\n❌ Unexpected error: {e}", file=sys.stderr)
+        logger.error("Unexpected error in main", exc_info=True)
+        return 1
 
 
 if __name__ == '__main__':

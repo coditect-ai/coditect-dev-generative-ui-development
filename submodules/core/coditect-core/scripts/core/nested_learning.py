@@ -52,12 +52,42 @@ from collections import Counter, defaultdict
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-# Setup logging
+# Configure logging to output to both stdout and file
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('coditect-nested-learning.log')
+    ]
 )
 logger = logging.getLogger(__name__)
+
+
+# Custom exception hierarchy for better error handling
+class NestedLearningError(Exception):
+    """Base exception for NESTED LEARNING errors."""
+    pass
+
+
+class PatternExtractionError(NestedLearningError):
+    """Raised when pattern extraction fails."""
+    pass
+
+
+class PatternStorageError(NestedLearningError):
+    """Raised when pattern storage fails."""
+    pass
+
+
+class DatabaseError(NestedLearningError):
+    """Raised when database operations fail."""
+    pass
+
+
+class ConfigurationError(NestedLearningError):
+    """Raised when configuration is invalid."""
+    pass
 
 
 class PatternType(Enum):
@@ -187,81 +217,139 @@ class NestedLearningProcessor:
         Args:
             db_path: Path to SQLite database
             config_path: Path to configuration file
+
+        Raises:
+            ConfigurationError: If configuration cannot be loaded
+            DatabaseError: If database path is invalid
         """
-        self.db_path = db_path or PROJECT_ROOT / "MEMORY-CONTEXT" / "memory-context.db"
-        self.config_path = config_path or PROJECT_ROOT / "MEMORY-CONTEXT" / "nested-learning.config.json"
+        try:
+            # Set paths with validation
+            self.db_path = db_path or PROJECT_ROOT / "MEMORY-CONTEXT" / "memory-context.db"
+            self.config_path = config_path or PROJECT_ROOT / "MEMORY-CONTEXT" / "nested-learning.config.json"
 
-        # Load configuration
-        self.config = self._load_config()
+            # Validate db_path parent directory exists
+            if not self.db_path.parent.exists():
+                try:
+                    self.db_path.parent.mkdir(parents=True, exist_ok=True)
+                    logger.info(f"Created database directory: {self.db_path.parent}")
+                except OSError as e:
+                    error_msg = f"Cannot create database directory '{self.db_path.parent}': {e}"
+                    logger.error(error_msg)
+                    raise DatabaseError(error_msg) from e
 
-        # Initialize pattern extractors (6 total)
-        self.workflow_extractor = WorkflowPatternExtractor(self.config)
-        self.decision_extractor = DecisionPatternExtractor(self.config)
-        self.code_extractor = CodePatternExtractor(self.config)
-        self.error_extractor = ErrorPatternExtractor(self.config)
-        self.architecture_extractor = ArchitecturePatternExtractor(self.config)
-        self.configuration_extractor = ConfigurationPatternExtractor(self.config)
+            # Load configuration
+            self.config = self._load_config()
 
-        # Pattern library cache
-        self.pattern_cache: Dict[str, Pattern] = {}
+            # Initialize pattern extractors (6 total) with error handling
+            try:
+                self.workflow_extractor = WorkflowPatternExtractor(self.config)
+                self.decision_extractor = DecisionPatternExtractor(self.config)
+                self.code_extractor = CodePatternExtractor(self.config)
+                self.error_extractor = ErrorPatternExtractor(self.config)
+                self.architecture_extractor = ArchitecturePatternExtractor(self.config)
+                self.configuration_extractor = ConfigurationPatternExtractor(self.config)
+            except Exception as e:
+                error_msg = f"Failed to initialize pattern extractors: {e}"
+                logger.error(error_msg, exc_info=True)
+                raise ConfigurationError(error_msg) from e
 
-        logger.info(f"NESTED LEARNING processor initialized")
-        logger.info(f"Database: {self.db_path}")
-        logger.info(f"Config: {self.config_path}")
+            # Pattern library cache
+            self.pattern_cache: Dict[str, Pattern] = {}
+
+            logger.info(f"NESTED LEARNING processor initialized")
+            logger.info(f"Database: {self.db_path}")
+            logger.info(f"Config: {self.config_path}")
+
+        except (ConfigurationError, DatabaseError):
+            raise
+        except Exception as e:
+            error_msg = f"Failed to initialize NESTED LEARNING processor: {e}"
+            logger.error(error_msg, exc_info=True)
+            raise NestedLearningError(error_msg) from e
 
     def _load_config(self) -> Dict[str, Any]:
-        """Load configuration from file or create default."""
-        if self.config_path.exists():
-            with open(self.config_path, 'r') as f:
-                config = json.load(f)
-            logger.info(f"Loaded config from {self.config_path}")
-            return config
-        else:
-            # Default configuration
-            config = {
-                "min_pattern_confidence": 0.6,
-                "min_similarity_threshold": 0.7,
-                "max_variations_per_pattern": 5,
-                "workflow_detection": {
-                    "min_steps": 2,
-                    "max_steps": 10,
-                    "common_verbs": ["create", "update", "delete", "test", "deploy", "review"]
-                },
-                "decision_detection": {
-                    "decision_markers": ["decided", "chose", "selected", "option", "alternative"],
-                    "rationale_markers": ["because", "since", "due to", "reason", "tradeoff"]
-                },
-                "code_detection": {
-                    "min_lines": 5,
-                    "languages": ["python", "javascript", "typescript", "rust", "sql"],
-                    "frameworks": {
-                        "python": ["fastapi", "flask", "django", "pytest"],
-                        "javascript": ["react", "vue", "angular", "express", "next"],
-                        "typescript": ["react", "nest", "angular"]
+        """
+        Load configuration from file or create default.
+
+        Returns:
+            Configuration dictionary
+
+        Raises:
+            ConfigurationError: If configuration file is invalid
+        """
+        try:
+            if self.config_path.exists():
+                try:
+                    with open(self.config_path, 'r') as f:
+                        config = json.load(f)
+                    logger.info(f"Loaded config from {self.config_path}")
+                    return config
+                except json.JSONDecodeError as e:
+                    error_msg = f"Invalid JSON in config file '{self.config_path}': {e}"
+                    logger.error(error_msg)
+                    raise ConfigurationError(error_msg) from e
+                except OSError as e:
+                    error_msg = f"Cannot read config file '{self.config_path}': {e}"
+                    logger.error(error_msg)
+                    raise ConfigurationError(error_msg) from e
+            else:
+                # Default configuration
+                config = {
+                    "min_pattern_confidence": 0.6,
+                    "min_similarity_threshold": 0.7,
+                    "max_variations_per_pattern": 5,
+                    "workflow_detection": {
+                        "min_steps": 2,
+                        "max_steps": 10,
+                        "common_verbs": ["create", "update", "delete", "test", "deploy", "review"]
                     },
-                    "design_patterns": ["singleton", "factory", "observer", "strategy", "decorator"]
-                },
-                "error_detection": {
-                    "error_markers": ["error", "exception", "traceback", "failed", "bug"],
-                    "solution_markers": ["fixed", "solved", "resolved", "workaround"]
-                },
-                "architecture_detection": {
-                    "arch_markers": ["architecture", "design", "adr", "decision record"],
-                    "component_markers": ["service", "module", "layer", "tier"]
-                },
-                "configuration_detection": {
-                    "config_files": [".env", "config.yaml", "config.json", "docker-compose.yml", "Dockerfile"],
-                    "env_markers": ["development", "staging", "production", "test"]
+                    "decision_detection": {
+                        "decision_markers": ["decided", "chose", "selected", "option", "alternative"],
+                        "rationale_markers": ["because", "since", "due to", "reason", "tradeoff"]
+                    },
+                    "code_detection": {
+                        "min_lines": 5,
+                        "languages": ["python", "javascript", "typescript", "rust", "sql"],
+                        "frameworks": {
+                            "python": ["fastapi", "flask", "django", "pytest"],
+                            "javascript": ["react", "vue", "angular", "express", "next"],
+                            "typescript": ["react", "nest", "angular"]
+                        },
+                        "design_patterns": ["singleton", "factory", "observer", "strategy", "decorator"]
+                    },
+                    "error_detection": {
+                        "error_markers": ["error", "exception", "traceback", "failed", "bug"],
+                        "solution_markers": ["fixed", "solved", "resolved", "workaround"]
+                    },
+                    "architecture_detection": {
+                        "arch_markers": ["architecture", "design", "adr", "decision record"],
+                        "component_markers": ["service", "module", "layer", "tier"]
+                    },
+                    "configuration_detection": {
+                        "config_files": [".env", "config.yaml", "config.json", "docker-compose.yml", "Dockerfile"],
+                        "env_markers": ["development", "staging", "production", "test"]
+                    }
                 }
-            }
 
-            # Save default config
-            self.config_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.config_path, 'w') as f:
-                json.dump(config, f, indent=2)
+                # Save default config with error handling
+                try:
+                    self.config_path.parent.mkdir(parents=True, exist_ok=True)
+                    with open(self.config_path, 'w') as f:
+                        json.dump(config, f, indent=2)
+                    logger.info(f"Created default config: {self.config_path}")
+                except OSError as e:
+                    error_msg = f"Cannot create config file '{self.config_path}': {e}"
+                    logger.error(error_msg)
+                    raise ConfigurationError(error_msg) from e
 
-            logger.info(f"Created default config: {self.config_path}")
-            return config
+                return config
+
+        except ConfigurationError:
+            raise
+        except Exception as e:
+            error_msg = f"Unexpected error loading configuration: {e}"
+            logger.error(error_msg, exc_info=True)
+            raise ConfigurationError(error_msg) from e
 
     def extract_patterns(self, session_data: Dict[str, Any]) -> List[Pattern]:
         """
@@ -358,39 +446,77 @@ class NestedLearningProcessor:
 
         Returns:
             Number of patterns stored
+
+        Raises:
+            PatternStorageError: If storage operation fails
         """
         if not patterns:
+            logger.debug("No patterns to store")
             return 0
 
+        conn = None
         try:
-            conn = sqlite3.connect(str(self.db_path))
+            # Validate database path
+            if not self.db_path.parent.exists():
+                self.db_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Connect to database with timeout
+            conn = sqlite3.connect(str(self.db_path), timeout=30.0)
             cursor = conn.cursor()
 
             stored_count = 0
 
             for pattern in patterns:
-                # Check if similar pattern exists
-                similar = self._find_similar_in_db(cursor, pattern)
+                try:
+                    # Check if similar pattern exists
+                    similar = self._find_similar_in_db(cursor, pattern)
 
-                if similar:
-                    # Update existing pattern
-                    self._merge_patterns(cursor, similar, pattern)
-                    logger.debug(f"Merged pattern: {pattern.name}")
-                else:
-                    # Insert new pattern
-                    self._insert_pattern(cursor, pattern)
-                    stored_count += 1
-                    logger.debug(f"Inserted new pattern: {pattern.name}")
+                    if similar:
+                        # Update existing pattern
+                        self._merge_patterns(cursor, similar, pattern)
+                        logger.debug(f"Merged pattern: {pattern.name}")
+                    else:
+                        # Insert new pattern
+                        self._insert_pattern(cursor, pattern)
+                        stored_count += 1
+                        logger.debug(f"Inserted new pattern: {pattern.name}")
+
+                except sqlite3.Error as e:
+                    logger.warning(f"Failed to store pattern '{pattern.name}': {e}")
+                    # Continue with next pattern
+                    continue
 
             conn.commit()
-            conn.close()
-
             logger.info(f"Stored {stored_count} new patterns, merged {len(patterns) - stored_count}")
             return stored_count
 
+        except sqlite3.Error as e:
+            error_msg = f"Database error during pattern storage: {e}"
+            logger.error(error_msg, exc_info=True)
+            if conn:
+                try:
+                    conn.rollback()
+                except:
+                    pass
+            raise PatternStorageError(error_msg) from e
+
         except Exception as e:
-            logger.error(f"Pattern storage failed: {e}")
-            return 0
+            error_msg = f"Unexpected error during pattern storage: {e}"
+            logger.error(error_msg, exc_info=True)
+            if conn:
+                try:
+                    conn.rollback()
+                except:
+                    pass
+            raise PatternStorageError(error_msg) from e
+
+        finally:
+            # Ensure connection is closed
+            if conn:
+                try:
+                    conn.close()
+                except:
+                    pass
 
     def track_pattern_usage(self, pattern_id: str, success: bool = True) -> bool:
         """
@@ -1626,49 +1752,104 @@ class ConfigurationPatternExtractor:
 
 
 def main():
-    """Main entry point for testing."""
-    processor = NestedLearningProcessor()
+    """
+    Main entry point for testing.
 
-    # Example session data
-    session_data = {
-        "session_id": "test_session_001",
-        "conversation": [
-            {"role": "user", "content": "Create a new Python class for authentication"},
-            {"role": "assistant", "content": "I'll create the authentication class with proper error handling"},
-        ],
-        "decisions": [
-            {
-                "decision": "Use JWT tokens for authentication",
-                "rationale": "JWT is stateless and scales well",
-                "alternatives": ["Session cookies", "OAuth2"],
-                "outcome": "Implemented successfully"
+    Returns:
+        Exit code (0 for success, 1 for failure)
+    """
+    try:
+        print("="*80)
+        print("NESTED LEARNING PROCESSOR - Test Mode")
+        print("="*80)
+
+        # Initialize processor
+        print("\n1. Initializing processor...")
+        processor = NestedLearningProcessor()
+        print("✅ Processor initialized successfully")
+
+        # Example session data
+        session_data = {
+            "session_id": "test_session_001",
+            "conversation": [
+                {"role": "user", "content": "Create a new Python class for authentication"},
+                {"role": "assistant", "content": "I'll create the authentication class with proper error handling"},
+            ],
+            "decisions": [
+                {
+                    "decision": "Use JWT tokens for authentication",
+                    "rationale": "JWT is stateless and scales well",
+                    "alternatives": ["Session cookies", "OAuth2"],
+                    "outcome": "Implemented successfully"
+                }
+            ],
+            "file_changes": [
+                {"file": "src/auth.py", "action": "created", "lines_added": 150}
+            ],
+            "metadata": {
+                "duration_minutes": 45,
+                "messages_count": 12
             }
-        ],
-        "file_changes": [
-            {"file": "src/auth.py", "action": "created", "lines_added": 150}
-        ],
-        "metadata": {
-            "duration_minutes": 45,
-            "messages_count": 12
         }
-    }
 
-    # Extract patterns
-    patterns = processor.extract_patterns(session_data)
-    print(f"\nExtracted {len(patterns)} patterns:")
-    for pattern in patterns:
-        print(f"  - {pattern.pattern_type.value}: {pattern.name}")
+        # Extract patterns
+        print("\n2. Extracting patterns from session data...")
+        patterns = processor.extract_patterns(session_data)
+        print(f"✅ Extracted {len(patterns)} patterns:")
+        for pattern in patterns:
+            print(f"   - {pattern.pattern_type.value}: {pattern.name}")
 
-    # Store patterns
-    stored = processor.store_patterns(patterns)
-    print(f"\nStored {stored} new patterns")
+        # Store patterns
+        print("\n3. Storing patterns in database...")
+        stored = processor.store_patterns(patterns)
+        print(f"✅ Stored {stored} new patterns")
 
-    # Get statistics
-    stats = processor.get_pattern_statistics()
-    print(f"\nPattern library statistics:")
-    print(f"  Total patterns: {stats.get('total_patterns', 0)}")
-    print(f"  Avg quality: {stats.get('avg_quality_score', 0):.2f}")
+        # Get statistics
+        print("\n4. Retrieving pattern library statistics...")
+        stats = processor.get_pattern_statistics()
+        print("✅ Pattern library statistics:")
+        print(f"   Total patterns: {stats.get('total_patterns', 0)}")
+        print(f"   Avg quality: {stats.get('avg_quality_score', 0):.2f}")
+
+        print("\n" + "="*80)
+        print("✅ All tests completed successfully")
+        print("="*80)
+        return 0
+
+    except ConfigurationError as e:
+        print(f"\n❌ Configuration error: {e}", file=sys.stderr)
+        logger.error("Configuration error in main", exc_info=True)
+        return 1
+
+    except PatternExtractionError as e:
+        print(f"\n❌ Pattern extraction error: {e}", file=sys.stderr)
+        logger.error("Pattern extraction error in main", exc_info=True)
+        return 1
+
+    except PatternStorageError as e:
+        print(f"\n❌ Pattern storage error: {e}", file=sys.stderr)
+        logger.error("Pattern storage error in main", exc_info=True)
+        return 1
+
+    except DatabaseError as e:
+        print(f"\n❌ Database error: {e}", file=sys.stderr)
+        logger.error("Database error in main", exc_info=True)
+        return 1
+
+    except NestedLearningError as e:
+        print(f"\n❌ NESTED LEARNING error: {e}", file=sys.stderr)
+        logger.error("NESTED LEARNING error in main", exc_info=True)
+        return 1
+
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Operation cancelled by user", file=sys.stderr)
+        return 130
+
+    except Exception as e:
+        print(f"\n❌ Unexpected error: {e}", file=sys.stderr)
+        logger.error("Unexpected error in main", exc_info=True)
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -16,7 +16,7 @@ Exit Codes:
     2 - Configuration error
     3 - Task specification error
 
-Copyright © 2025 AZ1.AI INC. All rights reserved.
+Copyright (c) 2025 AZ1.AI INC. All rights reserved.
 Developer: Hal Casteel, CEO/CTO
 Email: 1@az1.ai
 """
@@ -110,7 +110,7 @@ def execute_claude_interactive(task: Dict[str, Any]) -> Dict[str, Any]:
 
     # Display instructions
     print("\n" + "=" * 70, file=sys.stderr)
-    print("=Ý CLAUDE CODE TASK EXECUTION", file=sys.stderr)
+    print("=ï¿½ CLAUDE CODE TASK EXECUTION", file=sys.stderr)
     print("=" * 70, file=sys.stderr)
     print(f"\nTask ID: {task_id}", file=sys.stderr)
     print(f"Title: {task['title']}", file=sys.stderr)

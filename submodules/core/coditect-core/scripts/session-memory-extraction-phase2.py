@@ -35,13 +35,103 @@ import json
 import hashlib
 import os
 import sys
+import logging
+import traceback
 import re
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Tuple, Optional
 
 
-class Phase2DebugExtractor:
+# ============================================================================
+# CUSTOM EXCEPTION HIERARCHY
+# ============================================================================
+
+class Phase2ExtractionError(Exception):
+    """Base exception for Phase 2 extraction errors"""
+    pass
+
+
+class SourceFileError(Phase2ExtractionError):
+    """Source file access or validation errors"""
+    pass
+
+
+class ChecksumError(Phase2ExtractionError):
+    """Checksum verification errors"""
+    pass
+
+
+class ExtractionError(Phase2ExtractionError):
+    """Message extraction errors"""
+    pass
+
+
+class DeduplicationError(Phase2ExtractionError):
+    """Deduplication processing errors"""
+    pass
+
+
+class OutputError(Phase2ExtractionError):
+    """Output file writing errors"""
+    pass
+
+
+class DataIntegrityError(Phase2ExtractionError):
+    """Data integrity validation errors"""
+    pass
+
+
+# ============================================================================
+# DUAL LOGGING SETUP
+# ============================================================================
+
+def setup_logging(log_dir: Path, verbose: bool = True) -> Tuple[logging.Logger, Path]:
+    """
+    Setup dual logging: stdout + file
+
+    Args:
+        log_dir: Directory for log files
+        verbose: Enable console output
+
+    Returns:
+        Tuple of (logger, log_file_path)
+    """
+    log_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = log_dir / f"phase2_{timestamp}.log"
+
+    # Create logger
+    logger = logging.getLogger("Phase2Extractor")
+    logger.setLevel(logging.DEBUG)
+    logger.handlers.clear()
+
+    # File handler (always enabled, detailed)
+    file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    file_handler.setLevel(logging.DEBUG)
+    file_formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    file_handler.setFormatter(file_formatter)
+    logger.addHandler(file_handler)
+
+    # Console handler (optional, less detailed)
+    if verbose:
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setLevel(logging.INFO)
+        console_formatter = logging.Formatter('%(message)s')
+        console_handler.setFormatter(console_formatter)
+        logger.addHandler(console_handler)
+
+    return logger, log_file
+
+
+# ============================================================================
+# MAIN EXTRACTOR CLASS
+# ============================================================================
+
+class SessionMemoryExtractor:
     """Extract and deduplicate debug log messages with safety guarantees."""
 
     def __init__(self, verbose: bool = True):
@@ -54,11 +144,16 @@ class Phase2DebugExtractor:
         self.verbose = verbose
 
         # Create directories
-        self.extraction_dir.mkdir(parents=True, exist_ok=True)
-        self.logs_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.extraction_dir.mkdir(parents=True, exist_ok=True)
+            self.logs_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            raise OutputError(f"Failed to create directories: {e}") from e
+
+        # Setup dual logging
+        self.logger, self.log_file = setup_logging(self.logs_dir, verbose)
 
         # Initialize state
-        self.log_file = self.logs_dir / f"phase2-{datetime.now().isoformat()}.log"
         self.extracted_messages = []
         self.new_unique_count = 0
         self.duplicate_count = 0
@@ -67,29 +162,31 @@ class Phase2DebugExtractor:
         self.errors = []
 
         # Load existing dedup state
-        self.global_hashes = self._load_global_hashes()
-        self.log(f"Loaded {len(self.global_hashes)} existing unique message hashes")
-
-    def log(self, message: str):
-        """Log message to both console and file."""
-        timestamp = datetime.now().isoformat()
-        log_entry = f"[{timestamp}] {message}"
-
-        if self.verbose:
-            print(log_entry)
-
-        with open(self.log_file, "a") as f:
-            f.write(log_entry + "\n")
+        try:
+            self.global_hashes = self._load_global_hashes()
+            self.logger.info(f"Loaded {len(self.global_hashes)} existing unique message hashes")
+        except Exception as e:
+            self.logger.warning(f"Failed to load global hashes, starting fresh: {e}")
+            self.global_hashes = set()
 
     def _load_global_hashes(self) -> set:
-        """Load existing unique message hashes from MEMORY-CONTEXT."""
+        """
+        Load existing unique message hashes from MEMORY-CONTEXT.
+
+        Returns:
+            Set of existing message hashes
+
+        Raises:
+            IOError: If hash file cannot be read
+        """
         hash_file = self.memory_context / "dedup_state" / "global_hashes.json"
+
         if not hash_file.exists():
-            self.log(f"Warning: Hash file not found at {hash_file}")
+            self.logger.debug(f"Hash file not found at {hash_file}, starting fresh")
             return set()
 
         try:
-            with open(hash_file, "r") as f:
+            with open(hash_file, "r", encoding='utf-8') as f:
                 data = json.load(f)
 
             # Handle both array format and dictionary format
@@ -98,82 +195,136 @@ class Phase2DebugExtractor:
             elif isinstance(data, dict):
                 return set(data.get("hashes", []))
             else:
+                self.logger.warning(f"Unexpected hash file format, starting fresh")
                 return set()
-        except Exception as e:
-            self.log(f"Error loading hashes: {e}")
-            return set()
+
+        except json.JSONDecodeError as e:
+            raise DeduplicationError(f"Invalid JSON in hash file: {e}") from e
+        except IOError as e:
+            raise DeduplicationError(f"Failed to read hash file: {e}") from e
 
     def _compute_sha256(self, data: str) -> str:
-        """Compute SHA-256 hash of data."""
-        return hashlib.sha256(data.encode()).hexdigest()
+        """
+        Compute SHA-256 hash of data.
+
+        Args:
+            data: String data to hash
+
+        Returns:
+            Hex digest of hash
+        """
+        return hashlib.sha256(data.encode('utf-8')).hexdigest()
 
     def _compute_file_sha256(self, filepath: Path) -> str:
-        """Compute SHA-256 hash of entire file."""
+        """
+        Compute SHA-256 hash of entire file (streaming).
+
+        Args:
+            filepath: Path to file
+
+        Returns:
+            Hex digest of hash
+
+        Raises:
+            IOError: If file cannot be read
+        """
         sha256_hash = hashlib.sha256()
-        with open(filepath, "rb") as f:
-            for byte_block in iter(lambda: f.read(4096), b""):
-                sha256_hash.update(byte_block)
+
+        try:
+            with open(filepath, "rb") as f:
+                for byte_block in iter(lambda: f.read(4096), b""):
+                    sha256_hash.update(byte_block)
+        except IOError as e:
+            raise ChecksumError(f"Failed to read file for checksum: {e}") from e
+
         return sha256_hash.hexdigest()
 
     def verify_source_directory(self) -> Tuple[bool, str, List[Path]]:
-        """Verify source directory exists and list all files."""
-        self.log("=" * 80)
-        self.log("PHASE 2: debug/ LOGS EXTRACTION")
-        self.log("=" * 80)
-        self.log("")
+        """
+        Verify source directory exists and list all files.
 
-        self.log("Step 1/12: Verify source directory...")
+        Returns:
+            Tuple of (success, message, file_list)
+
+        Raises:
+            SourceFileError: If source directory is invalid
+        """
+        self.logger.info("=" * 80)
+        self.logger.info("PHASE 2: debug/ LOGS EXTRACTION")
+        self.logger.info("=" * 80)
+        self.logger.info("")
+        self.logger.info("Step 1/10: Verify source directory...")
 
         if not self.source_dir.exists():
-            msg = f"Source directory not found: {self.source_dir}"
-            self.log(f"ERROR: {msg}")
-            self.errors.append(msg)
-            return False, msg, []
+            raise SourceFileError(f"Source directory not found: {self.source_dir}")
 
         if not os.access(self.source_dir, os.R_OK):
-            msg = f"Source directory not readable: {self.source_dir}"
-            self.log(f"ERROR: {msg}")
-            self.errors.append(msg)
-            return False, msg, []
+            raise SourceFileError(f"Source directory not readable: {self.source_dir}")
 
         # Get all .txt files
-        debug_files = sorted(list(self.source_dir.glob("*.txt")))
+        try:
+            debug_files = sorted(list(self.source_dir.glob("*.txt")))
+        except OSError as e:
+            raise SourceFileError(f"Failed to list directory contents: {e}") from e
 
         if not debug_files:
-            msg = f"No debug log files found in {self.source_dir}"
-            self.log(f"WARNING: {msg}")
+            self.logger.warning(f"No debug log files found in {self.source_dir}")
             return True, "No files to process", []
 
-        total_size = sum(f.stat().st_size for f in debug_files)
-        self.log(f"✓ Source directory verified")
-        self.log(f"  Location: {self.source_dir}")
-        self.log(f"  Files found: {len(debug_files)}")
-        self.log(f"  Total size: {total_size:,} bytes ({total_size / 1024 / 1024:.2f} MB)")
+        try:
+            total_size = sum(f.stat().st_size for f in debug_files)
+        except OSError as e:
+            raise SourceFileError(f"Cannot access file metadata: {e}") from e
+
+        self.logger.info(f"✓ Source directory verified")
+        self.logger.info(f"  Location: {self.source_dir}")
+        self.logger.info(f"  Files found: {len(debug_files)}")
+        self.logger.info(f"  Total size: {total_size:,} bytes ({total_size / 1024 / 1024:.2f} MB)")
 
         return True, "Directory verified", debug_files
 
     def compute_baseline_checksums(self, files: List[Path]) -> Tuple[bool, str]:
-        """Compute baseline checksums for all files."""
-        self.log("")
-        self.log("Step 2/12: Compute baseline checksums for all files...")
+        """
+        Compute baseline checksums for all files.
+
+        Args:
+            files: List of files to checksum
+
+        Returns:
+            Tuple of (success, message)
+
+        Raises:
+            ChecksumError: If checksum computation fails
+        """
+        self.logger.info("")
+        self.logger.info("Step 2/10: Compute baseline checksums for all files...")
 
         try:
             for filepath in files:
                 checksum = self._compute_file_sha256(filepath)
                 self.file_checksums[str(filepath)] = checksum
 
-            self.log(f"✓ Baseline checksums computed for {len(files)} files")
+            self.logger.info(f"✓ Baseline checksums computed for {len(files)} files")
             return True, "Checksums computed"
+
         except Exception as e:
-            msg = f"Failed to compute checksums: {e}"
-            self.log(f"ERROR: {msg}")
-            self.errors.append(msg)
-            return False, msg
+            raise ChecksumError(f"Failed to compute checksums: {e}") from e
 
     def stream_extract_log_messages(self, files: List[Path]) -> Tuple[bool, str, int]:
-        """Stream extract meaningful messages from debug logs."""
-        self.log("")
-        self.log("Step 3/12: Stream extract meaningful messages from debug logs...")
+        """
+        Stream extract meaningful messages from debug logs.
+
+        Args:
+            files: List of log files to process
+
+        Returns:
+            Tuple of (success, message, count)
+
+        Raises:
+            ExtractionError: If extraction fails
+        """
+        self.logger.info("")
+        self.logger.info("Step 3/10: Stream extract meaningful messages from debug logs...")
 
         # Pattern to identify key log lines (not noise)
         key_patterns = [
@@ -189,78 +340,111 @@ class Phase2DebugExtractor:
             r"LSP",
         ]
 
-        key_regex = re.compile("|".join(key_patterns), re.IGNORECASE)
+        try:
+            key_regex = re.compile("|".join(key_patterns), re.IGNORECASE)
+        except re.error as e:
+            raise ExtractionError(f"Invalid regex pattern: {e}") from e
 
         line_count = 0
         file_count = 0
+        error_files = []
 
-        for filepath in files:
-            try:
-                with open(filepath, "r", errors="ignore") as f:
-                    for line_num, line in enumerate(f, 1):
-                        line = line.strip()
-                        if not line:
-                            continue
+        try:
+            for filepath in files:
+                try:
+                    with open(filepath, "r", encoding='utf-8', errors='replace') as f:
+                        for line_num, line in enumerate(f, 1):
+                            line = line.strip()
+                            if not line:
+                                continue
 
-                        # Check if line contains meaningful information
-                        if key_regex.search(line):
-                            self.extracted_messages.append({
-                                "content": line,
-                                "source": f"debug/{filepath.name}:line-{line_num}",
-                                "file": filepath.name,
-                                "source_type": "debug"
-                            })
-                            line_count += 1
+                            # Check if line contains meaningful information
+                            if key_regex.search(line):
+                                self.extracted_messages.append({
+                                    "content": line,
+                                    "source": f"debug/{filepath.name}:line-{line_num}",
+                                    "file": filepath.name,
+                                    "timestamp": int(datetime.now().timestamp() * 1000),
+                                    "source_type": "debug"
+                                })
+                                line_count += 1
 
-                file_count += 1
+                    file_count += 1
 
-            except Exception as e:
-                self.log(f"  Warning: Error reading {filepath.name}: {e}")
-                self.errors.append(f"Error reading {filepath.name}: {e}")
+                except IOError as e:
+                    error_files.append((filepath.name, str(e)))
+                    self.logger.debug(f"  Error reading {filepath.name}: {e}")
 
-        self.log(f"✓ Extracted {line_count} meaningful messages from {file_count} files")
-        return True, f"Extracted {line_count} messages", line_count
+            self.logger.info(f"✓ Extracted {line_count} meaningful messages from {file_count} files")
+
+            if error_files:
+                self.logger.warning(f"  Note: {len(error_files)} files had read errors")
+
+            return True, f"Extracted {line_count} messages", line_count
+
+        except Exception as e:
+            raise ExtractionError(f"Unexpected error during extraction: {e}") from e
 
     def deduplicate_messages(self) -> Tuple[bool, str, int, int]:
-        """Deduplicate extracted messages against global store."""
-        self.log("")
-        self.log("Step 4/12: Deduplicate messages against MEMORY-CONTEXT...")
+        """
+        Deduplicate extracted messages against global store.
+
+        Returns:
+            Tuple of (success, message, new_count, duplicate_count)
+        """
+        self.logger.info("")
+        self.logger.info("Step 4/10: Deduplicate messages against MEMORY-CONTEXT...")
 
         new_messages = []
         duplicates = 0
 
-        for msg in self.extracted_messages:
-            content_hash = self._compute_sha256(msg["content"])
+        try:
+            for msg in self.extracted_messages:
+                content_hash = self._compute_sha256(msg["content"])
 
-            if content_hash not in self.global_hashes:
-                new_messages.append({
-                    **msg,
-                    "hash": content_hash
-                })
-                self.new_unique_count += 1
-            else:
-                duplicates += 1
+                if content_hash not in self.global_hashes:
+                    new_messages.append({
+                        **msg,
+                        "hash": content_hash
+                    })
+                    self.new_unique_count += 1
+                else:
+                    duplicates += 1
 
-        self.duplicate_count = duplicates
-        self.total_processed = len(self.extracted_messages)
+            self.duplicate_count = duplicates
+            self.total_processed = len(self.extracted_messages)
 
-        dedup_rate = (duplicates / self.total_processed * 100) if self.total_processed > 0 else 0
+            dedup_rate = (duplicates / self.total_processed * 100) if self.total_processed > 0 else 0
 
-        self.log(f"✓ Deduplication complete")
-        self.log(f"  New unique messages: {self.new_unique_count}")
-        self.log(f"  Duplicate messages: {duplicates}")
-        self.log(f"  Total processed: {self.total_processed}")
-        self.log(f"  Deduplication rate: {dedup_rate:.1f}%")
+            self.logger.info(f"✓ Deduplication complete")
+            self.logger.info(f"  New unique messages: {self.new_unique_count}")
+            self.logger.info(f"  Duplicate messages: {duplicates}")
+            self.logger.info(f"  Total processed: {self.total_processed}")
+            self.logger.info(f"  Deduplication rate: {dedup_rate:.1f}%")
 
-        # Keep only new messages for further processing
-        self.extracted_messages = new_messages
+            # Keep only new messages for further processing
+            self.extracted_messages = new_messages
 
-        return True, "Deduplication complete", self.new_unique_count, duplicates
+            return True, "Deduplication complete", self.new_unique_count, duplicates
+
+        except Exception as e:
+            raise DeduplicationError(f"Deduplication failed: {e}") from e
 
     def create_session_index(self, files: List[Path]) -> Tuple[bool, str]:
-        """Create index mapping messages back to original files."""
-        self.log("")
-        self.log("Step 5/12: Create session index with full provenance...")
+        """
+        Create index mapping messages back to original files.
+
+        Args:
+            files: List of source files
+
+        Returns:
+            Tuple of (success, message)
+
+        Raises:
+            OutputError: If index creation fails
+        """
+        self.logger.info("")
+        self.logger.info("Step 5/10: Create session index with full provenance...")
 
         try:
             index = {
@@ -275,85 +459,130 @@ class Phase2DebugExtractor:
                 "messages": self.extracted_messages
             }
 
+            # Atomic write with backup
             index_file = self.extraction_dir / "session-index.json"
-            with open(index_file, "w") as f:
-                json.dump(index, f, indent=2, default=str)
+            temp_file = index_file.with_suffix('.json.tmp')
 
-            self.log(f"✓ Session index created")
-            self.log(f"  Location: {index_file}")
-            self.log(f"  Size: {index_file.stat().st_size:,} bytes")
+            try:
+                with open(temp_file, "w", encoding='utf-8') as f:
+                    json.dump(index, f, indent=2, default=str, ensure_ascii=False)
+
+                # Atomic rename
+                temp_file.replace(index_file)
+
+            except Exception as e:
+                # Cleanup temp file on error
+                if temp_file.exists():
+                    temp_file.unlink()
+                raise
+
+            self.logger.info(f"✓ Session index created")
+            self.logger.info(f"  Location: {index_file}")
+            self.logger.info(f"  Size: {index_file.stat().st_size:,} bytes")
 
             return True, "Session index created"
 
         except Exception as e:
-            msg = f"Failed to create index: {e}"
-            self.log(f"ERROR: {msg}")
-            self.errors.append(msg)
-            return False, msg
+            raise OutputError(f"Failed to create session index: {e}") from e
 
     def save_extracted_messages(self) -> Tuple[bool, str]:
-        """Save new unique messages in JSONL format."""
-        self.log("")
-        self.log("Step 6/12: Save extracted new unique messages...")
+        """
+        Save new unique messages in JSONL format.
+
+        Returns:
+            Tuple of (success, message)
+
+        Raises:
+            OutputError: If save fails
+        """
+        self.logger.info("")
+        self.logger.info("Step 6/10: Save extracted new unique messages...")
 
         try:
             output_file = self.extraction_dir / "extracted-messages.jsonl"
+            temp_file = output_file.with_suffix('.jsonl.tmp')
 
-            with open(output_file, "w") as f:
-                for msg in self.extracted_messages:
-                    f.write(json.dumps(msg, default=str) + "\n")
+            try:
+                with open(temp_file, "w", encoding='utf-8') as f:
+                    for msg in self.extracted_messages:
+                        f.write(json.dumps(msg, default=str, ensure_ascii=False) + "\n")
 
-            self.log(f"✓ Extracted messages saved")
-            self.log(f"  Location: {output_file}")
-            self.log(f"  Messages: {len(self.extracted_messages)}")
-            self.log(f"  Size: {output_file.stat().st_size:,} bytes")
+                # Atomic rename
+                temp_file.replace(output_file)
+
+            except Exception as e:
+                # Cleanup temp file on error
+                if temp_file.exists():
+                    temp_file.unlink()
+                raise
+
+            self.logger.info(f"✓ Extracted messages saved")
+            self.logger.info(f"  Location: {output_file}")
+            self.logger.info(f"  Messages: {len(self.extracted_messages)}")
+            self.logger.info(f"  Size: {output_file.stat().st_size:,} bytes")
 
             return True, "Messages saved"
 
         except Exception as e:
-            msg = f"Failed to save messages: {e}"
-            self.log(f"ERROR: {msg}")
-            self.errors.append(msg)
-            return False, msg
+            raise OutputError(f"Failed to save messages: {e}") from e
 
     def verify_post_extraction_checksums(self, files: List[Path]) -> Tuple[bool, str]:
-        """Verify all source files unchanged after extraction."""
-        self.log("")
-        self.log("Step 7/12: Verify all source files unchanged after extraction...")
+        """
+        Verify all source files unchanged after extraction.
+
+        Args:
+            files: List of files to verify
+
+        Returns:
+            Tuple of (success, message)
+
+        Raises:
+            DataIntegrityError: If files were modified
+        """
+        self.logger.info("")
+        self.logger.info("Step 7/10: Verify all source files unchanged after extraction...")
 
         try:
             all_match = True
+            mismatches = []
 
             for filepath in files:
                 post_checksum = self._compute_file_sha256(filepath)
                 baseline = self.file_checksums[str(filepath)]
 
                 if post_checksum != baseline:
-                    self.log(f"✗ {filepath.name}: CHECKSUM MISMATCH!")
-                    self.log(f"  Pre:  {baseline}")
-                    self.log(f"  Post: {post_checksum}")
+                    self.logger.error(f"✗ {filepath.name}: CHECKSUM MISMATCH!")
+                    self.logger.error(f"  Pre:  {baseline}")
+                    self.logger.error(f"  Post: {post_checksum}")
+                    mismatches.append(filepath.name)
                     all_match = False
                 else:
-                    self.log(f"✓ {filepath.name}: unchanged")
+                    self.logger.debug(f"✓ {filepath.name}: unchanged")
 
             if all_match:
-                self.log(f"✓ All {len(files)} files verified unchanged")
+                self.logger.info(f"✓ All {len(files)} files verified unchanged")
+                self.logger.info(f"  Status: UNCHANGED ✓")
                 return True, "All files verified"
             else:
-                msg = f"Some files were modified during extraction!"
-                self.errors.append(msg)
-                return False, msg
+                raise DataIntegrityError(
+                    f"Some files were modified during extraction!\n"
+                    f"  Modified files: {', '.join(mismatches)}"
+                )
 
+        except DataIntegrityError:
+            raise
         except Exception as e:
-            msg = f"Failed to verify checksums: {e}"
-            self.log(f"ERROR: {msg}")
-            self.errors.append(msg)
-            return False, msg
+            raise ChecksumError(f"Failed to verify checksums: {e}") from e
 
     def save_statistics(self):
-        """Save extraction statistics."""
-        self.log("")
-        self.log("Step 8/12: Save extraction statistics...")
+        """
+        Save extraction statistics.
+
+        Raises:
+            OutputError: If statistics save fails
+        """
+        self.logger.info("")
+        self.logger.info("Step 8/10: Save extraction statistics...")
 
         try:
             stats = {
@@ -370,21 +599,32 @@ class Phase2DebugExtractor:
             }
 
             stats_file = self.extraction_dir / "statistics.json"
-            with open(stats_file, "w") as f:
-                json.dump(stats, f, indent=2)
+            temp_file = stats_file.with_suffix('.json.tmp')
 
-            self.log(f"✓ Statistics saved to {stats_file}")
+            try:
+                with open(temp_file, "w", encoding='utf-8') as f:
+                    json.dump(stats, f, indent=2, ensure_ascii=False)
+
+                # Atomic rename
+                temp_file.replace(stats_file)
+
+            except Exception as e:
+                # Cleanup temp file on error
+                if temp_file.exists():
+                    temp_file.unlink()
+                raise
+
+            self.logger.info(f"✓ Statistics saved to {stats_file}")
 
             return True
 
         except Exception as e:
-            self.log(f"ERROR: Failed to save statistics: {e}")
-            return False
+            raise OutputError(f"Failed to save statistics: {e}") from e
 
     def generate_summary(self) -> str:
         """Generate summary report."""
-        self.log("")
-        self.log("Step 9/12: Generate summary report...")
+        self.logger.info("")
+        self.logger.info("Step 9/10: Generate summary report...")
 
         summary = f"""
 {'='*80}
@@ -417,91 +657,102 @@ OUTPUT FILES:
 {'='*80}
 """
 
-        self.log(summary)
+        self.logger.info(summary)
         return summary
 
     def run(self) -> bool:
-        """Execute complete Phase 2 extraction."""
+        """
+        Execute complete Phase 2 extraction.
+
+        Returns:
+            True if successful, False otherwise
+        """
         try:
             # Step 1: Verify source directory
             success, msg, files = self.verify_source_directory()
-            if not success:
-                return False
-
             if not files:
-                self.log("No debug files found. Skipping Phase 2.")
+                self.logger.info("No debug files found. Skipping Phase 2.")
                 return True
 
             # Step 2: Compute baseline checksums
-            success, msg = self.compute_baseline_checksums(files)
-            if not success:
-                return False
+            self.compute_baseline_checksums(files)
 
             # Step 3: Stream extract messages
             success, msg, count = self.stream_extract_log_messages(files)
-            if not success or count == 0:
-                self.log("WARNING: No meaningful messages extracted from debug logs")
-                # Don't fail - this is acceptable
+            if count == 0:
+                self.logger.warning("No meaningful messages extracted from debug logs")
+                return True  # Not an error, just empty
 
             # Step 4: Deduplicate
-            success, msg, new_count, dup_count = self.deduplicate_messages()
-            if not success:
-                return False
+            self.deduplicate_messages()
 
             # Step 5: Create session index
-            success, msg = self.create_session_index(files)
-            if not success:
-                return False
+            self.create_session_index(files)
 
             # Step 6: Save messages
-            success, msg = self.save_extracted_messages()
-            if not success:
-                return False
+            self.save_extracted_messages()
 
             # Step 7: Verify post-extraction checksums
-            success, msg = self.verify_post_extraction_checksums(files)
-            if not success:
-                return False
+            self.verify_post_extraction_checksums(files)
 
             # Step 8: Save statistics
             self.save_statistics()
 
             # Step 9: Generate summary
-            summary = self.generate_summary()
+            self.generate_summary()
 
             # Step 10: Final status
-            self.log("")
-            self.log("Step 10/12: Phase 2 extraction complete")
+            self.logger.info("")
+            self.logger.info("Step 10/10: Phase 2 extraction complete")
+            self.logger.info("✓ ALL STEPS COMPLETED SUCCESSFULLY")
 
-            if len(self.errors) == 0:
-                self.log("✓ ALL STEPS COMPLETED SUCCESSFULLY")
-                return True
-            else:
-                self.log(f"✗ COMPLETED WITH {len(self.errors)} ERRORS")
-                for error in self.errors:
-                    self.log(f"  - {error}")
-                return False
+            return True
 
-        except Exception as e:
-            self.log(f"CRITICAL ERROR: {e}")
+        except Phase2ExtractionError as e:
+            self.logger.error(f"Extraction failed: {e}")
             self.errors.append(str(e))
             return False
 
+        except Exception as e:
+            self.logger.error(f"CRITICAL ERROR: {e}")
+            self.logger.debug(traceback.format_exc())
+            self.errors.append(f"Critical error: {e}")
+            return False
+
+
+# ============================================================================
+# CLI ENTRY POINT
+# ============================================================================
 
 def main():
     """Run Phase 2 extraction."""
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Phase 2: Extract messages from debug/ logs")
+    parser.add_argument("--quiet", action="store_true", help="Suppress console output")
+    args = parser.parse_args()
+
     print("CODITECT Session Memory Extraction - Phase 2: debug/ Logs")
     print("")
 
-    extractor = Phase2DebugExtractor(verbose=True)
-    success = extractor.run()
+    try:
+        extractor = SessionMemoryExtractor(verbose=not args.quiet)
+        success = extractor.run()
 
-    print("")
-    if success:
-        print("✅ Phase 2 extraction SUCCESSFUL")
-        sys.exit(0)
-    else:
-        print("❌ Phase 2 extraction FAILED")
+        print("")
+        if success:
+            print("✅ Phase 2 extraction SUCCESSFUL")
+            sys.exit(0)
+        else:
+            print("❌ Phase 2 extraction FAILED")
+            print(f"Check log file: {extractor.log_file}")
+            sys.exit(1)
+
+    except KeyboardInterrupt:
+        print("\n⚠️  Extraction cancelled by user")
+        sys.exit(130)
+    except Exception as e:
+        print(f"\n❌ Fatal error: {e}")
         sys.exit(1)
 
 

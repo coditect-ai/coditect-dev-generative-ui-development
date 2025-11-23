@@ -62,19 +62,57 @@ except ImportError:
     subprocess.run([sys.executable, "-m", "pip", "install", "pyyaml"], check=True)
     import yaml
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(levelname)s: %(message)s'
-)
-logger = logging.getLogger(__name__)
-
 # ANSI color codes for output
 GREEN = '\033[0;32m'
 YELLOW = '\033[1;33m'
 RED = '\033[0;31m'
 BLUE = '\033[0;34m'
 NC = '\033[0m'  # No Color
+
+# Global logger (configured later)
+logger = None
+
+
+def setup_logging() -> logging.Logger:
+    """
+    Setup dual logging to both file and stdout.
+
+    Returns:
+        Configured logger instance
+    """
+    # Create logs directory
+    logs_dir = Path('logs')
+    logs_dir.mkdir(exist_ok=True)
+
+    # Create log file with timestamp
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    log_file = logs_dir / f'setup-new-submodule_{timestamp}.log'
+
+    # Configure logger
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+
+    # File handler - detailed logging
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(logging.DEBUG)
+    file_formatter = logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(message)s'
+    )
+    file_handler.setFormatter(file_formatter)
+
+    # Console handler - user-friendly logging
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.INFO)
+    console_formatter = logging.Formatter('%(message)s')
+    console_handler.setFormatter(console_formatter)
+
+    # Add handlers
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
+    logger.info(f"Logging initialized: {log_file}")
+
+    return logger
 
 
 class SubmoduleSetupError(Exception):
@@ -95,6 +133,60 @@ class GitOperationError(SubmoduleSetupError):
 class GitHubOperationError(SubmoduleSetupError):
     """Raised when GitHub operation fails."""
     pass
+
+
+class RollbackError(SubmoduleSetupError):
+    """Raised when rollback operation fails."""
+    pass
+
+
+def retry_operation(max_retries: int = 3, delay: float = 2.0, backoff: float = 2.0):
+    """
+    Decorator for retrying operations with exponential backoff.
+
+    Args:
+        max_retries: Maximum number of retry attempts
+        delay: Initial delay in seconds
+        backoff: Backoff multiplier for each retry
+
+    Returns:
+        Decorated function with retry logic
+    """
+    import time
+    import functools
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            current_delay = delay
+            last_exception = None
+
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except (GitHubOperationError, subprocess.CalledProcessError, OSError) as e:
+                    last_exception = e
+                    if attempt == max_retries - 1:
+                        raise
+
+                    print_warning(
+                        f"Attempt {attempt + 1}/{max_retries} failed: {e}. "
+                        f"Retrying in {current_delay:.1f}s..."
+                    )
+                    if logger:
+                        logger.warning(
+                            f"Retry attempt {attempt + 1}/{max_retries} failed: {e}"
+                        )
+
+                    time.sleep(current_delay)
+                    current_delay *= backoff
+
+            # Should not reach here, but raise last exception if it does
+            if last_exception:
+                raise last_exception
+
+        return wrapper
+    return decorator
 
 
 def print_success(message: str) -> None:
@@ -523,9 +615,10 @@ Generated with CODITECT framework
         raise GitOperationError(f"Git initialization failed: {e}")
 
 
+@retry_operation(max_retries=3, delay=2.0)
 def create_github_repository(repo_name: str, purpose: str, visibility: str, category: str) -> None:
     """
-    Create GitHub repository using GitHub CLI.
+    Create GitHub repository using GitHub CLI with retry logic.
 
     Args:
         repo_name: Repository name
@@ -537,6 +630,8 @@ def create_github_repository(repo_name: str, purpose: str, visibility: str, cate
         GitHubOperationError: If GitHub repository creation fails
     """
     try:
+        logger.info(f"Creating GitHub repository: coditect-ai/{repo_name}")
+
         # Create repository
         visibility_flag = f"--{visibility}"
         run_command([
@@ -546,22 +641,28 @@ def create_github_repository(repo_name: str, purpose: str, visibility: str, cate
             '--homepage', 'https://coditect.ai'
         ])
         print_success(f"Created GitHub repository: coditect-ai/{repo_name}")
+        logger.info("GitHub repository created successfully")
 
         # Add topics
+        logger.debug("Adding topics...")
         run_command([
             'gh', 'repo', 'edit', f'coditect-ai/{repo_name}',
             '--add-topic', 'coditect',
             '--add-topic', category
         ])
         print_success(f"Added topics: coditect, {category}")
+        logger.info(f"Topics added: coditect, {category}")
 
     except subprocess.CalledProcessError as e:
-        raise GitHubOperationError(f"GitHub repository creation failed: {e}")
+        error_msg = f"GitHub repository creation failed: {e.stderr if hasattr(e, 'stderr') else str(e)}"
+        logger.error(error_msg)
+        raise GitHubOperationError(error_msg)
 
 
+@retry_operation(max_retries=3, delay=2.0)
 def configure_remote_and_push(submodule_dir: Path, repo_name: str) -> None:
     """
-    Configure git remote and push to GitHub.
+    Configure git remote and push to GitHub with retry logic.
 
     Args:
         submodule_dir: Path to submodule directory
@@ -571,17 +672,90 @@ def configure_remote_and_push(submodule_dir: Path, repo_name: str) -> None:
         GitOperationError: If git remote configuration or push fails
     """
     try:
+        logger.info("Configuring git remote...")
+
         # Add remote
         remote_url = f"https://github.com/coditect-ai/{repo_name}.git"
         run_command(['git', 'remote', 'add', 'origin', remote_url], cwd=submodule_dir)
         print_success(f"Added remote: {remote_url}")
+        logger.info(f"Remote added: {remote_url}")
 
         # Push to GitHub
+        logger.info("Pushing to GitHub...")
         run_command(['git', 'push', '-u', 'origin', 'main'], cwd=submodule_dir)
         print_success("Pushed to GitHub")
+        logger.info("Successfully pushed to GitHub")
 
     except subprocess.CalledProcessError as e:
-        raise GitOperationError(f"Git remote configuration or push failed: {e}")
+        error_msg = f"Git remote configuration or push failed: {e.stderr if hasattr(e, 'stderr') else str(e)}"
+        logger.error(error_msg)
+        raise GitOperationError(error_msg)
+
+
+def rollback_submodule_setup(category: str, repo_name: str, created_items: List[str]) -> None:
+    """
+    Rollback submodule setup on failure.
+
+    Args:
+        category: Category directory name
+        repo_name: Repository name
+        created_items: List of items created (for tracking what to clean up)
+
+    Raises:
+        RollbackError: If rollback operation fails
+    """
+    logger.warning("Rolling back submodule setup...")
+    print_warning("Rolling back submodule setup...")
+
+    rollback_errors = []
+
+    try:
+        # Remove local submodule directory
+        submodule_dir = Path('submodules') / category / repo_name
+        if submodule_dir.exists() and 'submodule_dir' in created_items:
+            logger.info(f"Removing directory: {submodule_dir}")
+            import shutil
+            shutil.rmtree(submodule_dir)
+            print_success(f"Removed directory: {submodule_dir}")
+
+        # Remove GitHub repository if created
+        if 'github_repo' in created_items:
+            try:
+                logger.info(f"Deleting GitHub repository: coditect-ai/{repo_name}")
+                run_command([
+                    'gh', 'repo', 'delete', f'coditect-ai/{repo_name}',
+                    '--yes'
+                ], check=False)
+                print_success(f"Deleted GitHub repository: coditect-ai/{repo_name}")
+            except Exception as e:
+                error_msg = f"Failed to delete GitHub repository: {e}"
+                logger.error(error_msg)
+                rollback_errors.append(error_msg)
+                print_warning(error_msg)
+
+        # Remove submodule registration from parent
+        if 'parent_registration' in created_items:
+            try:
+                logger.info("Removing submodule registration from parent...")
+                submodule_path = f"submodules/{category}/{repo_name}"
+                run_command(['git', 'rm', '-f', submodule_path], check=False)
+                print_success("Removed submodule registration from parent")
+            except Exception as e:
+                error_msg = f"Failed to remove submodule registration: {e}"
+                logger.error(error_msg)
+                rollback_errors.append(error_msg)
+                print_warning(error_msg)
+
+        if rollback_errors:
+            raise RollbackError(f"Rollback completed with errors: {'; '.join(rollback_errors)}")
+        else:
+            print_success("Rollback completed successfully")
+            logger.info("Rollback completed successfully")
+
+    except Exception as e:
+        error_msg = f"Critical rollback failure: {e}"
+        logger.error(error_msg)
+        raise RollbackError(error_msg)
 
 
 def register_submodule_with_parent(category: str, repo_name: str) -> None:
@@ -617,7 +791,19 @@ def main() -> int:
 
     Returns:
         Exit code (0 for success, non-zero for error)
+
+    Exit Codes:
+        0: Success
+        1: General error
+        2: Usage error
+        3: Prerequisites not met
+        4: Git operation failed
+        5: GitHub operation failed
+        6: Rollback failed (after setup error)
+        130: User cancelled (Ctrl+C)
     """
+    global logger
+
     parser = argparse.ArgumentParser(
         description='Setup new CODITECT submodule with complete automation',
         formatter_class=argparse.RawDescriptionHelpFormatter
@@ -636,8 +822,16 @@ def main() -> int:
 
     args = parser.parse_args()
 
+    # Initialize logging
+    logger = setup_logging()
+
     if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
+
+    # Track created items for rollback
+    created_items = []
+    category = None
+    repo_name = None
 
     try:
         print_info("CODITECT Submodule Setup")
@@ -708,61 +902,114 @@ def main() -> int:
                 print_warning("Setup cancelled")
                 return 0
 
-        # Execute setup steps
-        print_info("Step 1: Creating directory structure...")
-        submodule_dir = create_directory_structure(category, repo_name)
-        print()
+        # Execute setup steps with rollback tracking
+        try:
+            print_info("Step 1: Creating directory structure...")
+            submodule_dir = create_directory_structure(category, repo_name)
+            created_items.append('submodule_dir')
+            logger.info(f"Created directory: {submodule_dir}")
+            print()
 
-        print_info("Step 2: Creating symlinks...")
-        create_symlinks(submodule_dir)
-        print()
+            print_info("Step 2: Creating symlinks...")
+            create_symlinks(submodule_dir)
+            print()
 
-        print_info("Step 3: Generating templates...")
-        generate_templates(submodule_dir, repo_name, category, purpose)
-        print()
+            print_info("Step 3: Generating templates...")
+            generate_templates(submodule_dir, repo_name, category, purpose)
+            print()
 
-        print_info("Step 4: Initializing git repository...")
-        initialize_git_repository(submodule_dir, repo_name)
-        print()
+            print_info("Step 4: Initializing git repository...")
+            initialize_git_repository(submodule_dir, repo_name)
+            print()
 
-        print_info("Step 5: Creating GitHub repository...")
-        create_github_repository(repo_name, purpose, visibility, category)
-        print()
+            print_info("Step 5: Creating GitHub repository...")
+            create_github_repository(repo_name, purpose, visibility, category)
+            created_items.append('github_repo')
+            logger.info("GitHub repository created")
+            print()
 
-        print_info("Step 6: Configuring remote and pushing...")
-        configure_remote_and_push(submodule_dir, repo_name)
-        print()
+            print_info("Step 6: Configuring remote and pushing...")
+            configure_remote_and_push(submodule_dir, repo_name)
+            print()
 
-        print_info("Step 7: Registering submodule with parent...")
-        register_submodule_with_parent(category, repo_name)
-        print()
+            print_info("Step 7: Registering submodule with parent...")
+            register_submodule_with_parent(category, repo_name)
+            created_items.append('parent_registration')
+            logger.info("Submodule registered with parent")
+            print()
 
-        print_success("✓ Submodule setup complete!")
-        print()
-        print_info("Next steps:")
-        print(f"  1. cd submodules/{category}/{repo_name}")
-        print("  2. Customize PROJECT-PLAN.md")
-        print("  3. Add tasks to TASKLIST.md")
-        print("  4. Start development!")
+            print_success("✓ Submodule setup complete!")
+            logger.info("Submodule setup completed successfully")
+            print()
+            print_info("Next steps:")
+            print(f"  1. cd submodules/{category}/{repo_name}")
+            print("  2. Customize PROJECT-PLAN.md")
+            print("  3. Add tasks to TASKLIST.md")
+            print("  4. Start development!")
 
-        return 0
+            return 0
+
+        except (GitOperationError, GitHubOperationError, SubmoduleSetupError) as e:
+            # Attempt rollback on setup failure
+            logger.error(f"Setup failed, attempting rollback: {e}")
+            print_error(f"Setup failed: {e}")
+            print()
+
+            try:
+                rollback_submodule_setup(category, repo_name, created_items)
+                logger.info("Rollback completed successfully")
+                print()
+                print_info("Rollback completed. You can retry the setup.")
+                return 1
+            except RollbackError as rb_error:
+                logger.error(f"Rollback failed: {rb_error}")
+                print_error(f"Rollback failed: {rb_error}")
+                print_warning("Manual cleanup may be required:")
+                print(f"  - Remove directory: submodules/{category}/{repo_name}")
+                print(f"  - Delete GitHub repo: gh repo delete coditect-ai/{repo_name}")
+                return 6
+
+    except KeyboardInterrupt:
+        logger.warning("Operation cancelled by user")
+        print()
+        print_warning("Operation cancelled by user")
+
+        # Attempt cleanup
+        if created_items:
+            print_warning("Attempting to clean up partial setup...")
+            try:
+                rollback_submodule_setup(category, repo_name, created_items)
+            except:
+                pass
+
+        return 130
 
     except PrerequisiteError as e:
+        logger.error(f"Prerequisites not met: {e}")
         print_error(f"Prerequisites not met: {e}")
         return 3
-    except GitOperationError as e:
-        print_error(f"Git operation failed: {e}")
-        return 4
-    except GitHubOperationError as e:
-        print_error(f"GitHub operation failed: {e}")
-        return 5
-    except SubmoduleSetupError as e:
-        print_error(f"Setup failed: {e}")
-        return 1
+
     except Exception as e:
         logger.exception("Unexpected error occurred")
         print_error(f"Unexpected error: {e}")
+
+        # Attempt cleanup on unexpected errors
+        if created_items and category and repo_name:
+            print_warning("Attempting rollback due to unexpected error...")
+            try:
+                rollback_submodule_setup(category, repo_name, created_items)
+            except:
+                logger.error("Rollback failed after unexpected error")
+
         return 1
+
+    finally:
+        # Resource cleanup
+        logger.info("Script execution completed")
+        # Close logging handlers
+        for handler in logger.handlers[:]:
+            handler.close()
+            logger.removeHandler(handler)
 
 
 if __name__ == "__main__":

@@ -27,16 +27,44 @@ License: MIT
 import hashlib
 import json
 import logging
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 
-# Configure logging
+# Setup dual logging (stdout + file)
+log_dir = Path(__file__).parent.parent.parent / "MEMORY-CONTEXT" / "logs"
+log_dir.mkdir(parents=True, exist_ok=True)
+log_file = log_dir / "message_deduplicator.log"
+
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(log_file)
+    ]
 )
 logger = logging.getLogger(__name__)
+
+
+# ============================================================================
+# Custom Exception Hierarchy
+# ============================================================================
+
+class DeduplicationError(Exception):
+    """Base exception for deduplication errors."""
+    pass
+
+
+class StorageError(DeduplicationError):
+    """Raised when storage operations fail."""
+    pass
+
+
+class ParseError(DeduplicationError):
+    """Raised when export parsing fails."""
+    pass
 
 
 class MessageDeduplicator:
@@ -58,25 +86,36 @@ class MessageDeduplicator:
 
         Args:
             storage_dir: Path to directory for state files
+
+        Raises:
+            StorageError: If storage directory cannot be created or accessed
         """
-        self.storage_dir = Path(storage_dir)
-        self.storage_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.storage_dir = Path(storage_dir)
+            self.storage_dir.mkdir(parents=True, exist_ok=True)
 
-        # Global state files
-        self.hashes_file = self.storage_dir / "global_hashes.json"
-        self.messages_file = self.storage_dir / "unique_messages.jsonl"
-        self.checkpoint_index_file = self.storage_dir / "checkpoint_index.json"
+            # Global state files
+            self.hashes_file = self.storage_dir / "global_hashes.json"
+            self.messages_file = self.storage_dir / "unique_messages.jsonl"
+            self.checkpoint_index_file = self.storage_dir / "checkpoint_index.json"
 
-        # Load global hash pool
-        hashes_data = self._load_json(self.hashes_file, default=[])
-        self.global_hashes = set(hashes_data)
+            # Load global hash pool
+            hashes_data = self._load_json(self.hashes_file, default=[])
+            self.global_hashes = set(hashes_data)
 
-        # Load checkpoint index (optional organizational metadata)
-        self.checkpoint_index = self._load_json(self.checkpoint_index_file, default={})
+            # Load checkpoint index (optional organizational metadata)
+            self.checkpoint_index = self._load_json(self.checkpoint_index_file, default={})
 
-        logger.info(f"MessageDeduplicator initialized with storage at {self.storage_dir}")
-        logger.info(f"Loaded {len(self.global_hashes)} unique message hashes")
-        logger.info(f"Tracking {len(self.checkpoint_index)} checkpoints")
+            logger.info(f"MessageDeduplicator initialized with storage at {self.storage_dir}")
+            logger.info(f"Loaded {len(self.global_hashes)} unique message hashes")
+            logger.info(f"Tracking {len(self.checkpoint_index)} checkpoints")
+
+        except OSError as e:
+            logger.error(f"Failed to create storage directory: {e}")
+            raise StorageError(f"Could not create storage directory: {e}") from e
+        except Exception as e:
+            logger.error(f"Failed to initialize deduplicator: {e}")
+            raise
 
     def process_export(
         self,
@@ -94,66 +133,80 @@ class MessageDeduplicator:
 
         Returns:
             Tuple of (new_messages, statistics)
+
+        Raises:
+            ParseError: If export data is invalid
         """
-        messages = export_data.get("messages", [])
-        new_messages = []
-        duplicates = 0
-        checkpoint_hashes = []
+        try:
+            # Validate export data
+            if not export_data or 'messages' not in export_data:
+                raise ParseError("Export data must contain 'messages' array")
 
-        logger.info(f"Processing export")
-        logger.info(f"  Messages in export: {len(messages)}")
-        logger.info(f"  Global unique hashes: {len(self.global_hashes)}")
-        if checkpoint_id:
-            logger.info(f"  Checkpoint ID: {checkpoint_id}")
+            messages = export_data.get("messages", [])
+            new_messages = []
+            duplicates = 0
+            checkpoint_hashes = []
 
-        for msg in messages:
-            # Hash message content
-            content_hash = self._hash_message(msg)
+            logger.info(f"Processing export")
+            logger.info(f"  Messages in export: {len(messages)}")
+            logger.info(f"  Global unique hashes: {len(self.global_hashes)}")
+            if checkpoint_id:
+                logger.info(f"  Checkpoint ID: {checkpoint_id}")
 
-            # Check global pool
-            if content_hash in self.global_hashes:
-                duplicates += 1
-                continue  # Already seen this exact message
+            for msg in messages:
+                # Hash message content
+                content_hash = self._hash_message(msg)
 
-            # New unique message!
-            new_messages.append(msg)
-            self.global_hashes.add(content_hash)
-            checkpoint_hashes.append(content_hash)
+                # Check global pool
+                if content_hash in self.global_hashes:
+                    duplicates += 1
+                    continue  # Already seen this exact message
 
-            # Append to log (if not dry run)
-            if not dry_run:
-                self._append_message(msg, content_hash, checkpoint_id)
+                # New unique message!
+                new_messages.append(msg)
+                self.global_hashes.add(content_hash)
+                checkpoint_hashes.append(content_hash)
 
-        # Update state (if not dry run)
-        if not dry_run and new_messages:
-            self._save_hashes()
+                # Append to log (if not dry run)
+                if not dry_run:
+                    self._append_message(msg, content_hash, checkpoint_id)
 
-            # Update checkpoint index if checkpoint_id provided
-            if checkpoint_id and checkpoint_hashes:
-                if checkpoint_id not in self.checkpoint_index:
-                    self.checkpoint_index[checkpoint_id] = {
-                        'created': datetime.now(timezone.utc).isoformat(),
-                        'message_hashes': []
-                    }
-                self.checkpoint_index[checkpoint_id]['message_hashes'].extend(checkpoint_hashes)
-                self._save_checkpoint_index()
+            # Update state (if not dry run)
+            if not dry_run and new_messages:
+                self._save_hashes()
 
-        # Generate statistics
-        stats = {
-            'total_messages': len(messages),
-            'new_unique': len(new_messages),
-            'duplicates_filtered': duplicates,
-            'dedup_rate': (duplicates / len(messages) * 100) if len(messages) > 0 else 0,
-            'global_unique_count': len(self.global_hashes)
-        }
+                # Update checkpoint index if checkpoint_id provided
+                if checkpoint_id and checkpoint_hashes:
+                    if checkpoint_id not in self.checkpoint_index:
+                        self.checkpoint_index[checkpoint_id] = {
+                            'created': datetime.now(timezone.utc).isoformat(),
+                            'message_hashes': []
+                        }
+                    self.checkpoint_index[checkpoint_id]['message_hashes'].extend(checkpoint_hashes)
+                    self._save_checkpoint_index()
 
-        logger.info("Processing complete:")
-        logger.info(f"  New unique messages: {stats['new_unique']}")
-        logger.info(f"  Duplicates filtered: {stats['duplicates_filtered']}")
-        logger.info(f"  Deduplication rate: {stats['dedup_rate']:.1f}%")
-        logger.info(f"  Total unique messages globally: {stats['global_unique_count']}")
+            # Generate statistics
+            stats = {
+                'total_messages': len(messages),
+                'new_unique': len(new_messages),
+                'duplicates_filtered': duplicates,
+                'dedup_rate': (duplicates / len(messages) * 100) if len(messages) > 0 else 0,
+                'global_unique_count': len(self.global_hashes)
+            }
 
-        return new_messages, stats
+            logger.info("Processing complete:")
+            logger.info(f"  New unique messages: {stats['new_unique']}")
+            logger.info(f"  Duplicates filtered: {stats['duplicates_filtered']}")
+            logger.info(f"  Deduplication rate: {stats['dedup_rate']:.1f}%")
+            logger.info(f"  Total unique messages globally: {stats['global_unique_count']}")
+
+            return new_messages, stats
+
+        except ParseError:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to process export: {e}")
+            raise ParseError(f"Export processing failed: {e}") from e
 
     def _hash_message(self, message: Dict[str, Any]) -> str:
         """
@@ -161,14 +214,20 @@ class MessageDeduplicator:
 
         Normalizes message to focus on content, ignoring metadata like timestamps.
         """
-        # Normalize message (only hash the actual content)
-        normalized = {
-            'role': message.get('role') or message.get('type', 'unknown'),
-            'content': message.get('content') or message.get('message', '')
-        }
+        try:
+            # Normalize message (only hash the actual content)
+            normalized = {
+                'role': message.get('role') or message.get('type', 'unknown'),
+                'content': message.get('content') or message.get('message', '')
+            }
 
-        content_str = json.dumps(normalized, sort_keys=True)
-        return hashlib.sha256(content_str.encode()).hexdigest()
+            content_str = json.dumps(normalized, sort_keys=True)
+            return hashlib.sha256(content_str.encode()).hexdigest()
+
+        except Exception as e:
+            logger.error(f"Failed to hash message: {e}")
+            # Return a fallback hash based on string representation
+            return hashlib.sha256(str(message).encode()).hexdigest()
 
     def _append_message(
         self,
@@ -183,6 +242,9 @@ class MessageDeduplicator:
             message: Message dict
             content_hash: Pre-computed content hash
             checkpoint_id: Optional checkpoint this message belongs to
+
+        Raises:
+            StorageError: If append fails
         """
         entry = {
             'hash': content_hash,
@@ -194,27 +256,49 @@ class MessageDeduplicator:
         try:
             with open(self.messages_file, 'a', encoding='utf-8') as f:
                 f.write(json.dumps(entry) + '\n')
-        except Exception as e:
+        except IOError as e:
             logger.error(f"Failed to append message to log: {e}")
+            raise StorageError(f"Could not append to log: {e}") from e
 
     def _save_hashes(self) -> None:
-        """Save global hash pool to disk"""
+        """
+        Save global hash pool to disk.
+
+        Raises:
+            StorageError: If save fails
+        """
         try:
             with open(self.hashes_file, 'w', encoding='utf-8') as f:
                 json.dump(list(self.global_hashes), f)
-        except Exception as e:
+        except IOError as e:
             logger.error(f"Failed to save hashes: {e}")
+            raise StorageError(f"Could not save hashes: {e}") from e
 
     def _save_checkpoint_index(self) -> None:
-        """Save checkpoint index to disk"""
+        """
+        Save checkpoint index to disk.
+
+        Raises:
+            StorageError: If save fails
+        """
         try:
             with open(self.checkpoint_index_file, 'w', encoding='utf-8') as f:
                 json.dump(self.checkpoint_index, f, indent=2)
-        except Exception as e:
+        except IOError as e:
             logger.error(f"Failed to save checkpoint index: {e}")
+            raise StorageError(f"Could not save checkpoint index: {e}") from e
 
     def _load_json(self, filepath: Path, default=None):
-        """Load JSON file with error handling"""
+        """
+        Load JSON file with error handling.
+
+        Args:
+            filepath: Path to JSON file
+            default: Default value if file doesn't exist or is invalid
+
+        Returns:
+            Loaded JSON data or default
+        """
         if not filepath.exists():
             return default if default is not None else {}
 
@@ -275,55 +359,69 @@ def parse_claude_export_file(filepath: Path) -> Dict[str, Any]:
 
     Returns:
         Dict with 'messages' array containing parsed conversation
+
+    Raises:
+        ParseError: If file cannot be parsed
     """
-    logger.info(f"Parsing Claude export: {filepath}")
+    try:
+        logger.info(f"Parsing Claude export: {filepath}")
 
-    with open(filepath, "r", encoding="utf-8") as f:
-        lines = f.readlines()
+        if not filepath.exists():
+            raise ParseError(f"Export file not found: {filepath}")
 
-    messages = []
-    current_message = None
-    current_content = []
-    index = 0
+        with open(filepath, "r", encoding="utf-8") as f:
+            lines = f.readlines()
 
-    for line in lines:
-        # User message/action marker
-        if line.startswith("⏺"):
-            # Save previous message if exists
-            if current_message is not None:
-                current_message["content"] = "".join(current_content).strip()
-                messages.append(current_message)
-                index += 1
+        messages = []
+        current_message = None
+        current_content = []
+        index = 0
 
-            # Start new user message
-            current_message = {"index": index, "role": "user", "type": "user"}
-            current_content = [line[2:]]  # Remove marker
+        for line in lines:
+            # User message/action marker
+            if line.startswith("⏺"):
+                # Save previous message if exists
+                if current_message is not None:
+                    current_message["content"] = "".join(current_content).strip()
+                    messages.append(current_message)
+                    index += 1
 
-        # Assistant response marker
-        elif line.strip().startswith("⎿"):
-            # Save previous message if exists
-            if current_message is not None:
-                current_message["content"] = "".join(current_content).strip()
-                messages.append(current_message)
-                index += 1
+                # Start new user message
+                current_message = {"index": index, "role": "user", "type": "user"}
+                current_content = [line[2:]]  # Remove marker
 
-            # Start new assistant message
-            current_message = {"index": index, "role": "assistant", "type": "assistant"}
-            current_content = [line.strip()[2:]]  # Remove marker and whitespace
+            # Assistant response marker
+            elif line.strip().startswith("⎿"):
+                # Save previous message if exists
+                if current_message is not None:
+                    current_message["content"] = "".join(current_content).strip()
+                    messages.append(current_message)
+                    index += 1
 
-        # Continuation of current message
-        else:
-            if current_message is not None:
-                current_content.append(line)
+                # Start new assistant message
+                current_message = {"index": index, "role": "assistant", "type": "assistant"}
+                current_content = [line.strip()[2:]]  # Remove marker and whitespace
 
-    # Save final message
-    if current_message is not None:
-        current_message["content"] = "".join(current_content).strip()
-        messages.append(current_message)
+            # Continuation of current message
+            else:
+                if current_message is not None:
+                    current_content.append(line)
 
-    logger.info(f"Parsed {len(messages)} messages from export")
+        # Save final message
+        if current_message is not None:
+            current_message["content"] = "".join(current_content).strip()
+            messages.append(current_message)
 
-    return {"messages": messages}
+        logger.info(f"Parsed {len(messages)} messages from export")
+
+        return {"messages": messages}
+
+    except IOError as e:
+        logger.error(f"Failed to read export file: {e}")
+        raise ParseError(f"Could not read export file: {e}") from e
+    except Exception as e:
+        logger.error(f"Failed to parse export file: {e}")
+        raise ParseError(f"Export parsing failed: {e}") from e
 
 
 if __name__ == "__main__":
@@ -335,26 +433,60 @@ if __name__ == "__main__":
     parser.add_argument("--storage-dir", "-d", default="dedup_state", help="Storage directory")
     parser.add_argument("--checkpoint", "-c", help="Optional checkpoint ID")
     parser.add_argument("--dry-run", action="store_true", help="Don't save state")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
 
-    # Initialize
-    dedup = MessageDeduplicator(args.storage_dir)
+    # Set logging level
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logger.debug("Verbose logging enabled")
 
-    # Parse export
-    export_data = parse_claude_export_file(Path(args.file))
+    try:
+        # Initialize
+        dedup = MessageDeduplicator(args.storage_dir)
 
-    # Process
-    new_messages, stats = dedup.process_export(
-        export_data,
-        checkpoint_id=args.checkpoint,
-        dry_run=args.dry_run
-    )
+        # Parse export
+        export_data = parse_claude_export_file(Path(args.file))
 
-    # Print results
-    print(f"\nResults:")
-    print(f"  Total messages: {stats['total_messages']}")
-    print(f"  New unique: {stats['new_unique']}")
-    print(f"  Duplicates: {stats['duplicates_filtered']}")
-    print(f"  Dedup rate: {stats['dedup_rate']:.1f}%")
-    print(f"  Global unique: {stats['global_unique_count']}")
+        # Process
+        new_messages, stats = dedup.process_export(
+            export_data,
+            checkpoint_id=args.checkpoint,
+            dry_run=args.dry_run
+        )
+
+        # Print results
+        print(f"\nResults:")
+        print(f"  Total messages: {stats['total_messages']}")
+        print(f"  New unique: {stats['new_unique']}")
+        print(f"  Duplicates: {stats['duplicates_filtered']}")
+        print(f"  Dedup rate: {stats['dedup_rate']:.1f}%")
+        print(f"  Global unique: {stats['global_unique_count']}")
+
+        logger.info("Deduplication completed successfully")
+        sys.exit(0)
+
+    except ParseError as e:
+        print(f"\n❌ Parse Error: {e}")
+        logger.error(f"Parse error: {e}")
+        sys.exit(1)
+
+    except StorageError as e:
+        print(f"\n❌ Storage Error: {e}")
+        logger.error(f"Storage error: {e}")
+        sys.exit(1)
+
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Interrupted by user")
+        logger.warning("Interrupted by user")
+        sys.exit(1)
+
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        print(f"\nLog file: {log_file}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        logger.exception("Unexpected error during deduplication")
+        sys.exit(1)
