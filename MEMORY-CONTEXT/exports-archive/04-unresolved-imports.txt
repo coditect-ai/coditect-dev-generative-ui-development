@@ -1,0 +1,515 @@
+# Build Error Chunk Metadata
+# ==========================
+# Source File: Google-Cloud-BUILD-ERRORS.2025-09-22.txt
+# Total Lines in Source: 4550
+# Chunk Number: 4
+# Lines in This Chunk: 500
+# Start Line: 1426
+# End Line: 1925
+# Overlap: 25 lines (5%)
+# Generated: 2025-09-22 15:38:35 UTC
+# Purpose: Rust compilation errors from Google Cloud Build
+# Error Count: 346 total compilation errors
+#
+# ==========================
+
+    |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+    = help: items from traits can only be used if the trait is in scope
+    |
+    |          ---------- the method is available for `HttpRequest` here
+ 29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+    |
+   ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+    |
+    | |_________-^^^^^^^^^^
+170 | |         .extensions()
+    |  _____________________-
+169 |       let tenant_id = req
+    |
+   --> src/api/handlers/entity.rs:170:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+   | ------------------------- method `list_by_tenant` not found for this struct
+ 8 | pub struct CostRepository {
+   |
+  ::: src/db/repositories/cost_repository.rs:8:1
+   |
+   |                     ^^^^^^^^^^^^^^ method not found in `CostRepository`
+24 |     match cost_repo.list_by_tenant(&tenant_id).await {
+   |
+  --> src/api/handlers/costs.rs:24:21
+error[E0599]: no method named `list_by_tenant` found for struct `CostRepository` in the current scope
+
+   |                      ^^^^ method not found in `std::sync::Arc<Database>`
+20 |     let db = data.db.lock().await;
+   |
+  --> src/api/handlers/costs.rs:20:22
+error[E0599]: no method named `lock` found for struct `std::sync::Arc<Database>` in the current scope
+
+   |                    ++++
+15 |         .extensions_mut()
+   |
+help: there is a method `extensions_mut` with a similar name
+   |
+ 1 + use actix_web::HttpMessage;
+   |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+   = help: items from traits can only be used if the trait is in scope
+   |
+   |          ---------- the method is available for `HttpRequest` here
+29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+   |
+  ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+   |
+   | |_________-^^^^^^^^^^
+15 | |         .extensions()
+   |  _____________________-
+14 |       let tenant_id = req
+   |
+  --> src/api/handlers/costs.rs:15:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+    |
+ 81 +         .map_err(|e| ApiError::InternalError(format!("Failed to store session: {}", e)))?;
+ 81 -         .map_err(|e| ApiError::InternalServerError(format!("Failed to store session: {}", e)))?;
+    |
+help: there is a variant with a similar name
+    |
+    | ----------------- variant or associated item `InternalServerError` not found for this enum
+121 | pub enum ApiError {
+    |
+   ::: src/api/response.rs:121:1
+    |
+    |                                ^^^^^^^^^^^^^^^^^^^ variant or associated item not found in `response::ApiError`
+ 81 |         .map_err(|e| ApiError::InternalServerError(format!("Failed to store session: {}", e)))?;
+    |
+   --> src/api/handlers/auth/refresh.rs:81:32
+error[E0599]: no variant or associated item named `InternalServerError` found for enum `response::ApiError` in the current scope
+
+   = note: available fields are: `db`, `auth_config`, `jwt_service`, `rate_limiter`, `usage_repo` ... and 7 others
+   |
+   |          ^^^^^^^^^^^^ unknown field
+71 |         .session_repo
+   |
+  --> src/api/handlers/auth/refresh.rs:71:10
+error[E0609]: no field `session_repo` on type `actix_web::web::Data<app_state_unified::AppState>`
+
+    |
+ 66 +     .map_err(|e| ApiError::InternalError(format!("Failed to generate refresh token: {}", e)))?;
+ 66 -     .map_err(|e| ApiError::InternalServerError(format!("Failed to generate refresh token: {}", e)))?;
+    |
+help: there is a variant with a similar name
+    |
+    | ----------------- variant or associated item `InternalServerError` not found for this enum
+121 | pub enum ApiError {
+    |
+   ::: src/api/response.rs:121:1
+    |
+    |                            ^^^^^^^^^^^^^^^^^^^ variant or associated item not found in `response::ApiError`
+ 66 |     .map_err(|e| ApiError::InternalServerError(format!("Failed to generate refresh token: {}", e)))?;
+    |
+   --> src/api/handlers/auth/refresh.rs:66:28
+error[E0599]: no variant or associated item named `InternalServerError` found for enum `response::ApiError` in the current scope
+
+   = note: available fields are: `db`, `auth_config`, `jwt_service`, `rate_limiter`, `usage_repo` ... and 7 others
+   |
+   |                ^^^^^^ unknown field
+63 |         &state.config.jwt_secret,
+   |
+  --> src/api/handlers/auth/refresh.rs:63:16
+error[E0609]: no field `config` on type `actix_web::web::Data<app_state_unified::AppState>`
+
+    |
+ 56 +     .map_err(|e| ApiError::InternalError(format!("Failed to generate access token: {}", e)))?;
+ 56 -     .map_err(|e| ApiError::InternalServerError(format!("Failed to generate access token: {}", e)))?;
+    |
+help: there is a variant with a similar name
+    |
+    | ----------------- variant or associated item `InternalServerError` not found for this enum
+121 | pub enum ApiError {
+    |
+   ::: src/api/response.rs:121:1
+    |
+    |                            ^^^^^^^^^^^^^^^^^^^ variant or associated item not found in `response::ApiError`
+ 56 |     .map_err(|e| ApiError::InternalServerError(format!("Failed to generate access token: {}", e)))?;
+    |
+   --> src/api/handlers/auth/refresh.rs:56:28
+error[E0599]: no variant or associated item named `InternalServerError` found for enum `response::ApiError` in the current scope
+
+   = note: available fields are: `db`, `auth_config`, `jwt_service`, `rate_limiter`, `usage_repo` ... and 7 others
+   |
+   |                ^^^^^^ unknown field
+53 |         &state.config.jwt_secret,
+   |
+  --> src/api/handlers/auth/refresh.rs:53:16
+error[E0609]: no field `config` on type `actix_web::web::Data<app_state_unified::AppState>`
+
+    |     ------------ `response::ApiError::Unauthorized` defined here
+127 |     Unauthorized,
+    |
+   ::: src/api/response.rs:127:5
+    |
+    |                      call expression requires function
+    |                      |
+    |                      ^^^^^^^^^^^^^^^^^^^^^^------------------------------
+ 45 |         .map_err(|_| ApiError::Unauthorized("User not found".to_string()))?;
+    |
+   --> src/api/handlers/auth/refresh.rs:45:22
+error[E0618]: expected function, found `response::ApiError`
+
+   |
+42 +         .usage_repo
+42 -         .user_repo
+   |
+help: a field with a similar name exists
+   |
+   |          ^^^^^^^^^ unknown field
+42 |         .user_repo
+   |
+  --> src/api/handlers/auth/refresh.rs:42:10
+error[E0609]: no field `user_repo` on type `actix_web::web::Data<app_state_unified::AppState>`
+
+   |                       ^^^^ method not found in `std::sync::Arc<Database>`
+40 |     let db = state.db.lock().await;
+   |
+  --> src/api/handlers/auth/refresh.rs:40:23
+error[E0599]: no method named `lock` found for struct `std::sync::Arc<Database>` in the current scope
+
+    |     ------------ `response::ApiError::Unauthorized` defined here
+127 |     Unauthorized,
+    |
+   ::: src/api/response.rs:127:5
+    |
+    |                    call expression requires function
+    |                    |
+    |                    ^^^^^^^^^^^^^^^^^^^^^^----------------------------------
+ 36 |         return Err(ApiError::Unauthorized("Invalid token type".to_string()));
+    |
+   --> src/api/handlers/auth/refresh.rs:36:20
+error[E0618]: expected function, found `response::ApiError`
+
+    |     ------------ `response::ApiError::Unauthorized` defined here
+127 |     Unauthorized,
+    |
+   ::: src/api/response.rs:127:5
+    |
+    |                      call expression requires function
+    |                      |
+    |                      ^^^^^^^^^^^^^^^^^^^^^^-------------------------------------
+ 32 |         .map_err(|_| ApiError::Unauthorized("Invalid refresh token".to_string()))?;
+    |
+   --> src/api/handlers/auth/refresh.rs:32:22
+error[E0618]: expected function, found `response::ApiError`
+
+   = note: available fields are: `db`, `auth_config`, `jwt_service`, `rate_limiter`, `usage_repo` ... and 7 others
+   |
+   |                                                          ^^^^^^ unknown field
+31 |     let claims = validate_jwt(&req.refresh_token, &state.config.jwt_secret)
+   |
+  --> src/api/handlers/auth/refresh.rs:31:58
+error[E0609]: no field `config` on type `actix_web::web::Data<app_state_unified::AppState>`
+
+    |                    ++++
+160 |         .extensions_mut()
+    |
+help: there is a method `extensions_mut` with a similar name
+    |
+  1 + use actix_web::HttpMessage;
+    |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+    = help: items from traits can only be used if the trait is in scope
+    |
+    |          ---------- the method is available for `HttpRequest` here
+ 29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+    |
+   ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+    |
+    | |_________-^^^^^^^^^^
+160 | |         .extensions()
+    |  _____________________-
+159 |       let tenant_id = req
+    |
+   --> src/api/handlers/audit/query.rs:160:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+    |                    ++++
+135 |         .extensions_mut()
+    |
+help: there is a method `extensions_mut` with a similar name
+    |
+  1 + use actix_web::HttpMessage;
+    |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+    = help: items from traits can only be used if the trait is in scope
+    |
+    |          ---------- the method is available for `HttpRequest` here
+ 29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+    |
+   ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+    |
+    | |_________-^^^^^^^^^^
+135 | |         .extensions()
+    |  _____________________-
+134 |       let tenant_id = req
+    |
+   --> src/api/handlers/audit/query.rs:135:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+    |                    ++++
+102 |         .extensions_mut()
+    |
+help: there is a method `extensions_mut` with a similar name
+    |
+  1 + use actix_web::HttpMessage;
+    |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+    = help: items from traits can only be used if the trait is in scope
+    |
+    |          ---------- the method is available for `HttpRequest` here
+ 29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+    |
+   ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+    |
+    | |_________-^^^^^^^^^^
+102 | |         .extensions()
+    |  _____________________-
+101 |       let tenant_id = req
+    |
+   --> src/api/handlers/audit/query.rs:102:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+   |                    ++++
+78 |         .extensions_mut()
+   |
+help: there is a method `extensions_mut` with a similar name
+   |
+ 1 + use actix_web::HttpMessage;
+   |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+   = help: items from traits can only be used if the trait is in scope
+   |
+   |          ---------- the method is available for `HttpRequest` here
+29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+   |
+  ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+   |
+   | |_________-^^^^^^^^^^
+78 | |         .extensions()
+   |  _____________________-
+77 |       let tenant_id = req
+   |
+  --> src/api/handlers/audit/query.rs:78:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+   |                          +++++++++
+53 |                 if event.resource.resource_type != *resource_type {
+   |
+help: one of the expressions' fields has a field of the same name
+   |
+   |                          ^^^^^^^^^^^^^ unknown field
+53 |                 if event.resource_type != *resource_type {
+   |
+  --> src/api/handlers/audit/query.rs:53:26
+error[E0609]: no field `resource_type` on type `AuditEvent`
+
+   |
+48 +                 if event.actor != *action {
+48 -                 if event.action != *action {
+   |
+help: a field with a similar name exists
+   |
+   |                          ^^^^^^ unknown field
+48 |                 if event.action != *action {
+   |
+  --> src/api/handlers/audit/query.rs:48:26
+error[E0609]: no field `action` on type `AuditEvent`
+
+   = note: available fields are: `id`, `timestamp`, `tenant_id`, `shard_key`, `actor` ... and 10 others
+   |
+   |                          ^^^^^^^ unknown field
+43 |                 if event.user_id != *user_id {
+   |
+  --> src/api/handlers/audit/query.rs:43:26
+error[E0609]: no field `user_id` on type `AuditEvent`
+
+   |                      ^^^^ method not found in `std::sync::Arc<Database>`
+26 |     let db = data.db.lock().await;
+   |
+  --> src/api/handlers/audit/query.rs:26:22
+error[E0599]: no method named `lock` found for struct `std::sync::Arc<Database>` in the current scope
+
+   |                    ++++
+20 |         .extensions_mut()
+   |
+help: there is a method `extensions_mut` with a similar name
+   |
+ 1 + use actix_web::HttpMessage;
+   |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+   = help: items from traits can only be used if the trait is in scope
+   |
+   |          ---------- the method is available for `HttpRequest` here
+29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+   |
+  ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+   |
+   | |_________-^^^^^^^^^^
+20 | |         .extensions()
+   |  _____________________-
+19 |       let tenant_id = req
+   |
+  --> src/api/handlers/audit/query.rs:20:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+   |                    ++++
+92 |         .extensions_mut()
+   |
+help: there is a method `extensions_mut` with a similar name
+   |
+ 1 + use actix_web::HttpMessage;
+   |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+   = help: items from traits can only be used if the trait is in scope
+   |
+   |          ---------- the method is available for `HttpRequest` here
+29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+   |
+  ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+   |
+   | |_________-^^^^^^^^^^
+92 | |         .extensions()
+   |  _____________________-
+91 |       let tenant_id = req
+   |
+  --> src/api/handlers/audit/compliance.rs:92:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+   |                    ++++
+58 |         .extensions_mut()
+   |
+help: there is a method `extensions_mut` with a similar name
+   |
+ 1 + use actix_web::HttpMessage;
+   |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+   = help: items from traits can only be used if the trait is in scope
+   |
+   |          ---------- the method is available for `HttpRequest` here
+29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+   |
+  ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+   |
+   | |_________-^^^^^^^^^^
+58 | |         .extensions()
+   |  _____________________-
+57 |       let tenant_id = req
+   |
+  --> src/api/handlers/audit/compliance.rs:58:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+   |                    ++++
+21 |         .extensions_mut()
+   |
+help: there is a method `extensions_mut` with a similar name
+   |
+ 1 + use actix_web::HttpMessage;
+   |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+   = help: items from traits can only be used if the trait is in scope
+   |
+   |          ---------- the method is available for `HttpRequest` here
+29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+   |
+  ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+   |
+   | |_________-^^^^^^^^^^
+21 | |         .extensions()
+   |  _____________________-
+20 |       let tenant_id = req
+   |
+  --> src/api/handlers/audit/compliance.rs:21:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+    |   ----------------------------- method `list_events` not found for this struct
+ 13 |   pub struct AuditLogRepository {
+    |
+   ::: src/db/repositories/audit_log_repository.rs:13:1
+    |
+    |
+    | |_________|
+    | |         -^^^^^^^^^^^ method not found in `AuditLogRepository`
+237 | |         .list_events(
+    |  __________________-
+236 |       let events = audit_repo
+    |
+   --> src/api/handlers/audit/basic.rs:237:10
+error[E0599]: no method named `list_events` found for struct `AuditLogRepository` in the current scope
+
+    |                                                        ++++++++++++++++++
+229 |     let audit_repo = AuditLogRepository::new(db.clone(), /* uuid::Uuid */);
+    |
+help: provide the argument
+    |            ^^^                    ---------------
+ 19 |     pub fn new(db: Arc<Database>, tenant_id: Uuid) -> Self {
+    |
+   --> src/db/repositories/audit_log_repository.rs:19:12
+note: associated function defined here
+    |
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^------------ argument #2 of type `uuid::Uuid` is missing
+229 |     let audit_repo = AuditLogRepository::new(db.clone());
+    |
+   --> src/api/handlers/audit/basic.rs:229:22
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+
+    |                      ^^^^ method not found in `std::sync::Arc<Database>`
+228 |     let db = data.db.lock().await;
+    |
+   --> src/api/handlers/audit/basic.rs:228:22
+error[E0599]: no method named `lock` found for struct `std::sync::Arc<Database>` in the current scope
+
+    | ----------------------------- method `get_event` not found for this struct
+ 13 | pub struct AuditLogRepository {
+    |
+   ::: src/db/repositories/audit_log_repository.rs:13:1
+    |
+    |                      ^^^^^^^^^ method not found in `AuditLogRepository`
+196 |     match audit_repo.get_event(&tenant_id, &event_id).await {
+    |
+   --> src/api/handlers/audit/basic.rs:196:22
+error[E0599]: no method named `get_event` found for struct `AuditLogRepository` in the current scope
+
+    |                                                        ++++++++++++++++++
+193 |     let audit_repo = AuditLogRepository::new(db.clone(), /* uuid::Uuid */);
+    |
+help: provide the argument
+    |            ^^^                    ---------------
+ 19 |     pub fn new(db: Arc<Database>, tenant_id: Uuid) -> Self {
+    |
+   --> src/db/repositories/audit_log_repository.rs:19:12
+note: associated function defined here
+    |
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^------------ argument #2 of type `uuid::Uuid` is missing
+193 |     let audit_repo = AuditLogRepository::new(db.clone());
+    |
+   --> src/api/handlers/audit/basic.rs:193:22
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+
+    |                      ^^^^ method not found in `std::sync::Arc<Database>`
+192 |     let db = data.db.lock().await;
+    |
+   --> src/api/handlers/audit/basic.rs:192:22
+error[E0599]: no method named `lock` found for struct `std::sync::Arc<Database>` in the current scope
+
+    |   ----------------------------- method `list_events` not found for this struct
+ 13 |   pub struct AuditLogRepository {
+    |
+   ::: src/db/repositories/audit_log_repository.rs:13:1
+    |
+    |
+    | |_________|
+    | |         -^^^^^^^^^^^ method not found in `AuditLogRepository`
+150 | |         .list_events(
+    |  __________________-
+149 |       let events = audit_repo
+    |

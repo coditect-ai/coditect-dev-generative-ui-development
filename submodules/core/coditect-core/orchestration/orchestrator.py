@@ -28,11 +28,12 @@ Example:
     >>>
     >>> orchestrator.generate_report()
 
-Copyright © 2025 AZ1.AI INC. All rights reserved.
+Copyright ï¿½ 2025 AZ1.AI INC. All rights reserved.
 Developer: Hal Casteel, CEO/CTO
 Email: 1@az1.ai
 """
 
+import asyncio
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
@@ -59,7 +60,7 @@ class ProjectOrchestrator:
     Attributes:
         project_root: Path to project root directory
         project_id: Unique project identifier
-        tasks: Dictionary of task_id ’ AgentTask
+        tasks: Dictionary of task_id ï¿½ AgentTask
         state_manager: State persistence manager
         backup_manager: Backup and rollback manager
         executor: Task executor (optional)
@@ -419,13 +420,17 @@ class ProjectOrchestrator:
 
         return ready_tasks
 
-    def execute_task(
+    async def execute_task(
         self,
         task_id: str,
         agent: Optional[str] = None
     ) -> ExecutionResult:
         """
-        Execute a task using specified agent.
+        Execute a task using specified agent (async).
+
+        Note:
+            This method is async to enable concurrent task execution
+            and seamless integration with async TaskExecutor.
 
         Args:
             task_id: Task identifier
@@ -445,8 +450,8 @@ class ProjectOrchestrator:
         # Start task (validates dependencies)
         self.start_task(task_id)
 
-        # Execute using executor
-        result = self.executor.execute(task, agent=agent)
+        # Execute using executor (async)
+        result = await self.executor.execute(task, agent=agent)
 
         return result
 
@@ -500,22 +505,22 @@ class ProjectOrchestrator:
         print(f"PROJECT STATUS REPORT: {report['project_id']}")
         print("=" * 70)
 
-        print(f"\n=Ê PROGRESS:")
+        print(f"\n=ï¿½ PROGRESS:")
         print(f"   Total Tasks: {report['total_tasks']}")
         print(f"    Completed: {report['completed_tasks']}")
         print(f"   = In Progress: {report['in_progress_tasks']}")
-        print(f"   ø  Pending: {report['pending_tasks']}")
-        print(f"   =« Blocked: {report['blocked_tasks']}")
+        print(f"   ï¿½  Pending: {report['pending_tasks']}")
+        print(f"   =ï¿½ Blocked: {report['blocked_tasks']}")
         print(f"   L Failed: {report['failed_tasks']}")
-        print(f"   =È Completion: {report['completion_percentage']:.1f}%")
+        print(f"   =ï¿½ Completion: {report['completion_percentage']:.1f}%")
 
-        print(f"\nñ  TIME ESTIMATES:")
+        print(f"\nï¿½  TIME ESTIMATES:")
         print(f"   Total: {report['estimated_total_hours']:.1f} hours")
         print(f"   Remaining: {report['estimated_remaining_hours']:.1f} hours")
 
         if report['next_task']:
             next_task = self.get_task(report['next_task'])
-            print(f"\n<¯ NEXT TASK:")
+            print(f"\n<ï¿½ NEXT TASK:")
             print(f"   {next_task.task_id}: {next_task.title}")
             print(f"   Priority: {next_task.priority.value}")
             print(f"   Estimated: {next_task.estimated_hours}h")
@@ -532,7 +537,7 @@ class ProjectOrchestrator:
         backups = self.backup_manager.list_backups(limit=limit)
 
         if not backups:
-            print("\n=æ No backups found.\n")
+            print("\n=ï¿½ No backups found.\n")
             return
 
         print("\n" + "=" * 70)

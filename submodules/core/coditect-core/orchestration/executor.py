@@ -41,6 +41,7 @@ Developer: Hal Casteel, CEO/CTO
 Email: 1@az1.ai
 """
 
+import asyncio
 import json
 import subprocess
 import sys
@@ -52,6 +53,13 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from .agent_registry import AgentRegistry, AgentConfig, AgentInterface, AgentType
 from .task import AgentTask, TaskStatus
+
+# Import LLM abstraction layer (Phase 1C)
+try:
+    from llm_abstractions import LlmFactory
+    LLM_ABSTRACTIONS_AVAILABLE = True
+except ImportError:
+    LLM_ABSTRACTIONS_AVAILABLE = False
 
 
 class ExecutionStatus(str, Enum):
@@ -151,7 +159,7 @@ class TaskExecutor:
         self.scripts_dir = scripts_dir or Path(__file__).parent.parent / "scripts"
         self.default_agent = default_agent
 
-    def execute(
+    async def execute(
         self,
         task: AgentTask,
         agent: Optional[str] = None,
@@ -159,6 +167,10 @@ class TaskExecutor:
     ) -> ExecutionResult:
         """
         Execute a single task using specified agent.
+
+        Note:
+            This method is async to enable concurrent task execution
+            and seamless integration with async LLM providers.
 
         Args:
             task: Task to execute
@@ -196,13 +208,13 @@ class TaskExecutor:
         try:
             # Execute based on mode
             if exec_mode == AgentInterface.TASK_TOOL.value or exec_mode == "interactive":
-                result = self._execute_interactive(task, agent_config, result)
+                result = await self._execute_interactive(task, agent_config, result)
 
             elif exec_mode == AgentInterface.API.value:
-                result = self._execute_api(task, agent_config, result)
+                result = await self._execute_api(task, agent_config, result)
 
             elif exec_mode == AgentInterface.HYBRID.value:
-                result = self._execute_hybrid(task, agent_config, result)
+                result = await self._execute_hybrid(task, agent_config, result)
 
             else:
                 raise ValueError(f"Unknown execution mode: {exec_mode}")
@@ -214,17 +226,16 @@ class TaskExecutor:
 
         return result
 
-    def execute_parallel(
+    async def execute_parallel(
         self,
         tasks: List[Tuple[AgentTask, str]],
         max_concurrent: int = 3
     ) -> List[ExecutionResult]:
         """
-        Execute multiple tasks in parallel using different agents.
+        Execute multiple tasks in TRUE PARALLEL using async/await.
 
-        NOTE: This generates execution plan and instructions.
-        Actual parallel execution requires manual coordination or
-        future automation (Process pool, async/await, etc.)
+        Uses asyncio.gather for concurrent execution, achieving
+        significant speedup compared to sequential execution.
 
         Args:
             tasks: List of (task, agent_name) tuples
@@ -234,16 +245,16 @@ class TaskExecutor:
             List of ExecutionResult instances
 
         Example:
-            >>> results = executor.execute_parallel([
+            >>> results = await executor.execute_parallel([
             ...     (task1, "claude-code"),
             ...     (task2, "gpt-4"),
             ...     (task3, "gemini-pro")
             ... ])
         """
-        print(f"\n🚀 PARALLEL EXECUTION PLAN")
+        print(f"\n🚀 PARALLEL EXECUTION (ASYNC)")
         print(f"   Total tasks: {len(tasks)}")
         print(f"   Max concurrent: {max_concurrent}")
-        print(f"   Estimated speedup: {len(tasks) / max_concurrent:.1f}x\n")
+        print(f"   Expected speedup: {min(len(tasks), max_concurrent)}x\n")
 
         results = []
 
@@ -256,16 +267,20 @@ class TaskExecutor:
             for task, agent_name in batch:
                 print(f"   - {task.task_id}: {agent_name}")
 
-            print(f"\n   ⏱️  Run these {len(batch)} tasks concurrently for maximum speed\n")
+            print(f"\n   ⏱️  Executing {len(batch)} tasks concurrently...\n")
 
-            # For now, execute sequentially (future: implement true parallelism)
-            for task, agent_name in batch:
-                result = self.execute(task, agent=agent_name)
-                results.append(result)
+            # TRUE PARALLEL EXECUTION with asyncio.gather
+            batch_coroutines = [
+                self.execute(task, agent=agent_name)
+                for task, agent_name in batch
+            ]
+
+            batch_results = await asyncio.gather(*batch_coroutines)
+            results.extend(batch_results)
 
         return results
 
-    def _execute_interactive(
+    async def _execute_interactive(
         self,
         task: AgentTask,
         agent_config: AgentConfig,
@@ -275,6 +290,10 @@ class TaskExecutor:
         Execute task in interactive mode (Claude Code Task tool).
 
         Displays command for user to copy/paste into Claude Code.
+
+        Note:
+            Async for consistency with other execution methods,
+            though no actual async I/O operations occur.
 
         Args:
             task: Task to execute
@@ -305,16 +324,25 @@ class TaskExecutor:
 
         return result
 
-    def _execute_api(
+    async def _execute_api(
         self,
         task: AgentTask,
         agent_config: AgentConfig,
         result: ExecutionResult
     ) -> ExecutionResult:
         """
-        Execute task via direct API call.
+        Execute task via direct API call (async).
 
-        Supports OpenAI GPT, Google Gemini, and custom LLMs.
+        Phase 1C: Uses LlmFactory for direct LLM integration (7 providers).
+        Falls back to script-based execution if LLM abstraction unavailable.
+
+        Supported Providers:
+            - Anthropic Claude (claude-3-5-sonnet-20241022, etc.)
+            - OpenAI GPT (gpt-4o, gpt-5.1-codex-max, etc.)
+            - Google Gemini (gemini-2.0-flash, etc.)
+            - Hugging Face (Llama 3, Mistral, etc.)
+            - Ollama (local - llama3.2, codellama, etc.)
+            - LM Studio (local - any GGUF model)
 
         Args:
             task: Task to execute
@@ -323,30 +351,96 @@ class TaskExecutor:
 
         Returns:
             Updated ExecutionResult
-
-        Raises:
-            NotImplementedError: API execution not yet implemented
         """
         result.status = ExecutionStatus.IN_PROGRESS
 
-        # Use scripts library for standardized API calling
+        # Phase 1C: Try direct LLM integration first
+        if LLM_ABSTRACTIONS_AVAILABLE:
+            try:
+                # Handle both enum and string agent types
+                agent_type_str = (agent_config.agent_type.value
+                                if hasattr(agent_config.agent_type, 'value')
+                                else agent_config.agent_type)
+
+                # Get LLM provider from factory
+                llm = LlmFactory.get_provider(
+                    agent_type=agent_type_str,
+                    model=agent_config.model,
+                    api_key=agent_config.api_key,
+                    max_tokens=agent_config.metadata.get("max_tokens", 4096),
+                    temperature=agent_config.metadata.get("temperature", 0.7)
+                )
+
+                # Prepare messages from task
+                messages = []
+
+                # Add system prompt if available
+                if agent_config.metadata.get("system_prompt"):
+                    messages.append({
+                        "role": "system",
+                        "content": agent_config.metadata["system_prompt"]
+                    })
+
+                # Add task description as user message
+                messages.append({
+                    "role": "user",
+                    "content": task.description
+                })
+
+                # Add context if available
+                if task.metadata.get("context"):
+                    messages.append({
+                        "role": "user",
+                        "content": f"Context:\n{task.metadata['context']}"
+                    })
+
+                # Call LLM via factory
+                response = await llm.generate_content_async(messages)
+
+                # Success
+                result.status = ExecutionStatus.SUCCESS
+                result.output = response
+                result.completed_at = datetime.now()
+                result.metadata["execution_method"] = "llm_factory"
+                result.metadata["provider"] = agent_type_str
+                result.metadata["model"] = agent_config.model
+
+                return result
+
+            except ValueError as e:
+                # Provider not registered - fall back to script
+                print(f"⚠️  LLM provider not available: {e}")
+                result.metadata["llm_factory_error"] = str(e)
+
+            except Exception as e:
+                # LLM call failed - fall back to script
+                print(f"⚠️  LLM API call failed: {e}")
+                result.metadata["llm_factory_error"] = str(e)
+
+        # Fallback: Use scripts library for standardized API calling
         script_path = self._get_execution_script(agent_config.agent_type)
 
         if script_path and script_path.exists():
-            result = self._execute_via_script(task, agent_config, script_path, result)
+            result = await self._execute_via_script(task, agent_config, script_path, result)
+            result.metadata["execution_method"] = "script_based"
         else:
-            # Fallback: Generate API call instructions
-            print(f"\n⚠️  API execution for {agent_config.agent_type.value} not yet implemented")
+            # No script available
+            agent_type_str = (agent_config.agent_type.value
+                            if hasattr(agent_config.agent_type, 'value')
+                            else agent_config.agent_type)
+            print(f"\n⚠️  API execution for {agent_type_str} not available")
             print(f"   Task: {task.task_id}")
             print(f"   Agent: {agent_config.name}")
-            print(f"   Required script: {script_path}\n")
+            print(f"   LLM Factory: {'Not available' if not LLM_ABSTRACTIONS_AVAILABLE else 'Failed'}")
+            print(f"   Script: {script_path} (not found)\n")
 
             result.status = ExecutionStatus.PENDING
             result.metadata["requires_implementation"] = True
+            result.metadata["execution_method"] = "none"
 
         return result
 
-    def _execute_hybrid(
+    async def _execute_hybrid(
         self,
         task: AgentTask,
         agent_config: AgentConfig,
@@ -368,7 +462,7 @@ class TaskExecutor:
         """
         raise NotImplementedError("Hybrid execution not yet implemented")
 
-    def _execute_via_script(
+    async def _execute_via_script(
         self,
         task: AgentTask,
         agent_config: AgentConfig,
@@ -376,9 +470,10 @@ class TaskExecutor:
         result: ExecutionResult
     ) -> ExecutionResult:
         """
-        Execute task using scripts library.
+        Execute task using scripts library (async subprocess).
 
         Standardized script-based execution for consistent agent calling.
+        Uses asyncio subprocess for non-blocking execution.
 
         Args:
             task: Task to execute
@@ -393,26 +488,31 @@ class TaskExecutor:
             # Prepare task data as JSON
             task_data = task.to_dict()
 
-            # Call execution script
-            proc = subprocess.run(
-                [sys.executable, str(script_path)],
-                input=json.dumps(task_data),
-                capture_output=True,
-                text=True,
+            # Call execution script using async subprocess
+            proc = await asyncio.create_subprocess_exec(
+                sys.executable, str(script_path),
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            # Communicate with process (send input, wait for output)
+            stdout, stderr = await asyncio.wait_for(
+                proc.communicate(input=json.dumps(task_data).encode()),
                 timeout=3600  # 1 hour timeout
             )
 
             if proc.returncode == 0:
                 result.status = ExecutionStatus.SUCCESS
-                result.output = proc.stdout
+                result.output = stdout.decode()
             else:
                 result.status = ExecutionStatus.FAILED
-                result.error = proc.stderr
+                result.error = stderr.decode()
 
             result.completed_at = datetime.now()
             result.metadata["exit_code"] = proc.returncode
 
-        except subprocess.TimeoutExpired:
+        except asyncio.TimeoutError:
             result.status = ExecutionStatus.FAILED
             result.error = "Execution timeout (1 hour)"
             result.completed_at = datetime.now()

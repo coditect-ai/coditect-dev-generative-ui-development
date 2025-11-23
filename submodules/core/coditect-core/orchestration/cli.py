@@ -39,12 +39,13 @@ Examples:
     # Rollback
     python -m claude.orchestration.cli --rollback 20251112-013045
 
-Copyright © 2025 AZ1.AI INC. All rights reserved.
+Copyright ï¿½ 2025 AZ1.AI INC. All rights reserved.
 Developer: Hal Casteel, CEO/CTO
 Email: 1@az1.ai
 """
 
 import argparse
+import asyncio
 import sys
 from pathlib import Path
 from typing import Optional
@@ -73,7 +74,7 @@ Examples:
   %(prog)s --list-backups              # List backups
   %(prog)s --rollback 20251112-013045  # Rollback
 
-Copyright © 2025 AZ1.AI INC. All rights reserved.
+Copyright ï¿½ 2025 AZ1.AI INC. All rights reserved.
         """
     )
 
@@ -195,12 +196,12 @@ def cmd_list_tasks(orchestrator: ProjectOrchestrator, args: argparse.Namespace) 
 
     for task in tasks:
         status_emoji = {
-            TaskStatus.PENDING: "ø ",
+            TaskStatus.PENDING: "ï¿½ ",
             TaskStatus.IN_PROGRESS: "=",
-            TaskStatus.BLOCKED: "=«",
+            TaskStatus.BLOCKED: "=ï¿½",
             TaskStatus.COMPLETED: "",
             TaskStatus.FAILED: "L",
-            TaskStatus.CANCELLED: "=®",
+            TaskStatus.CANCELLED: "=ï¿½",
         }.get(task.status, "  ")
 
         print(f"{status_emoji} {task.task_id}: {task.title}")
@@ -227,7 +228,7 @@ def cmd_next_task(orchestrator: ProjectOrchestrator, args: argparse.Namespace) -
         return
 
     print("\n" + "=" * 70)
-    print("<¯ NEXT RECOMMENDED TASK")
+    print("<ï¿½ NEXT RECOMMENDED TASK")
     print("=" * 70 + "\n")
 
     print(f"Task ID: {next_task.task_id}")
@@ -264,15 +265,16 @@ def cmd_execute_task(orchestrator: ProjectOrchestrator, task_id: str) -> None:
         print(f"\nL Task '{task_id}' not found.\n")
         sys.exit(1)
 
-    print(f"\n=€ Executing task: {task_id}\n")
+    print(f"\n=ï¿½ Executing task: {task_id}\n")
 
     try:
-        result = orchestrator.execute_task(task_id)
+        # Call async execute_task() using asyncio.run()
+        result = asyncio.run(orchestrator.execute_task(task_id))
 
         if result.status == "success":
             print(f" Task executed successfully")
         elif result.status == "pending":
-            print(f"ø  Task execution pending (interactive mode)")
+            print(f"ï¿½  Task execution pending (interactive mode)")
         else:
             print(f"L Task execution failed: {result.error}")
 
@@ -328,7 +330,7 @@ def cmd_cancel_task(orchestrator: ProjectOrchestrator, task_id: str) -> None:
     success = orchestrator.cancel_task(task_id)
 
     if success:
-        print(f"\n=® Task '{task_id}' cancelled.\n")
+        print(f"\n=ï¿½ Task '{task_id}' cancelled.\n")
     else:
         print(f"\nL Failed to cancel task '{task_id}'.\n")
         sys.exit(1)

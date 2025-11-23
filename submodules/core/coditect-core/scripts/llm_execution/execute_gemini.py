@@ -95,7 +95,7 @@ def execute_gemini_api(task: Dict[str, Any]) -> Dict[str, Any]:
         client = genai.Client(api_key=api_key)
 
         # Get model from task or use default (gemini-2.5-flash is latest free tier)
-        model_name = task.get("model", "gemini-2.5-flash")
+        model_name = task.get("model", "gemini-3.0-ultra")
 
         # Build prompt with complete task specification
         prompt = f"""You are an AI agent executing a specific task for project orchestration.

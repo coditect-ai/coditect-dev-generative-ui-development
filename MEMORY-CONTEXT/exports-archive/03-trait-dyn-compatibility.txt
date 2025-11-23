@@ -1,0 +1,515 @@
+# Build Error Chunk Metadata
+# ==========================
+# Source File: Google-Cloud-BUILD-ERRORS.2025-09-22.txt
+# Total Lines in Source: 4550
+# Chunk Number: 3
+# Lines in This Chunk: 500
+# Start Line: 951
+# End Line: 1450
+# Overlap: 25 lines (5%)
+# Generated: 2025-09-22 15:38:35 UTC
+# Purpose: Rust compilation errors from Google Cloud Build
+# Error Count: 346 total compilation errors
+#
+# ==========================
+
+    |
+help: there is a method `extensions_mut` with a similar name
+    |
+  1 + use actix_web::HttpMessage;
+    |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+    = help: items from traits can only be used if the trait is in scope
+    |
+    |          ---------- the method is available for `HttpRequest` here
+ 29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+    |
+   ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+    |
+    | |_________-^^^^^^^^^^
+342 | |         .extensions()
+    |  _____________________-
+341 |       let tenant_id = req
+    |
+   --> src/api/handlers/subsidiary.rs:342:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+    |                       +++++++++++++++++
+318 |     match repo.update(/* uuid::Uuid */, &subsidiary).await {
+    |
+help: provide the argument
+    |                  ^^^^^^        ---------------
+ 45 |     pub async fn update(&self, tenant_id: Uuid, subsidiary: &Subsidiary) -> Result<bool> {
+    |
+   --> src/db/repositories/subsidiary_repository.rs:45:18
+note: method defined here
+    |
+    |                ^^^^^^ ----------- argument #1 of type `uuid::Uuid` is missing
+318 |     match repo.update(&subsidiary).await {
+    |
+   --> src/api/handlers/subsidiary.rs:318:16
+error[E0061]: this method takes 2 arguments but 1 argument was supplied
+
+    = note: available fields are: `subsidiary_id`, `entity_id`, `name`, `code`, `region` ... and 4 others
+    |
+    |                    ^^^^^^^^^ unknown field
+314 |         subsidiary.is_active = is_active;
+    |
+   --> src/api/handlers/subsidiary.rs:314:20
+error[E0609]: no field `is_active` on type `Subsidiary`
+
+    = note: available fields are: `name`, `code`, `region`, `manager_id`, `status`
+    = note: available field is: `0`
+    |
+    |                                   ^^^^^^^^^ unknown field
+313 |     if let Some(is_active) = body.is_active {
+    |
+   --> src/api/handlers/subsidiary.rs:313:35
+error[E0609]: no field `is_active` on type `actix_web::web::Json<UpdateSubsidiaryRequest>`
+
+    |
+286 +     let mut subsidiary = match repo.get(/* uuid::Uuid */, /* uuid::Uuid */).await {
+286 -     let mut subsidiary = match repo.get(&subsidiary_id).await {
+    |
+help: provide the argument
+    |
+286 +     let mut subsidiary = match repo.get(subsidiary_id).await {
+286 -     let mut subsidiary = match repo.get(&subsidiary_id).await {
+    |
+help: consider removing the borrow
+    |                  ^^^        ---------------  -------------------
+ 32 |     pub async fn get(&self, tenant_id: Uuid, subsidiary_id: Uuid) -> Result<Option<Subsidiary>> {
+    |
+   --> src/db/repositories/subsidiary_repository.rs:32:18
+note: method defined here
+    |
+    |                                        argument #2 of type `uuid::Uuid` is missing
+    |                                        |expected `Uuid`, found `&Uuid`
+    |                                        ||
+    |                                     ^^^----------------
+286 |     let mut subsidiary = match repo.get(&subsidiary_id).await {
+    |
+   --> src/api/handlers/subsidiary.rs:286:37
+error[E0061]: this method takes 2 arguments but 1 argument was supplied
+
+    |
+283 +     let repo = SubsidiaryRepository::new(data.db.clone());
+283 -     let repo = SubsidiaryRepository::new(data.db.clone(), tenant_id);
+    |
+help: remove the extra argument
+    |            ^^^
+ 15 |     pub fn new(db: Arc<Database>) -> Self {
+    |
+   --> src/db/repositories/subsidiary_repository.rs:15:12
+note: associated function defined here
+    |
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^                  --------- unexpected argument #2
+283 |     let repo = SubsidiaryRepository::new(data.db.clone(), tenant_id);
+    |
+   --> src/api/handlers/subsidiary.rs:283:16
+error[E0061]: this function takes 1 argument but 2 arguments were supplied
+
+    |                    ++++
+278 |         .extensions_mut()
+    |
+help: there is a method `extensions_mut` with a similar name
+    |
+  1 + use actix_web::HttpMessage;
+    |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+    = help: items from traits can only be used if the trait is in scope
+    |
+    |          ---------- the method is available for `HttpRequest` here
+ 29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+    |
+   ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+    |
+    | |_________-^^^^^^^^^^
+278 | |         .extensions()
+    |  _____________________-
+277 |       let tenant_id = req
+    |
+   --> src/api/handlers/subsidiary.rs:278:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+    |
+248 +     match repo.get(/* uuid::Uuid */, /* uuid::Uuid */).await {
+248 -     match repo.get(&subsidiary_id).await {
+    |
+help: provide the argument
+    |
+248 +     match repo.get(subsidiary_id).await {
+248 -     match repo.get(&subsidiary_id).await {
+    |
+help: consider removing the borrow
+    |                  ^^^        ---------------  -------------------
+ 32 |     pub async fn get(&self, tenant_id: Uuid, subsidiary_id: Uuid) -> Result<Option<Subsidiary>> {
+    |
+   --> src/db/repositories/subsidiary_repository.rs:32:18
+note: method defined here
+    |
+    |                   argument #2 of type `uuid::Uuid` is missing
+    |                   |expected `Uuid`, found `&Uuid`
+    |                   ||
+    |                ^^^----------------
+248 |     match repo.get(&subsidiary_id).await {
+    |
+   --> src/api/handlers/subsidiary.rs:248:16
+error[E0061]: this method takes 2 arguments but 1 argument was supplied
+
+    |
+247 +     let repo = SubsidiaryRepository::new(data.db.clone());
+247 -     let repo = SubsidiaryRepository::new(data.db.clone(), tenant_id);
+    |
+help: remove the extra argument
+    |            ^^^
+ 15 |     pub fn new(db: Arc<Database>) -> Self {
+    |
+   --> src/db/repositories/subsidiary_repository.rs:15:12
+note: associated function defined here
+    |
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^                  --------- unexpected argument #2
+247 |     let repo = SubsidiaryRepository::new(data.db.clone(), tenant_id);
+    |
+   --> src/api/handlers/subsidiary.rs:247:16
+error[E0061]: this function takes 1 argument but 2 arguments were supplied
+
+    |                    ++++
+242 |         .extensions_mut()
+    |
+help: there is a method `extensions_mut` with a similar name
+    |
+  1 + use actix_web::HttpMessage;
+    |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+    = help: items from traits can only be used if the trait is in scope
+    |
+    |          ---------- the method is available for `HttpRequest` here
+ 29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+    |
+   ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+    |
+    | |_________-^^^^^^^^^^
+242 | |         .extensions()
+    |  _____________________-
+241 |       let tenant_id = req
+    |
+   --> src/api/handlers/subsidiary.rs:242:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+            candidate #1: `Directory`
+    = note: the following trait defines an item `list`, perhaps you need to implement it:
+    = help: items from traits can only be used if the trait is implemented and in scope
+    |
+    | ------------------------------- method `list` not found for this struct
+ 10 | pub struct SubsidiaryRepository {
+    |
+   ::: src/db/repositories/subsidiary_repository.rs:10:1
+    |
+    |                ^^^^ method not found in `SubsidiaryRepository`
+218 |     match repo.list().await {
+    |
+   --> src/api/handlers/subsidiary.rs:218:16
+error[E0599]: no method named `list` found for struct `SubsidiaryRepository` in the current scope
+
+    |
+217 +     let repo = SubsidiaryRepository::new(data.db.clone());
+217 -     let repo = SubsidiaryRepository::new(data.db.clone(), tenant_id);
+    |
+help: remove the extra argument
+    |            ^^^
+ 15 |     pub fn new(db: Arc<Database>) -> Self {
+    |
+   --> src/db/repositories/subsidiary_repository.rs:15:12
+note: associated function defined here
+    |
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^                  --------- unexpected argument #2
+217 |     let repo = SubsidiaryRepository::new(data.db.clone(), tenant_id);
+    |
+   --> src/api/handlers/subsidiary.rs:217:16
+error[E0061]: this function takes 1 argument but 2 arguments were supplied
+
+    |                    ++++
+212 |         .extensions_mut()
+    |
+help: there is a method `extensions_mut` with a similar name
+    |
+  1 + use actix_web::HttpMessage;
+    |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+    = help: items from traits can only be used if the trait is in scope
+    |
+    |          ---------- the method is available for `HttpRequest` here
+ 29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+    |
+   ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+    |
+    | |_________-^^^^^^^^^^
+212 | |         .extensions()
+    |  _____________________-
+211 |       let tenant_id = req
+    |
+   --> src/api/handlers/subsidiary.rs:212:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+    |                       +++++++++++++++++
+191 |     match repo.create(/* uuid::Uuid */, &subsidiary).await {
+    |
+help: provide the argument
+    |                  ^^^^^^        ---------------
+ 19 |     pub async fn create(&self, tenant_id: Uuid, subsidiary: &Subsidiary) -> Result<()> {
+    |
+   --> src/db/repositories/subsidiary_repository.rs:19:18
+note: method defined here
+    |
+    |                ^^^^^^ ----------- argument #1 of type `uuid::Uuid` is missing
+191 |     match repo.create(&subsidiary).await {
+    |
+   --> src/api/handlers/subsidiary.rs:191:16
+error[E0061]: this method takes 2 arguments but 1 argument was supplied
+
+    |
+190 +     let repo = SubsidiaryRepository::new(data.db.clone());
+190 -     let repo = SubsidiaryRepository::new(data.db.clone(), tenant_id);
+    |
+help: remove the extra argument
+    |            ^^^
+ 15 |     pub fn new(db: Arc<Database>) -> Self {
+    |
+   --> src/db/repositories/subsidiary_repository.rs:15:12
+note: associated function defined here
+    |
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^                  --------- unexpected argument #2
+190 |     let repo = SubsidiaryRepository::new(data.db.clone(), tenant_id);
+    |
+   --> src/api/handlers/subsidiary.rs:190:16
+error[E0061]: this function takes 1 argument but 2 arguments were supplied
+
+    |
+183 +     let subsidiary = Subsidiary::new(tenant_id, /* std::string::String */, body.name.clone(), body.code.clone(), body.entity_id);
+188 -     );
+187 -         body.code.clone(),
+186 -         body.name.clone(),
+185 -         body.entity_id,
+184 -         tenant_id,
+183 -     let subsidiary = Subsidiary::new(
+    |
+help: provide the argument
+    |         ------------
+ 28 |         name: String,
+ 27 |         entity_id: Uuid,
+    |            ^^^
+ 26 |     pub fn new(
+    |
+   --> src/models/subsidiary.rs:26:12
+note: associated function defined here
+    |
+    |         -------------- argument #2 of type `std::string::String` is missing
+185 |         body.entity_id,
+184 |         tenant_id,
+    |                      ^^^^^^^^^^^^^^^
+183 |     let subsidiary = Subsidiary::new(
+    |
+   --> src/api/handlers/subsidiary.rs:183:22
+error[E0061]: this function takes 5 arguments but 4 arguments were supplied
+
+    |                    ++++
+178 |         .extensions_mut()
+    |
+help: there is a method `extensions_mut` with a similar name
+    |
+  1 + use actix_web::HttpMessage;
+    |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+    = help: items from traits can only be used if the trait is in scope
+    |
+    |          ---------- the method is available for `HttpRequest` here
+ 29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+    |
+   ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+    |
+    | |_________-^^^^^^^^^^
+178 | |         .extensions()
+    |  _____________________-
+177 |       let tenant_id = req
+    |
+   --> src/api/handlers/subsidiary.rs:178:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+    |
+ 14 +     let project = Project::new(req.tenant_id, req.entity_id, req.subsidiary_id, req.name.clone(), req.code.clone(), req.description.clone(), req.project_type.clone(), req.manager_id, req.created_by, /* chrono::DateTime<chrono::Utc> */, /* chrono::DateTime<chrono::Utc> */, /* uuid::Uuid */);
+ 24 -     );
+ 23 -         req.created_by,
+ 22 -         req.manager_id,
+ 21 -         req.project_type.clone(),
+ 20 -         req.description.clone(),
+ 19 -         req.code.clone(),
+ 18 -         req.name.clone(),
+ 17 -         req.subsidiary_id,
+ 16 -         req.entity_id,
+ 15 -         req.tenant_id,
+ 14 -     let project = Project::new(
+    |
+help: provide the arguments
+    |         ----------------
+105 |         created_by: Uuid,
+    |         -----------------------
+104 |         end_date: DateTime<Utc>,
+    |         -------------------------
+103 |         start_date: DateTime<Utc>,
+...
+    |            ^^^
+ 93 |     pub fn new(
+    |
+   --> src/models/project/core.rs:93:12
+note: associated function defined here
+    |
+    | |_____- three arguments of type `chrono::DateTime<chrono::Utc>`, `chrono::DateTime<chrono::Utc>`, and `uuid::Uuid` are missing
+ 24 | |     );
+ 23 | |         req.created_by,
+...   |
+ 17 | |         req.subsidiary_id,
+ 16 | |         req.entity_id,
+ 15 | |         req.tenant_id,
+    |  ___________________^^^^^^^^^^^^-
+ 14 |       let project = Project::new(
+    |
+   --> src/api/handlers/project.rs:14:19
+error[E0061]: this function takes 12 arguments but 9 arguments were supplied
+
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+241 | pub trait ProjectExtension: Send + Sync {
+    |
+   --> src/models/project/core.rs:241:1
+note: `ProjectExtension` defines an item `validate`, perhaps you need to implement it
+    = help: items from traits can only be used if the trait is implemented and in scope
+    |
+    |          ^^^^^^^^ method not found in `actix_web::web::Json<ExecuteTaskRequest>`
+ 80 |     body.validate().map_err(|e| ApiError::ValidationError {
+    |
+   --> src/api/handlers/execution_handlers.rs:80:10
+error[E0599]: no method named `validate` found for struct `actix_web::web::Json<ExecuteTaskRequest>` in the current scope
+
+    |                    ++++
+334 |         .extensions_mut()
+    |
+help: there is a method `extensions_mut` with a similar name
+    |
+  1 + use actix_web::HttpMessage;
+    |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+    = help: items from traits can only be used if the trait is in scope
+    |
+    |          ---------- the method is available for `HttpRequest` here
+ 29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+    |
+   ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+    |
+    | |_________-^^^^^^^^^^
+334 | |         .extensions()
+    |  _____________________-
+333 |       let tenant_id = req
+    |
+   --> src/api/handlers/entity.rs:334:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+    |                    ++++
+270 |         .extensions_mut()
+    |
+help: there is a method `extensions_mut` with a similar name
+    |
+  1 + use actix_web::HttpMessage;
+    |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+    = help: items from traits can only be used if the trait is in scope
+    |
+    |          ---------- the method is available for `HttpRequest` here
+ 29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+    |
+   ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+    |
+    | |_________-^^^^^^^^^^
+270 | |         .extensions()
+    |  _____________________-
+269 |       let tenant_id = req
+    |
+   --> src/api/handlers/entity.rs:270:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+    |                    ++++
+234 |         .extensions_mut()
+    |
+help: there is a method `extensions_mut` with a similar name
+    |
+  1 + use actix_web::HttpMessage;
+    |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+    = help: items from traits can only be used if the trait is in scope
+    |
+    |          ---------- the method is available for `HttpRequest` here
+ 29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+    |
+   ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+    |
+    | |_________-^^^^^^^^^^
+234 | |         .extensions()
+    |  _____________________-
+233 |       let tenant_id = req
+    |
+   --> src/api/handlers/entity.rs:234:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+    |                    ++++
+204 |         .extensions_mut()
+    |
+help: there is a method `extensions_mut` with a similar name
+    |
+  1 + use actix_web::HttpMessage;
+    |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+    = help: items from traits can only be used if the trait is in scope
+    |
+    |          ---------- the method is available for `HttpRequest` here
+ 29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+    |
+   ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+    |
+    | |_________-^^^^^^^^^^
+204 | |         .extensions()
+    |  _____________________-
+203 |       let tenant_id = req
+    |
+   --> src/api/handlers/entity.rs:204:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+    |                    ++++
+170 |         .extensions_mut()
+    |
+help: there is a method `extensions_mut` with a similar name
+    |
+  1 + use actix_web::HttpMessage;
+    |
+help: trait `HttpMessage` which provides `extensions` is implemented but not in scope; perhaps you want to import it
+    = help: items from traits can only be used if the trait is in scope
+    |
+    |          ---------- the method is available for `HttpRequest` here
+ 29 |       fn extensions(&self) -> Ref<'_, Extensions>;
+    |
+   ::: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/actix-http-3.11.1/src/http_message.rs:29:8
+    |
+    | |_________-^^^^^^^^^^
+170 | |         .extensions()
+    |  _____________________-
+169 |       let tenant_id = req
+    |
+   --> src/api/handlers/entity.rs:170:10
+error[E0599]: no method named `extensions` found for struct `HttpRequest` in the current scope
+
+   | ------------------------- method `list_by_tenant` not found for this struct
+ 8 | pub struct CostRepository {
+   |
+  ::: src/db/repositories/cost_repository.rs:8:1
+   |
+   |                     ^^^^^^^^^^^^^^ method not found in `CostRepository`
+24 |     match cost_repo.list_by_tenant(&tenant_id).await {
+   |

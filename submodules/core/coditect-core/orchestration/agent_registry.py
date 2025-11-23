@@ -430,7 +430,7 @@ def create_gemini_agent(
         name=name,
         agent_type=AgentType.GOOGLE_GEMINI,
         interface=AgentInterface.API,
-        model="gemini-pro",
+        model="gemini-3.0-ultra",
         api_key=api_key,
         api_endpoint="https://generativelanguage.googleapis.com/v1/models",
         capabilities=[
