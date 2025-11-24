@@ -1426,11 +1426,17 @@ class NavigationController {
             try {
                 const checkpoint = await window.dashboardData.loadCheckpoint(id);
 
+                // Load git data for this checkpoint
+                const gitData = await window.dashboardData.loadGitCommitsForCheckpoint(id);
+
                 // Extract metadata
                 const dateExtracted = this.extractDateFromId(checkpoint.id);
                 const project = this.extractProject(checkpoint.id);
                 const submodule = this.extractSubmodule(checkpoint.id);
                 const modules = this.extractModulesFromFiles(checkpoint.files_modified || []);
+
+                // GitHub repo URL (generic - can be enhanced based on project)
+                const githubBaseUrl = 'https://github.com/coditect-ai/coditect-rollout-master';
 
                 mainContent.innerHTML = `
                     <div class="checkpoint-detail-view">
@@ -1484,6 +1490,73 @@ class NavigationController {
                                         ` : ''}
                                     </div>
                                 </div>
+
+                                <!-- Git Commits Section -->
+                                ${gitData && gitData.commits && gitData.commits.length > 0 ? `
+                                    <div style="background: var(--bg-tertiary); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6);">
+                                        <h3 style="margin-bottom: var(--space-3); color: var(--text-primary);">🔀 Git Commits (${gitData.commits.length})</h3>
+
+                                        ${gitData.branch ? `
+                                            <div style="margin-bottom: var(--space-3); padding: var(--space-2); background: var(--primary-100); border-radius: var(--radius-sm);">
+                                                <strong style="color: var(--primary-900);">Branch:</strong>
+                                                <code style="color: var(--primary-700); font-weight: 600;">${gitData.branch}</code>
+                                            </div>
+                                        ` : ''}
+
+                                        <div style="max-height: 400px; overflow-y: auto;">
+                                            ${gitData.commits.map(commit => `
+                                                <div style="padding: var(--space-3); margin-bottom: var(--space-2); background: var(--bg-primary); border-left: 3px solid var(--primary-500); border-radius: var(--radius-sm);">
+                                                    <div style="font-family: monospace; font-size: var(--text-sm);">
+                                                        <a href="${githubBaseUrl}/commit/${commit.hash}"
+                                                           target="_blank"
+                                                           rel="noopener noreferrer"
+                                                           style="color: var(--primary-600); text-decoration: none; font-weight: 600; font-family: monospace;"
+                                                           title="View commit on GitHub">
+                                                            📝 ${commit.hash}
+                                                        </a>
+                                                        <div style="color: var(--text-secondary); margin-top: var(--space-1); word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word;">
+                                                            ${this.escapeHtml(commit.message)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+
+                                        ${gitData.working_dir_status ? `
+                                            <div style="margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border-primary);">
+                                                <strong>Working Directory Status:</strong>
+                                                <div style="margin-top: var(--space-2); padding: var(--space-2); background: var(--bg-primary); border-radius: var(--radius-sm); font-family: monospace; font-size: var(--text-xs); white-space: pre-wrap; overflow-wrap: break-word;">
+                                                    ${this.escapeHtml(gitData.working_dir_status)}
+                                                </div>
+                                            </div>
+                                        ` : ''}
+
+                                        ${gitData.submodules && gitData.submodules.length > 0 ? `
+                                            <div style="margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border-primary);">
+                                                <strong>Submodule Updates (${gitData.submodules.length}):</strong>
+                                                <div style="margin-top: var(--space-2);">
+                                                    ${gitData.submodules.map(sub => `
+                                                        <div style="padding: var(--space-2); margin-bottom: var(--space-2); background: var(--bg-primary); border-radius: var(--radius-sm); font-size: var(--text-sm);">
+                                                            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-1);">
+                                                                📦 ${this.escapeHtml(sub.name)}
+                                                            </div>
+                                                            ${sub.commit ? `
+                                                                <div style="font-family: monospace; font-size: var(--text-xs); color: var(--text-tertiary);">
+                                                                    Commit: <code>${sub.commit}</code>
+                                                                </div>
+                                                            ` : ''}
+                                                            ${sub.latest_hash && sub.latest_message ? `
+                                                                <div style="font-family: monospace; font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-1);">
+                                                                    Latest: ${sub.latest_hash} ${this.escapeHtml(sub.latest_message)}
+                                                                </div>
+                                                            ` : ''}
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                ` : ''}
 
                                 <div class="grid grid-cols-4" style="margin-bottom: var(--space-6);">
                                     <div class="stat-card">
