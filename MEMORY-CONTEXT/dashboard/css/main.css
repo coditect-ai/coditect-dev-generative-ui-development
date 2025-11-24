@@ -339,7 +339,8 @@ pre code {
     transform: rotate(-90deg);
 }
 
-.card-content {
+/* Only apply max-height and overflow to collapsible cards */
+.card-collapsible .card-content {
     max-height: 2000px;
     overflow: hidden;
     transition: max-height var(--transition-slow);
@@ -541,4 +542,55 @@ select {
 
 .theme-toggle-icon {
     font-size: var(--text-lg);
+}
+
+/* ============================================
+   UTILITY CLASSES FOR TEXT OVERFLOW
+   ============================================ */
+
+/* Ensure text wraps properly and doesn't clip */
+.text-wrap {
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+.text-no-clip {
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+/* Ensure code blocks wrap properly */
+code {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+pre code {
+    display: block;
+    overflow-x: auto;
+}
+
+/* Ensure long URLs and paths break properly */
+.card code,
+.message-result code,
+.search-match-preview code {
+    word-break: break-all;
+}
+
+/* Ensure card content is fully visible */
+.card {
+    overflow: visible;
+}
+
+.card p,
+.card div {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }

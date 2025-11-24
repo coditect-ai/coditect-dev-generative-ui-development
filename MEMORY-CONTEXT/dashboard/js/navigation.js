@@ -850,8 +850,8 @@ class NavigationController {
                                             <span class="badge badge-${ref.role}">${ref.role}</span>
                                             <span class="text-xs text-tertiary">${this.formatDate(ref.timestamp)}</span>
                                         </div>
-                                        <p style="font-size: var(--text-sm); margin: var(--space-2) 0;">
-                                            ${this.escapeHtml(ref.content_preview.substring(0, 200))}${ref.content_preview.length > 200 ? '...' : ''}
+                                        <p style="font-size: var(--text-sm); margin: var(--space-2) 0; line-height: 1.6;">
+                                            ${this.escapeHtml(ref.content_preview.substring(0, 500))}${ref.content_preview.length > 500 ? '...' : ''}
                                         </p>
                                         <div style="font-size: var(--text-xs); color: var(--text-tertiary);">
                                             Session: ${this.escapeHtml(ref.checkpoint_id)}
@@ -1346,11 +1346,11 @@ class NavigationController {
         }
 
         if (bestIndex === -1) {
-            return content.substring(0, 200) + (content.length > 200 ? '...' : '');
+            return content.substring(0, 400) + (content.length > 400 ? '...' : '');
         }
 
-        // Extract context around the match (150 chars before and after)
-        const contextSize = 150;
+        // Extract context around the match (250 chars before and after)
+        const contextSize = 250;
         const start = Math.max(0, bestIndex - contextSize);
         const end = Math.min(content.length, bestIndex + contextSize);
 
