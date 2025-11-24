@@ -799,6 +799,183 @@ See [Current Status: Beta Testing Phase](#current-status-beta-testing-phase) for
 - [ ] Documentation updated
 - [ ] Pilot test plan approved
 
+#### 🔒 CRITICAL: License Platform Security Hardening (P0)
+
+**Status:** 🚨 CRITICAL PRIORITY | ⏸️ NOT STARTED | 📅 Target: Week 3 of Beta
+**Timeline:** 3-4 days (18 hours effort)
+**Budget:** Included in Beta budget ($145K)
+**Repository:** [coditect-cloud-infra](https://github.com/coditect-ai/coditect-cloud-infra)
+
+**Context:**
+
+The CODITECT License Management Platform requires production-grade security hardening before pilot launch. Current security posture is **inadequate (35/100 security score)** with critical gaps in DDoS protection, authentication enforcement, and network isolation. This initiative implements a comprehensive 7-layer defense-in-depth security architecture to achieve **95/100 security score** and enterprise-grade protection.
+
+**Reference Documentation:**
+- [LICENSE-PLATFORM-SECURITY-HARDENING.md](../submodules/cloud/coditect-cloud-infra/docs/security/LICENSE-PLATFORM-SECURITY-HARDENING.md) (38KB, 1,100+ lines)
+- [SECURITY-INDEX.md](../submodules/cloud/coditect-cloud-infra/docs/security/SECURITY-INDEX.md) (20KB control matrix)
+- [SECURITY-MANIFEST.md](../submodules/cloud/coditect-cloud-infra/docs/security/SECURITY-MANIFEST.md) (12KB inventory)
+
+**7-Layer Security Architecture:**
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ Layer 1: Cloud Armor WAF                                │
+│ - DDoS protection (L3/L4/L7, adaptive)                  │
+│ - OWASP Top 10 (SQLi, XSS, malicious IPs, scanners)    │
+│ - Rate limiting (100 req/min per IP)                    │
+│ - Geo-blocking (US/EU allowlist)                        │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ Layer 2: Backend Security Policy                        │
+│ - Health checks (10s interval, port 8000)               │
+│ - Connection draining (60s graceful shutdown)           │
+│ - 100% request logging for security audit               │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ Layer 3: Unified Ingress (Host-Based Routing)          │
+│ - licenses.coditect.ai → License API (NEW)             │
+│ - api.coditect.ai → Cloud IDE (existing, unchanged)    │
+│ - Shared IP (34.8.51.57) - zero new attack surface     │
+│ - Managed SSL (TLS 1.3), HTTPS-only                    │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ Layer 4: Kubernetes NetworkPolicy                       │
+│ - Default deny (all ingress/egress blocked)            │
+│ - License API: ingress from Ingress Controller only    │
+│ - License API: egress to Cloud SQL, Redis, KMS only    │
+│ - Lateral movement prevention (pod-to-pod blocked)     │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ Layer 5: Django Application Security                    │
+│ - JWT validation (Identity Platform, every request)    │
+│ - Multi-tenant row-level isolation (django-multitenant)│
+│ - CSRF protection, XSS protection, SQL injection       │
+│ - HTTPS-only cookies, HSTS (1 year)                    │
+│ - CORS restrictive (licenses.coditect.ai only)         │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ Layer 6: Data Layer Security                           │
+│ - Cloud KMS signing (RSA-4096, tamper-proof licenses)  │
+│ - Cloud SQL encryption (CMEK at rest, SSL in transit)  │
+│ - Redis TLS encryption + AUTH                          │
+│ - Private IPs only (no public database access)         │
+│ - Complete audit logging (connections, queries)        │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ Layer 7: Observability & Incident Response             │
+│ - Prometheus alerts (auth failures, DDoS, KMS errors)  │
+│ - Cloud Logging (100% request sampling)                │
+│ - Automated incident response (<60s isolation)         │
+│ - Grafana security dashboards                          │
+│ - PagerDuty integration                                │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Implementation Phases:**
+
+1. **Phase 1: Core Infrastructure Security** (Day 1-2, 8 hours)
+   - Deploy Cloud Armor WAF with OWASP rules
+   - Create Backend Security Policy with 100% logging
+   - Update Unified Ingress for licenses.coditect.ai
+   - Implement Kubernetes NetworkPolicy (default deny)
+   - **Deliverables:** 95% attack surface reduction, DDoS protection operational
+
+2. **Phase 2: Application Security** (Day 3, 6 hours)
+   - Implement JWT authentication middleware
+   - Configure Django security settings (HSTS, CSRF, XSS)
+   - Deploy Cloud KMS for license signing (RSA-4096)
+   - Configure encryption at rest (CMEK) and in transit (TLS)
+   - **Deliverables:** Authentication enforced, tamper-proof licenses
+
+3. **Phase 3: Observability & Incident Response** (Day 4, 4 hours)
+   - Deploy Prometheus alert rules (4 critical alerts)
+   - Configure Cloud Logging export
+   - Create automated incident response runbooks
+   - Setup PagerDuty integration
+   - **Deliverables:** Complete visibility, <60s automated response
+
+4. **Phase 4: Security Validation** (Concurrent, 2 hours)
+   - Run OWASP Top 10 vulnerability scans
+   - Perform penetration testing
+   - Load testing (DDoS simulation)
+   - Security audit report
+   - **Deliverables:** Zero critical vulnerabilities, production ready
+
+**Security Metrics (Before → After):**
+
+| Control | Current | Target | Impact |
+|---------|---------|--------|--------|
+| **Security Score** | 35/100 | 95/100 | +171% |
+| **Cloud Armor WAF** | ❌ Missing | ✅ Deployed | DDoS protection |
+| **DDoS Protection** | ❌ Vulnerable | ✅ Adaptive | Withstands 10K+ req/min |
+| **Rate Limiting** | ❌ Missing | ✅ 100 req/min | Abuse prevention |
+| **Authentication** | ❌ Missing | ✅ JWT + Identity Platform | Every request validated |
+| **Network Isolation** | ❌ Missing | ✅ NetworkPolicy | Lateral movement blocked |
+| **Encryption** | ⚠️ Partial | ✅ Complete | CMEK at rest, TLS in transit |
+| **License Signing** | ❌ Missing | ✅ RSA-4096 KMS | Tamper-proof |
+| **Audit Logging** | ⚠️ Partial | ✅ 100% sampling | Complete trail |
+| **Incident Response** | ❌ Missing | ✅ <60s automated | Rapid containment |
+
+**Compliance Achievement:**
+
+- ✅ **OWASP Top 10:2021** - 100% compliant (from 35%)
+- ✅ **OWASP API Security Top 10:2023** - 100% compliant (from 0%)
+- ✅ **OWASP Kubernetes Top 10** - 100% compliant (from 0%)
+- ✅ **CIS GCP Benchmark v3.0** - 95% compliant (from 60%)
+- ⏸️ **NIST CSF 2.0** - 78% compliant (ongoing)
+
+**Cost Impact:**
+
+| Component | Current | With Security | Delta |
+|-----------|---------|---------------|-------|
+| Cloud Armor | $0 | +$10/month | +$120/year |
+| Network Egress | $20 | $25/month | +$60/year |
+| **Total Additional Cost** | - | **$15/month** | **$180/year** |
+
+**Security ROI:**
+- Average data breach cost: $50K-500K
+- Security hardening cost: $180/year
+- Break-even: 1 prevented breach every 278+ years
+- **Verdict:** Extremely cost-effective
+
+**Blockers & Dependencies:**
+
+- ⚠️ **Cloud Armor deployment** - Requires GCP Project Owner permissions
+- ⚠️ **Identity Platform OAuth2** - Requires manual credential creation in Google Cloud Console
+- ⚠️ **Cloud KMS setup** - Requires IAM signBlob permissions for License API service account
+- ✅ **OpenTofu modules** - Complete implementation code already written
+- ✅ **Kubernetes manifests** - All YAML configurations documented
+- ✅ **Django middleware** - Complete Python code provided
+
+**Success Criteria:**
+
+- [ ] Security score ≥ 95/100 (60-point improvement)
+- [ ] Zero critical vulnerabilities in OWASP scan
+- [ ] All 7 security layers deployed and verified
+- [ ] 100% request logging operational
+- [ ] Incident response <60s (automated)
+- [ ] Production readiness sign-off
+- [ ] Security documentation complete (3 docs)
+- [ ] Team trained on security procedures
+
+**Next Actions:**
+
+1. **Immediate (Week 3, Day 1):** Deploy Cloud Armor OpenTofu module
+2. **Day 2:** Kubernetes NetworkPolicy and Ingress updates
+3. **Day 3:** Django JWT middleware and Cloud KMS integration
+4. **Day 4:** Monitoring, alerting, and security validation
+5. **Week 4:** Production deployment and stakeholder review
+
+**Detailed Task Breakdown:**
+
+See [TASKLIST.md - License Platform Security Hardening](./TASKLIST.md#-critical-license-platform-security-hardening-🚨-priority-p0---3-4-days-18-hours) for complete checkbox-based task list (120+ tasks across 4 phases).
+
 ---
 
 ### Phase 4: Pilot Program 📅 SCHEDULED

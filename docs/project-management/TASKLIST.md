@@ -308,6 +308,356 @@
 
 ## Phase 1: Beta Testing (⚡ ACTIVE NOW - Week 2 of 4, Nov 12 - Dec 10, 2025)
 
+### 🔒 CRITICAL: License Platform Security Hardening (🚨 PRIORITY P0 - 3-4 days, 18 hours)
+
+**Context:** Production-grade security implementation for CODITECT License Management Platform
+**Primary Repository:** [coditect-cloud-infra](https://github.com/coditect-ai/coditect-cloud-infra)
+**Reference Doc:** [LICENSE-PLATFORM-SECURITY-HARDENING.md](../submodules/cloud/coditect-cloud-infra/docs/security/LICENSE-PLATFORM-SECURITY-HARDENING.md)
+**Security Score Target:** 95/100 (from current 35/100)
+**Timeline:** 3-4 days (18 hours total effort)
+
+**Architecture:** 7-Layer Defense-in-Depth Security Model
+
+```
+Layer 1: Cloud Armor WAF (DDoS, OWASP Top 10, rate limiting, geo-blocking)
+Layer 2: Backend Security Policy (health checks, connection draining, logging)
+Layer 3: Unified Ingress (host-based routing, managed SSL, shared IP)
+Layer 4: Kubernetes NetworkPolicy (pod isolation, lateral movement prevention)
+Layer 5: Django Application Security (JWT, CSRF, multi-tenant isolation)
+Layer 6: Data Layer Security (Cloud KMS signing, encryption at rest/transit)
+Layer 7: Observability & Incident Response (logging, alerting, runbooks)
+```
+
+---
+
+#### Phase 1: Core Infrastructure Security (Day 1-2, 8 hours)
+
+**Layer 1: Cloud Armor Security Policy**
+- [ ] **Create Cloud Armor OpenTofu module** (2h)
+  - [ ] Define security policy resource in `opentofu/modules/cloud-armor/main.tf`
+  - [ ] Configure geo-blocking (US/EU allowlist: US, CA, GB, DE, FR, NL, SE, DK, NO, FI)
+  - [ ] Set up rate limiting (100 req/min per IP, 10-minute ban)
+  - [ ] Define variables and outputs
+
+- [ ] **Implement OWASP Top 10 Protection Rules** (2h)
+  - [ ] Add SQL injection protection (Rule 3, priority 3000)
+  - [ ] Add XSS protection (Rule 4, priority 4000)
+  - [ ] Add malicious IP blocking via Project Shield (Rule 5, priority 5000)
+  - [ ] Add scanner/bot detection (Rule 6, priority 6000)
+  - [ ] Configure default allow rule (Rule 7, lowest priority)
+
+- [ ] **Enable DDoS Adaptive Protection** (30min)
+  - [ ] Configure Layer 7 DDoS defense
+  - [ ] Set up adaptive protection config block
+  - [ ] Document protection thresholds
+
+- [ ] **Deploy and Test Cloud Armor** (1.5h)
+  - [ ] Run `tofu init && tofu plan` in cloud-armor module
+  - [ ] Apply Cloud Armor security policy to GCP
+  - [ ] Test SQL injection blocking (curl with ' OR 1=1)
+  - [ ] Test XSS blocking (curl with <script> tags)
+  - [ ] Verify rate limiting (exceed 100 req/min)
+  - [ ] Document Cloud Armor policy ID
+
+**Layer 2: Backend Security Policy**
+- [ ] **Create Backend Config YAML** (1h)
+  - [ ] Create `kubernetes/base/backend-config-license-api.yaml`
+  - [ ] Attach Cloud Armor security policy by name
+  - [ ] Configure health check (port 8000, /health, 10s interval)
+  - [ ] Set connection draining (60s timeout)
+  - [ ] Enable 100% request logging (sampleRate: 1.0)
+  - [ ] Disable CDN (not cacheable API)
+
+- [ ] **Verify Backend Security** (30min)
+  - [ ] Apply BackendConfig to GKE cluster
+  - [ ] Verify Cloud Armor attachment
+  - [ ] Test health check responsiveness
+  - [ ] Validate logging in Cloud Logging console
+
+**Layer 3: Unified Ingress with Host-Based Routing**
+- [ ] **Create Multi-Domain SSL Certificate** (30min)
+  - [ ] Create `kubernetes/base/managed-certificate-multi.yaml`
+  - [ ] Add licenses.coditect.ai to domain list
+  - [ ] Keep existing domains (coditect.ai, www, api)
+  - [ ] Apply ManagedCertificate resource
+
+- [ ] **Update Unified Ingress** (1.5h)
+  - [ ] Edit `kubernetes/base/unified-ingress.yaml`
+  - [ ] Add host rule for licenses.coditect.ai → coditect-license-api service
+  - [ ] Configure per-service backend config annotation
+  - [ ] Verify shared static IP (coditect-ai-ip: 34.8.51.57)
+  - [ ] Ensure HTTPS-only (allow-http: "false")
+  - [ ] Keep existing api.coditect.ai routing unchanged
+
+- [ ] **Test Host-Based Routing** (30min)
+  - [ ] Verify DNS propagation for licenses.coditect.ai
+  - [ ] Test HTTPS certificate provisioning
+  - [ ] Verify routing: licenses.coditect.ai → License API
+  - [ ] Verify routing: api.coditect.ai → Cloud IDE (unchanged)
+  - [ ] Test HTTPS redirect (HTTP → HTTPS)
+
+**Layer 4: Kubernetes Network Policies**
+- [ ] **Create Network Policy for License API** (1h)
+  - [ ] Create `kubernetes/base/network-policy-license-api.yaml`
+  - [ ] Configure podSelector (app: coditect-license-api)
+  - [ ] Define Ingress rules (only from Ingress Controller on port 8000)
+  - [ ] Define Egress rules (Cloud SQL:5432, Redis:6379, KMS API:443, DNS:53)
+  - [ ] Use private IP CIDR (10.0.0.0/8) for database egress
+
+- [ ] **Create Default Deny Policy** (30min)
+  - [ ] Create default-deny-all NetworkPolicy
+  - [ ] Apply to coditect-app namespace
+  - [ ] Block all ingress by default
+  - [ ] Block all egress by default
+
+- [ ] **Test Pod Isolation** (1h)
+  - [ ] Apply NetworkPolicy to cluster
+  - [ ] Test License API → Cloud SQL connectivity (should work)
+  - [ ] Test License API → Redis connectivity (should work)
+  - [ ] Test License API → Cloud KMS connectivity (should work)
+  - [ ] Test License API → other pod connectivity (should FAIL)
+  - [ ] Test direct pod access from outside (should FAIL)
+  - [ ] Document network isolation verification
+
+---
+
+#### Phase 2: Application Security (Day 3, 6 hours)
+
+**Layer 5: Django Application Security**
+- [ ] **Implement JWT Authentication Middleware** (2h)
+  - [ ] Create `backend/coditect_license/middleware.py`
+  - [ ] Implement JWTAuthenticationMiddleware class
+  - [ ] Add Identity Platform JWT verification (google.oauth2.id_token)
+  - [ ] Extract tenant_id from JWT claims
+  - [ ] Set tenant context with django-multitenant
+  - [ ] Handle /health endpoint bypass
+  - [ ] Return 401 for missing/invalid tokens
+
+- [ ] **Configure Django Security Settings** (1h)
+  - [ ] Add JWTAuthenticationMiddleware to MIDDLEWARE (first)
+  - [ ] Enable SECURE_SSL_REDIRECT = True
+  - [ ] Set SECURE_HSTS_SECONDS = 31536000 (1 year)
+  - [ ] Enable SECURE_HSTS_INCLUDE_SUBDOMAINS and PRELOAD
+  - [ ] Set SESSION_COOKIE_SECURE = True
+  - [ ] Set CSRF_COOKIE_SECURE = True
+  - [ ] Enable SECURE_BROWSER_XSS_FILTER
+  - [ ] Set X_FRAME_OPTIONS = 'DENY'
+  - [ ] Enable SECURE_CONTENT_TYPE_NOSNIFF
+
+- [ ] **Configure CORS (Restrictive)** (30min)
+  - [ ] Set CORS_ALLOWED_ORIGINS = ['https://coditect.ai', 'https://licenses.coditect.ai']
+  - [ ] Enable CORS_ALLOW_CREDENTIALS = True
+  - [ ] Verify CORS middleware order
+
+- [ ] **Test Application Security** (2h)
+  - [ ] Test JWT validation (valid token → 200, invalid token → 401)
+  - [ ] Test tenant isolation (user A cannot access user B's licenses)
+  - [ ] Test CSRF protection (missing CSRF token → 403)
+  - [ ] Test XSS protection (template auto-escaping)
+  - [ ] Test SQL injection protection (ORM parameterized queries)
+  - [ ] Verify HTTPS-only cookies
+  - [ ] Document security test results
+
+- [ ] **Integration Testing** (30min)
+  - [ ] End-to-end acquire license flow
+  - [ ] End-to-end heartbeat flow
+  - [ ] End-to-end release license flow
+  - [ ] Verify multi-tenant data isolation
+
+**Layer 6: Data Layer Security**
+- [ ] **Deploy Cloud KMS for License Signing** (1.5h)
+  - [ ] Create `opentofu/modules/kms/main.tf`
+  - [ ] Define key ring resource (coditect-license-keys, us-central1)
+  - [ ] Define crypto key (RSA_SIGN_PKCS1_4096_SHA512)
+  - [ ] Set rotation period (90 days = 7776000s)
+  - [ ] Run tofu apply to create KMS resources
+  - [ ] Grant License API service account signBlob permission
+  - [ ] Test KMS signing with test payload
+
+- [ ] **Configure Cloud SQL Encryption (CMEK)** (30min)
+  - [ ] Update `opentofu/modules/cloudsql/main.tf`
+  - [ ] Add disk_encryption_configuration block
+  - [ ] Reference Cloud KMS key for encryption
+  - [ ] Verify encryption at rest enabled
+
+- [ ] **Configure Redis TLS** (30min)
+  - [ ] Update `opentofu/modules/redis/main.tf`
+  - [ ] Set transit_encryption_mode = "SERVER_AUTHENTICATION"
+  - [ ] Enable auth_enabled = true
+  - [ ] Store Redis AUTH token in Secret Manager
+  - [ ] Update Django Redis connection to use TLS
+
+- [ ] **Enable Database Audit Logging** (30min)
+  - [ ] Add database_flags for Cloud SQL (log_connections, log_disconnections, log_statement)
+  - [ ] Configure backup retention (30 days)
+  - [ ] Enable point-in-time recovery
+  - [ ] Verify audit logs in Cloud Logging
+
+- [ ] **Test Tamper-Proof License Signing** (1h)
+  - [ ] Integrate Cloud KMS signing in License API
+  - [ ] Sign test license with RSA-4096
+  - [ ] Verify signature locally (offline)
+  - [ ] Test signature tampering detection
+  - [ ] Document KMS signing flow
+
+---
+
+#### Phase 3: Observability & Incident Response (Day 4, 4 hours)
+
+**Layer 7: Monitoring & Alerting**
+- [ ] **Deploy Prometheus Alert Rules** (1.5h)
+  - [ ] Create `kubernetes/monitoring/prometheus-rules-license-api.yaml`
+  - [ ] Add HighAuthenticationFailureRate alert (>10 failures/sec for 5min)
+  - [ ] Add PotentialDDoSAttack alert (>1000 req/sec for 2min)
+  - [ ] Add CloudKMSSigningFailures alert (>1 failure/sec for 5min)
+  - [ ] Add DatabaseConnectionPoolExhausted alert (>90% utilization)
+  - [ ] Configure severity levels and annotations
+  - [ ] Apply PrometheusRule to cluster
+
+- [ ] **Configure Log Export to Cloud Logging** (1h)
+  - [ ] Create `kubernetes/monitoring/fluent-bit-config.yaml`
+  - [ ] Configure log tailing for License API containers
+  - [ ] Add Kubernetes metadata enrichment
+  - [ ] Filter for ERROR/CRITICAL/SECURITY keywords
+  - [ ] Configure Stackdriver output
+  - [ ] Verify logs appearing in Cloud Logging
+
+- [ ] **Create Security Dashboards** (1h)
+  - [ ] Create Grafana dashboard for License API security
+  - [ ] Add panel: Request rate over time
+  - [ ] Add panel: 401/403 error rate
+  - [ ] Add panel: Cloud Armor blocks by rule
+  - [ ] Add panel: KMS signing latency
+  - [ ] Add panel: Active sessions by tenant
+  - [ ] Export dashboard JSON
+
+- [ ] **Test Alerting System** (30min)
+  - [ ] Trigger HighAuthenticationFailureRate (send invalid JWTs)
+  - [ ] Trigger PotentialDDoSAttack (high request rate)
+  - [ ] Verify Prometheus alerts firing
+  - [ ] Verify alert annotations and severity
+  - [ ] Document alert response procedures
+
+**Incident Response**
+- [ ] **Create Incident Response Runbooks** (1h)
+  - [ ] Create `scripts/incident-response/license-api-breach.sh`
+  - [ ] Implement Step 1: Isolate (block ingress traffic)
+  - [ ] Implement Step 2: Forensics capture (logs, metrics)
+  - [ ] Implement Step 3: Database snapshot
+  - [ ] Implement Step 4: PagerDuty notification
+  - [ ] Test runbook execution (dry-run mode)
+
+- [ ] **Configure PagerDuty Integration** (30min)
+  - [ ] Create PagerDuty service for License API
+  - [ ] Configure Prometheus Alertmanager webhook
+  - [ ] Test PagerDuty alert delivery
+  - [ ] Define escalation policies
+
+- [ ] **Test Incident Response Workflow** (1h)
+  - [ ] Simulate security incident (trigger critical alert)
+  - [ ] Verify automated isolation (traffic blocked)
+  - [ ] Verify forensics capture (logs saved)
+  - [ ] Verify database snapshot created
+  - [ ] Verify PagerDuty notification sent
+  - [ ] Document incident response time (target: <60s)
+
+---
+
+#### Phase 4: Security Validation & Production Readiness (Concurrent with Day 4, 2 hours)
+
+**Security Testing**
+- [ ] **Run OWASP Top 10 Vulnerability Scans** (1h)
+  - [ ] Install OWASP ZAP or similar scanner
+  - [ ] Run automated security scan against licenses.coditect.ai
+  - [ ] Verify no critical vulnerabilities found
+  - [ ] Document scan results and remediation
+
+- [ ] **Perform Manual Penetration Testing** (2h)
+  - [ ] Test authentication bypass attempts
+  - [ ] Test authorization bypass (access other tenants)
+  - [ ] Test injection attacks (SQL, XSS, command injection)
+  - [ ] Test rate limiting enforcement
+  - [ ] Test DDoS resilience (load testing)
+  - [ ] Document penetration test findings
+
+- [ ] **Load Testing (Simulate DDoS)** (1h)
+  - [ ] Use Apache Bench or Locust for load testing
+  - [ ] Send 10,000 requests/min to trigger rate limiting
+  - [ ] Verify Cloud Armor blocks excessive requests
+  - [ ] Verify system remains responsive under load
+  - [ ] Document load test results
+
+**Security Audit & Documentation**
+- [ ] **Verify All Security Controls** (1h)
+  - [ ] Cloud Armor policy active (verify in GCP console)
+  - [ ] DDoS adaptive protection enabled
+  - [ ] Rate limiting configured (100 req/min per IP)
+  - [ ] Geo-blocking configured (US/EU only)
+  - [ ] OWASP rules enabled (SQLi, XSS, scanners)
+  - [ ] Network Policies blocking lateral movement
+  - [ ] Private IPs for Cloud SQL and Redis
+  - [ ] TLS encryption in transit (Redis + Cloud SQL)
+  - [ ] JWT validation on every request
+  - [ ] CSRF protection enabled
+  - [ ] CORS restrictive
+  - [ ] Cloud KMS signing operational
+  - [ ] Audit logging complete
+  - [ ] Monitoring and alerting operational
+
+- [ ] **Document Security Posture** (1h)
+  - [ ] Update SECURITY-MANIFEST.md with deployment status
+  - [ ] Update SECURITY-INDEX.md with compliance scores
+  - [ ] Create security audit report (SECURITY-AUDIT-REPORT.md)
+  - [ ] Document all security configurations
+  - [ ] Update README.md with security achievements
+
+- [ ] **Create Security Review Presentation** (30min)
+  - [ ] Executive summary (security score: 35/100 → 95/100)
+  - [ ] 7-layer security architecture diagram
+  - [ ] Key security controls implemented
+  - [ ] Security testing results
+  - [ ] Compliance status (OWASP, NIST, CIS)
+  - [ ] Production readiness assessment
+
+---
+
+#### Success Criteria
+
+**Security Metrics:**
+- [ ] Security Score: ≥ 95/100 (target: 95/100)
+- [ ] Cloud Armor protection: ✅ Deployed and tested
+- [ ] DDoS resilience: ✅ Withstands 10,000+ req/min
+- [ ] Authentication: ✅ JWT validated on every request
+- [ ] Network isolation: ✅ Pod-to-pod blocked, databases accessible
+- [ ] Encryption: ✅ TLS in transit, CMEK at rest
+- [ ] License signing: ✅ RSA-4096 tamper-proof
+- [ ] Monitoring: ✅ All alerts operational
+- [ ] Incident response: ✅ <60s automated response time
+
+**Compliance:**
+- [ ] OWASP Top 10:2021 - 100% compliant
+- [ ] OWASP API Security Top 10:2023 - 100% compliant
+- [ ] OWASP Kubernetes Top 10 - 100% compliant
+- [ ] Zero critical vulnerabilities in security scan
+- [ ] Complete audit trail (100% request logging)
+
+**Production Readiness:**
+- [ ] All 7 security layers deployed and verified
+- [ ] Security documentation complete (3 documents updated)
+- [ ] Security testing passed (OWASP, pentest, load test)
+- [ ] Incident response tested and operational
+- [ ] Team trained on security procedures
+- [ ] Stakeholder sign-off on security posture
+
+---
+
+**Reference Documentation:**
+- [LICENSE-PLATFORM-SECURITY-HARDENING.md](../submodules/cloud/coditect-cloud-infra/docs/security/LICENSE-PLATFORM-SECURITY-HARDENING.md) - Complete implementation guide (38KB, 1,100+ lines)
+- [SECURITY-INDEX.md](../submodules/cloud/coditect-cloud-infra/docs/security/SECURITY-INDEX.md) - Security control matrix (20KB)
+- [SECURITY-MANIFEST.md](../submodules/cloud/coditect-cloud-infra/docs/security/SECURITY-MANIFEST.md) - Documentation inventory (12KB)
+
+---
+
 ### Sprint +1: MEMORY-CONTEXT Implementation (📋 PLANNED - 2 weeks, $45K)
 
 **Primary Repository:** [coditect-project-dot-claude](https://github.com/coditect-ai/coditect-project-dot-claude)
