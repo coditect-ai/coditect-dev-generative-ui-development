@@ -173,6 +173,9 @@ class NavigationController {
             case 'commands':
                 this.renderCommands(filter);
                 break;
+            case 'search':
+                this.renderSearch(filter);
+                break;
             case 'about':
                 this.renderAbout();
                 break;
@@ -512,6 +515,13 @@ class NavigationController {
         try {
             const filesData = await window.dashboardData.loadFiles();
 
+            console.log('📁 Files data loaded:', {
+                totalFiles: filesData.total_files,
+                totalUnique: filesData.total_unique_files,
+                filesArrayLength: filesData.files?.length,
+                topFilesLength: filesData.top_files?.length
+            });
+
             // Build hierarchical tree structure
             const tree = this.buildFileTree(filesData.files || []);
 
@@ -595,7 +605,18 @@ class NavigationController {
     buildFileTree(files) {
         const tree = {};
 
+        if (!files || !Array.isArray(files)) {
+            console.warn('buildFileTree: files is not an array', files);
+            return tree;
+        }
+
         files.forEach(file => {
+            // Skip invalid entries
+            if (!file || !file.path || typeof file.path !== 'string') {
+                console.warn('buildFileTree: skipping invalid file entry', file);
+                return;
+            }
+
             const parts = file.path.split('/');
             let current = tree;
 
@@ -611,7 +632,7 @@ class NavigationController {
                 }
 
                 if (index === parts.length - 1) {
-                    current[part].count = file.count;
+                    current[part].count = file.count || 0;
                 }
 
                 current = current[part].children;
@@ -938,16 +959,232 @@ class NavigationController {
     }
 
     handleSearch(e) {
-        this.searchQuery = e.target.value;
-        console.log('Search query:', this.searchQuery);
-        // Search implementation in Task 1.4
+        this.searchQuery = e.target.value.trim();
+
+        // Auto-search when query is empty (clear results)
+        if (this.searchQuery === '') {
+            // Don't automatically navigate, just clear the stored query
+            return;
+        }
+
+        // Debounce search - wait for user to stop typing
+        clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(() => {
+            if (this.searchQuery.length >= 2) {
+                this.executeSearch();
+            }
+        }, 500); // 500ms debounce
     }
 
-    executeSearch() {
-        if (!this.searchQuery) return;
-        console.log('Executing search:', this.searchQuery);
-        // Search execution in Task 1.4
-        alert('Search functionality will be implemented in Task 1.4 - Data Loading System');
+    async executeSearch() {
+        if (!this.searchQuery || this.searchQuery.length < 2) {
+            return;
+        }
+
+        console.log('🔍 Executing search:', this.searchQuery);
+
+        // Navigate to search results view
+        window.location.hash = `#search/${encodeURIComponent(this.searchQuery)}`;
+    }
+
+    async renderSearch(query) {
+        const mainContent = document.querySelector('.main-content');
+
+        if (!query || query.length < 2) {
+            mainContent.innerHTML = `
+                <div class="search-view">
+                    <h1>🔍 Search Messages</h1>
+                    <p class="text-secondary">Enter at least 2 characters to search across 10,206 messages</p>
+                </div>
+            `;
+            return;
+        }
+
+        mainContent.innerHTML = '<div class="loading">Searching messages...</div>';
+
+        try {
+            const results = await this.searchMessages(query);
+
+            mainContent.innerHTML = `
+                <div class="search-view">
+                    <div class="section-header">
+                        <h1>🔍 Search Results</h1>
+                        <p class="text-secondary">
+                            Found ${results.length} message${results.length !== 1 ? 's' : ''} matching "${this.escapeHtml(query)}"
+                        </p>
+                    </div>
+
+                    ${results.length === 0 ? `
+                        <div class="card">
+                            <h3>No results found</h3>
+                            <p>Try different keywords or check your spelling</p>
+                            <p class="text-sm text-tertiary" style="margin-top: var(--space-4);">
+                                Search tips:
+                                <ul style="margin-top: var(--space-2); margin-left: var(--space-6);">
+                                    <li>Use specific technical terms</li>
+                                    <li>Try partial words (e.g., "auth" finds "authentication")</li>
+                                    <li>Search is case-insensitive</li>
+                                </ul>
+                            </p>
+                        </div>
+                    ` : `
+                        <div class="search-results">
+                            ${results.slice(0, 50).map(result => `
+                                <div class="card message-result" style="margin-bottom: var(--space-4);">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-2);">
+                                        <div style="display: flex; gap: var(--space-2); align-items: center;">
+                                            <span class="badge badge-${result.message.role}">${result.message.role}</span>
+                                            ${result.message.has_code ? '<span class="badge">📝 Code</span>' : ''}
+                                        </div>
+                                        <span class="text-xs text-tertiary">${this.formatDate(result.message.timestamp)}</span>
+                                    </div>
+
+                                    <div class="search-match-preview" style="margin: var(--space-3) 0;">
+                                        ${this.highlightSearchTerms(result.preview, query)}
+                                    </div>
+
+                                    <div style="display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--text-tertiary);">
+                                        <span>Words: ${result.message.word_count}</span>
+                                        <span>Session: ${this.escapeHtml(result.message.checkpoint_id)}</span>
+                                        <span>Match score: ${result.score.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+
+                            ${results.length > 50 ? `
+                                <div class="card" style="text-align: center; background: var(--bg-tertiary);">
+                                    <p>Showing first 50 of ${results.length} results</p>
+                                    <p class="text-sm text-tertiary">Refine your search for more specific results</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `}
+                </div>
+            `;
+
+        } catch (error) {
+            console.error('Search failed:', error);
+            mainContent.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title" style="color: var(--error-500);">Search Failed</h2>
+                    </div>
+                    <div class="card-content">
+                        <p>Error: ${error.message}</p>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    async searchMessages(query) {
+        console.log(`🔍 Searching for: "${query}"`);
+
+        // Load all messages (this searches across all pages)
+        const messagesData = await window.dashboardData.loadOverviewData();
+        const allMessages = messagesData.stats ? await this.loadAllMessages() : [];
+
+        const queryLower = query.toLowerCase();
+        const queryWords = queryLower.split(/\s+/).filter(w => w.length > 0);
+
+        // Search and score results
+        const results = [];
+
+        for (const message of allMessages) {
+            const contentLower = (message.content_preview || message.content || '').toLowerCase();
+
+            // Calculate match score
+            let score = 0;
+            let matchedWords = 0;
+
+            queryWords.forEach(word => {
+                if (contentLower.includes(word)) {
+                    matchedWords++;
+                    // More points for exact whole word matches
+                    const wordRegex = new RegExp(`\\b${word}\\b`, 'gi');
+                    const exactMatches = (contentLower.match(wordRegex) || []).length;
+                    score += exactMatches * 2;
+
+                    // Points for partial matches
+                    const partialMatches = (contentLower.match(new RegExp(word, 'gi')) || []).length;
+                    score += partialMatches;
+                }
+            });
+
+            // Only include if at least one word matched
+            if (matchedWords > 0) {
+                // Find the best preview snippet with the match
+                const preview = this.extractSearchPreview(message.content_preview || message.content || '', query, queryWords);
+
+                results.push({
+                    message: message,
+                    score: score,
+                    matchedWords: matchedWords,
+                    preview: preview
+                });
+            }
+        }
+
+        // Sort by score (highest first)
+        results.sort((a, b) => b.score - a.score);
+
+        console.log(`✓ Found ${results.length} matching messages`);
+
+        return results;
+    }
+
+    async loadAllMessages() {
+        // For now, just load from the overview data
+        // In a real implementation, we'd load all message pages
+        const messagesData = await window.dashboardData.loader.load('data/messages.json');
+        return messagesData.messages || [];
+    }
+
+    extractSearchPreview(content, originalQuery, queryWords) {
+        // Find the first occurrence of any query word
+        const contentLower = content.toLowerCase();
+        let bestIndex = -1;
+
+        for (const word of queryWords) {
+            const index = contentLower.indexOf(word);
+            if (index !== -1 && (bestIndex === -1 || index < bestIndex)) {
+                bestIndex = index;
+            }
+        }
+
+        if (bestIndex === -1) {
+            return content.substring(0, 200) + (content.length > 200 ? '...' : '');
+        }
+
+        // Extract context around the match (150 chars before and after)
+        const contextSize = 150;
+        const start = Math.max(0, bestIndex - contextSize);
+        const end = Math.min(content.length, bestIndex + contextSize);
+
+        let preview = content.substring(start, end);
+
+        if (start > 0) preview = '...' + preview;
+        if (end < content.length) preview = preview + '...';
+
+        return preview;
+    }
+
+    highlightSearchTerms(text, query) {
+        if (!text || !query) return this.escapeHtml(text);
+
+        const escaped = this.escapeHtml(text);
+        const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 0);
+
+        let highlighted = escaped;
+
+        queryWords.forEach(word => {
+            // Escape special regex characters
+            const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escapedWord})`, 'gi');
+            highlighted = highlighted.replace(regex, '<mark style="background-color: var(--primary-100); color: var(--primary-900); padding: 2px 4px; border-radius: 2px;">$1</mark>');
+        });
+
+        return highlighted;
     }
 
     closeModals() {
