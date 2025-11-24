@@ -344,24 +344,109 @@ class NavigationController {
         const mainContent = document.querySelector('.main-content');
 
         if (filter) {
-            // Show specific topic (placeholder for now - Task 1.5)
-            mainContent.innerHTML = `
-                <div class="topic-detail-view">
-                    <button onclick="window.location.hash='#topics'" class="btn-secondary" style="margin-bottom: var(--space-4);">
-                        ← Back to All Topics
-                    </button>
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title">Topic: ${this.escapeHtml(filter)}</h2>
-                        </div>
-                        <div class="card-content">
-                            <p><strong>Task 1.5: Message Rendering</strong></p>
-                            <p>Topic-filtered message list will be implemented next</p>
-                            <p>Shows all messages tagged with topic "${this.escapeHtml(filter)}"</p>
+            // Show specific topic with messages
+            mainContent.innerHTML = '<div class="loading">Loading messages for topic...</div>';
+
+            try {
+                // Load messages for this topic
+                const messages = await window.dashboardData.loadMessagesByTopic(filter);
+
+                // Get topic info
+                const topics = await window.dashboardData.loadTopics();
+                const topicInfo = topics.find(t => t.name === filter);
+
+                mainContent.innerHTML = `
+                    <div class="topic-detail-view">
+                        <button onclick="window.location.hash='#topics'" class="btn-secondary" style="margin-bottom: var(--space-4);">
+                            ← Back to All Topics
+                        </button>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">${this.escapeHtml(topicInfo ? topicInfo.display_name : filter)}</h2>
+                                <p class="card-subtitle">${messages.length} messages • ${topicInfo ? topicInfo.percentage + '% of all messages' : ''}</p>
+                            </div>
+                            <div class="card-content">
+                                ${topicInfo ? `
+                                    <div class="grid grid-cols-4" style="margin-bottom: var(--space-6);">
+                                        <div class="stat-card">
+                                            <h4>Messages</h4>
+                                            <p class="stat-value">${topicInfo.message_count.toLocaleString()}</p>
+                                        </div>
+                                        <div class="stat-card">
+                                            <h4>Percentage</h4>
+                                            <p class="stat-value">${topicInfo.percentage}%</p>
+                                        </div>
+                                        <div class="stat-card">
+                                            <h4>Category</h4>
+                                            <p class="stat-value" style="font-size: var(--text-base);">${topicInfo.category}</p>
+                                        </div>
+                                        <div class="stat-card">
+                                            <h4>Color</h4>
+                                            <div style="width: 40px; height: 40px; background-color: ${topicInfo.color}; border-radius: var(--radius-full); margin: var(--space-2) auto;"></div>
+                                        </div>
+                                    </div>
+                                ` : ''}
+
+                                <h3 style="margin-top: var(--space-6); margin-bottom: var(--space-4);">Messages (${messages.length})</h3>
+                                <div class="grid grid-cols-1" style="gap: var(--space-4);">
+                                    ${messages.slice(0, 50).map(msg => `
+                                        <div class="card" style="background: var(--bg-tertiary);">
+                                            <div class="card-header">
+                                                <div style="display: flex; justify-content: space-between; align-items: start;">
+                                                    <div>
+                                                        <span class="badge badge-${msg.role === 'user' ? 'primary' : 'secondary'}" style="margin-right: var(--space-2);">
+                                                            ${msg.role}
+                                                        </span>
+                                                        ${msg.has_code ? '<span class="badge" style="background: var(--success-500); color: white;">📝 Code</span>' : ''}
+                                                    </div>
+                                                    <span style="color: var(--text-tertiary); font-size: var(--text-xs);">
+                                                        ${new Date(msg.first_seen).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="card-content">
+                                                <p style="font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-secondary); white-space: pre-wrap;">
+                                                    ${this.escapeHtml(msg.content_preview)}
+                                                </p>
+                                                <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-primary); display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-tertiary);">
+                                                    <span>Words: ${msg.word_count}</span>
+                                                    <span>Session: ${this.escapeHtml(msg.checkpoint_id.substring(0, 40))}...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+
+                                ${messages.length > 50 ? `
+                                    <div style="text-align: center; margin-top: var(--space-6); padding: var(--space-4); background: var(--bg-tertiary); border-radius: var(--radius-md);">
+                                        <p style="color: var(--text-secondary);">
+                                            Showing first 50 of ${messages.length} messages
+                                        </p>
+                                        <p style="color: var(--text-tertiary); font-size: var(--text-sm); margin-top: var(--space-2);">
+                                            Full pagination coming soon
+                                        </p>
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
+            } catch (error) {
+                mainContent.innerHTML = `
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title" style="color: var(--error-500);">Failed to Load Topic</h2>
+                        </div>
+                        <div class="card-content">
+                            <p>Error: ${error.message}</p>
+                            <button onclick="window.location.hash='#topics'" class="btn-primary" style="margin-top: var(--space-4);">
+                                Back to All Topics
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
         } else {
             // Show all topics
             mainContent.innerHTML = '<div class="loading">Loading topics...</div>';

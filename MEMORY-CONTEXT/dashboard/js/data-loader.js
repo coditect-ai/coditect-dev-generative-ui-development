@@ -254,6 +254,25 @@ class DashboardDataManager {
     }
 
     /**
+     * Load messages filtered by topic tag
+     */
+    async loadMessagesByTopic(topicTag) {
+        console.log(`🔍 Loading messages for topic: ${topicTag}`);
+
+        // Load main messages file
+        const messagesData = await this.loader.load(this.dataFiles.messages);
+
+        // Filter messages by tag
+        const filtered = messagesData.messages.filter(msg =>
+            msg.tags && msg.tags.includes(topicTag)
+        );
+
+        console.log(`✓ Found ${filtered.length} messages with tag: ${topicTag}`);
+
+        return filtered;
+    }
+
+    /**
      * Preload critical data for fast initial render
      */
     async preloadCritical() {
