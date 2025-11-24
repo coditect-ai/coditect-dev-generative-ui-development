@@ -519,8 +519,15 @@ class NavigationController {
                 totalFiles: filesData.total_files,
                 totalUnique: filesData.total_unique_files,
                 filesArrayLength: filesData.files?.length,
-                topFilesLength: filesData.top_files?.length
+                topFilesLength: filesData.top_files?.length,
+                filter: filter
             });
+
+            // If filter is set, show file detail view
+            if (filter) {
+                await this.renderFileDetail(filter, filesData);
+                return;
+            }
 
             // Build hierarchical tree structure
             const tree = this.buildFileTree(filesData.files || []);
@@ -560,7 +567,7 @@ class NavigationController {
                         <h3 style="margin-bottom: var(--space-4);">Top Referenced Files</h3>
                         <div style="display: grid; gap: var(--space-2);">
                             ${filesData.top_files.slice(0, 10).map(file => `
-                                <div class="file-item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); background: var(--bg-secondary); border-radius: var(--radius-md); transition: all var(--transition-fast);">
+                                <a href="#files/${encodeURIComponent(file.path)}" class="file-item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); background: var(--bg-secondary); border-radius: var(--radius-md); transition: all var(--transition-fast); text-decoration: none; color: inherit;">
                                     <div style="flex: 1; min-width: 0;">
                                         <div style="display: flex; align-items: center; gap: var(--space-2);">
                                             <span style="font-size: 1.2em;">${this.getFileIcon(file.path)}</span>
@@ -570,7 +577,7 @@ class NavigationController {
                                     <span class="badge" style="margin-left: var(--space-3); white-space: nowrap;">
                                         ${file.count} reference${file.count > 1 ? 's' : ''}
                                     </span>
-                                </div>
+                                </a>
                             `).join('')}
                         </div>
                     </div>
@@ -659,11 +666,11 @@ class NavigationController {
 
             if (entry.isFile) {
                 return `
-                    <div class="file-tree-item file-tree-file" style="padding-left: ${indent}px;">
+                    <a href="#files/${encodeURIComponent(entry.path)}" class="file-tree-item file-tree-file" style="padding-left: ${indent}px; text-decoration: none; color: inherit; display: flex;">
                         <span class="file-tree-icon">${icon}</span>
                         <span class="file-tree-name">${this.escapeHtml(entry.name)}</span>
                         ${entry.count > 0 ? `<span class="badge badge-sm">${entry.count}</span>` : ''}
-                    </div>
+                    </a>
                 `;
             } else {
                 return `
@@ -741,6 +748,192 @@ class NavigationController {
 
     getFileName(path) {
         return path.split('/').pop();
+    }
+
+    async renderFileDetail(filePath, filesData) {
+        const mainContent = document.querySelector('.main-content');
+        mainContent.innerHTML = '<div class="loading">Loading file details...</div>';
+
+        try {
+            // Find the file in the data
+            const fileInfo = filesData.files?.find(f => f.path === filePath) ||
+                           filesData.top_files?.find(f => f.path === filePath);
+
+            if (!fileInfo) {
+                mainContent.innerHTML = `
+                    <div class="card">
+                        <h2 style="color: var(--error-500);">File Not Found</h2>
+                        <p>Could not find information for: <code>${this.escapeHtml(filePath)}</code></p>
+                        <button onclick="window.location.hash='#files'" class="btn-secondary">
+                            ← Back to Files
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Search for messages that reference this file
+            const references = await this.findFileReferences(filePath);
+
+            // Try to load the actual file content
+            const fileContent = await this.loadFileContent(filePath);
+
+            mainContent.innerHTML = `
+                <div class="file-detail-view">
+                    <button onclick="window.location.hash='#files'" class="btn-secondary" style="margin-bottom: var(--space-4);">
+                        ← Back to Files
+                    </button>
+
+                    <div class="card">
+                        <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                            <span style="font-size: 2em;">${this.getFileIcon(filePath)}</span>
+                            <div style="flex: 1; min-width: 0;">
+                                <h1 style="font-size: var(--text-xl); margin: 0; word-break: break-all;">
+                                    ${this.escapeHtml(this.getFileName(filePath))}
+                                </h1>
+                                <code style="font-size: var(--text-sm); color: var(--text-tertiary); word-break: break-all;">
+                                    ${this.escapeHtml(filePath)}
+                                </code>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3" style="margin-top: var(--space-4);">
+                            <div class="stat-card">
+                                <h4>References</h4>
+                                <p class="stat-value">${fileInfo.count || 0}</p>
+                            </div>
+                            <div class="stat-card">
+                                <h4>Sessions</h4>
+                                <p class="stat-value">${references.sessions.size}</p>
+                            </div>
+                            <div class="stat-card">
+                                <h4>File Type</h4>
+                                <p class="stat-value">${this.getFileExtension(filePath).toUpperCase()}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${fileContent ? `
+                        <div class="card" style="margin-top: var(--space-6);">
+                            <h3 style="margin-bottom: var(--space-4);">📄 File Content</h3>
+                            <div style="background: var(--bg-tertiary); border-radius: var(--radius-md); padding: var(--space-4); overflow-x: auto;">
+                                <pre style="margin: 0; font-family: 'Monaco', 'Menlo', 'Courier New', monospace; font-size: var(--text-sm); line-height: 1.6;"><code>${this.escapeHtml(fileContent)}</code></pre>
+                            </div>
+                            <p class="text-xs text-tertiary" style="margin-top: var(--space-2);">
+                                ${fileContent.split('\n').length} lines • ${(fileContent.length / 1024).toFixed(1)} KB
+                            </p>
+                        </div>
+                    ` : `
+                        <div class="card" style="margin-top: var(--space-6); background: var(--bg-tertiary);">
+                            <p class="text-center text-tertiary">
+                                <strong>Note:</strong> File content not available in this dashboard.
+                                This view shows metadata about files referenced in the conversation history.
+                            </p>
+                        </div>
+                    `}
+
+                    <div class="card" style="margin-top: var(--space-6);">
+                        <h3 style="margin-bottom: var(--space-4);">💬 References in Conversations</h3>
+
+                        ${references.messages.length === 0 ? `
+                            <p class="text-tertiary">No message references found.</p>
+                        ` : `
+                            <p class="text-secondary" style="margin-bottom: var(--space-4);">
+                                This file was referenced in ${references.messages.length} message${references.messages.length !== 1 ? 's' : ''}
+                                across ${references.sessions.size} session${references.sessions.size !== 1 ? 's' : ''}.
+                            </p>
+
+                            <div style="display: grid; gap: var(--space-3);">
+                                ${references.messages.slice(0, 20).map(ref => `
+                                    <div class="card" style="background: var(--bg-secondary); padding: var(--space-3);">
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-2);">
+                                            <span class="badge badge-${ref.role}">${ref.role}</span>
+                                            <span class="text-xs text-tertiary">${this.formatDate(ref.timestamp)}</span>
+                                        </div>
+                                        <p style="font-size: var(--text-sm); margin: var(--space-2) 0;">
+                                            ${this.escapeHtml(ref.content_preview.substring(0, 200))}${ref.content_preview.length > 200 ? '...' : ''}
+                                        </p>
+                                        <div style="font-size: var(--text-xs); color: var(--text-tertiary);">
+                                            Session: ${this.escapeHtml(ref.checkpoint_id)}
+                                        </div>
+                                    </div>
+                                `).join('')}
+
+                                ${references.messages.length > 20 ? `
+                                    <div class="card" style="text-align: center; background: var(--bg-tertiary);">
+                                        <p>Showing first 20 of ${references.messages.length} references</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+
+        } catch (error) {
+            console.error('Failed to load file details:', error);
+            mainContent.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title" style="color: var(--error-500);">Failed to Load File Details</h2>
+                    </div>
+                    <div class="card-content">
+                        <p>Error: ${error.message}</p>
+                        <button onclick="window.location.hash='#files'" class="btn-secondary" style="margin-top: var(--space-4);">
+                            ← Back to Files
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    async findFileReferences(filePath) {
+        // Search through messages to find references to this file
+        const messagesData = await window.dashboardData.loader.load('data/messages.json');
+        const messages = messagesData.messages || [];
+
+        const references = {
+            messages: [],
+            sessions: new Set()
+        };
+
+        for (const message of messages) {
+            const content = message.content_preview || message.content || '';
+
+            // Check if this message references the file
+            if (content.includes(filePath)) {
+                references.messages.push(message);
+                references.sessions.add(message.checkpoint_id);
+            }
+        }
+
+        console.log(`Found ${references.messages.length} references to ${filePath}`);
+
+        return references;
+    }
+
+    async loadFileContent(filePath) {
+        // Try to load the actual file content
+        // This may not work if the files aren't served alongside the dashboard
+        try {
+            // Try relative path from dashboard root
+            const response = await fetch(`../../${filePath}`);
+            if (response.ok) {
+                const content = await response.text();
+                console.log(`✓ Loaded file content: ${filePath} (${content.length} bytes)`);
+                return content;
+            }
+        } catch (error) {
+            console.log(`Could not load file content for ${filePath}:`, error.message);
+        }
+
+        return null;
+    }
+
+    getFileExtension(path) {
+        const parts = path.split('.');
+        return parts.length > 1 ? parts.pop() : 'file';
     }
 
     async renderCheckpoints(id) {
