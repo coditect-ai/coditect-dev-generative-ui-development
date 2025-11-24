@@ -310,10 +310,8 @@ function initD3TimelineEnhanced(data, nav) {
         })
         .on('click', function(event, d) {
             event.stopPropagation();
-            // Hide tooltip when session is clicked
+            // Close tooltip when bubble is clicked
             tooltip.style('visibility', 'hidden');
-            // Show detail panel
-            showDetailPanel(d, nav);
         });
 
     // Setup navigation handlers
