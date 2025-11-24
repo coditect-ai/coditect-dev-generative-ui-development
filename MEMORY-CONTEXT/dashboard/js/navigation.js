@@ -91,11 +91,20 @@ class NavigationController {
             return;
         }
 
-        // Parse hash: #view or #view/filter or #view/filter/id
+        // Parse hash: #view or #view/id or #view/filter/id
         const parts = hash.split('/');
         const view = parts[0];
-        const filter = parts[1] || null;
-        const id = parts[2] || null;
+
+        // For checkpoints, second part is the ID (not a filter)
+        let filter = null;
+        let id = null;
+
+        if (view === 'checkpoints' && parts[1]) {
+            id = decodeURIComponent(parts[1]);
+        } else {
+            filter = parts[1] || null;
+            id = parts[2] || null;
+        }
 
         // Validate view
         if (this.views[view]) {
@@ -482,7 +491,7 @@ class NavigationController {
                                     <div class="card-content">
                                         <p><strong>Summary:</strong> ${checkpoint.summary}</p>
                                         <p style="margin-top: var(--space-2);"><strong>Topics:</strong> ${checkpoint.top_topics.slice(0, 3).join(', ')}</p>
-                                        <button onclick="event.stopPropagation(); window.location.hash='#checkpoints/${checkpoint.id}'"
+                                        <button onclick="event.stopPropagation(); window.location.hash='#checkpoints/${encodeURIComponent(checkpoint.id)}'"
                                                 class="btn-primary" style="margin-top: var(--space-4);">
                                             View Full Details
                                         </button>
