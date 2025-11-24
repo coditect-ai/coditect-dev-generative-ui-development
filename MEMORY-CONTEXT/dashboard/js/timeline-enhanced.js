@@ -37,8 +37,8 @@ function constrainToViewport(x, y, element) {
         height = parseInt(computed.height) || 300;
     }
 
-    // Add padding for safe margins
-    const padding = 10;
+    // Add padding for safe margins - 30px minimum on all sides
+    const padding = 30;
 
     // Ensure element stays within viewport with padding
     const constrainedX = Math.max(padding, Math.min(x, viewportWidth - width - padding));
