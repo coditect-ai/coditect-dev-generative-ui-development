@@ -12,17 +12,30 @@ let timelineState = {
 
 // Constrain element position to viewport bounds
 function constrainToViewport(x, y, element) {
+    // Force layout to get accurate dimensions
+    element.offsetWidth; // Trigger reflow
+
     const rect = element.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    // Calculate actual dimensions (might be 0 if element is hidden)
-    const width = rect.width || 400; // fallback to max-width
-    const height = rect.height || 300; // reasonable fallback
+    // Get actual dimensions, fallback if not yet rendered
+    let width = rect.width;
+    let height = rect.height;
 
-    // Ensure element stays within viewport
-    const constrainedX = Math.max(10, Math.min(x, viewportWidth - width - 10));
-    const constrainedY = Math.max(10, Math.min(y, viewportHeight - height - 10));
+    // If dimensions are 0 (element not rendered), use computed style or fallback
+    if (width === 0 || height === 0) {
+        const computed = window.getComputedStyle(element);
+        width = parseInt(computed.width) || 400;
+        height = parseInt(computed.height) || 300;
+    }
+
+    // Add padding for safe margins
+    const padding = 10;
+
+    // Ensure element stays within viewport with padding
+    const constrainedX = Math.max(padding, Math.min(x, viewportWidth - width - padding));
+    const constrainedY = Math.max(padding, Math.min(y, viewportHeight - height - padding));
 
     return { x: constrainedX, y: constrainedY };
 }
@@ -269,7 +282,6 @@ function initD3TimelineEnhanced(data, nav) {
             const submodule = extractSubmodule(d.id);
 
             tooltip
-                .style('visibility', 'visible')
                 .html(`
                     <div style="color: var(--text-primary);">
                         <strong style="display: block; margin-bottom: 10px; font-size: 15px; color: var(--primary-600);">${nav.escapeHtml(d.title || d.id).substring(0, 80)}${d.title?.length > 80 ? '...' : ''}</strong>
@@ -287,6 +299,16 @@ function initD3TimelineEnhanced(data, nav) {
                         </div>
                     </div>
                 `);
+
+            // Set initial position constrained to viewport BEFORE making visible
+            const tooltipNode = tooltip.node();
+            const x = event.clientX + 20;
+            const y = event.clientY - 10;
+            const constrained = constrainToViewport(x, y, tooltipNode);
+            tooltip
+                .style('left', constrained.x + 'px')
+                .style('top', constrained.y + 'px')
+                .style('visibility', 'visible');
         })
         .on('mousemove', function(event) {
             if (!isDraggingTooltip) { // Only update position if not being dragged
@@ -310,8 +332,10 @@ function initD3TimelineEnhanced(data, nav) {
         })
         .on('click', function(event, d) {
             event.stopPropagation();
-            // Close tooltip when bubble is clicked
+            // Hide tooltip when session is clicked
             tooltip.style('visibility', 'hidden');
+            // Show detail panel
+            showDetailPanel(d, nav);
         });
 
     // Setup navigation handlers
