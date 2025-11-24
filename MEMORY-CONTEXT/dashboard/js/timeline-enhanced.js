@@ -449,9 +449,9 @@ async function initD3TimelineEnhanced(data, nav) {
         .style('border-radius', 'var(--radius-md)')
         .style('padding', 'var(--space-4)')
         .style('box-shadow', 'var(--shadow-xl)')
-        .style('pointer-events', 'auto')
+        .style('pointer-events', 'none')
         .style('cursor', 'move')
-        .style('z-index', '3000')
+        .style('z-index', '9999')
         .style('font-size', '13px')
         .style('max-width', '400px');
 
@@ -508,7 +508,9 @@ async function initD3TimelineEnhanced(data, nav) {
     // ESC key to dismiss tooltip
     d3.select('body').on('keydown', function(event) {
         if (event.key === 'Escape') {
-            tooltip.style('visibility', 'hidden');
+            tooltip
+                .style('visibility', 'hidden')
+                .style('pointer-events', 'none');
         }
     });
 
@@ -556,25 +558,26 @@ async function initD3TimelineEnhanced(data, nav) {
                 `);
 
             // Set initial position constrained to viewport BEFORE making visible
+            // Larger offset to prevent tooltip from appearing under cursor
             const tooltipNode = tooltip.node();
-            const x = event.clientX + 20;
-            const y = event.clientY - 10;
+            const x = event.clientX + 25;
+            const y = event.clientY + 25;
             const constrained = constrainToViewport(x, y, tooltipNode);
             tooltip
                 .style('left', constrained.x + 'px')
                 .style('top', constrained.y + 'px')
                 .style('visibility', 'visible');
+
+            // Enable pointer events after a short delay to allow dragging
+            setTimeout(() => {
+                if (tooltip.style('visibility') === 'visible') {
+                    tooltip.style('pointer-events', 'auto');
+                }
+            }, 100);
         })
         .on('mousemove', function(event) {
-            if (!isDraggingTooltip) { // Only update position if not being dragged
-                const tooltipNode = tooltip.node();
-                const x = event.clientX + 20;
-                const y = event.clientY - 10;
-                const constrained = constrainToViewport(x, y, tooltipNode);
-                tooltip
-                    .style('left', constrained.x + 'px')
-                    .style('top', constrained.y + 'px');
-            }
+            // Disable position updates on mousemove to prevent shaking
+            // Tooltip position is set once on mouseover
         })
         .on('mouseout', function(event, d) {
             d3.select(this)
@@ -583,12 +586,16 @@ async function initD3TimelineEnhanced(data, nav) {
                 .style('opacity', 0.75)
                 .attr('r', sizeScale(d.messageCount));
 
-            tooltip.style('visibility', 'hidden');
+            tooltip
+                .style('visibility', 'hidden')
+                .style('pointer-events', 'none');
         })
         .on('click', function(event, d) {
             event.stopPropagation();
             // Hide tooltip when session is clicked
-            tooltip.style('visibility', 'hidden');
+            tooltip
+                .style('visibility', 'hidden')
+                .style('pointer-events', 'none');
             // Show detail panel
             showDetailPanel(d, nav);
         });
@@ -648,25 +655,26 @@ async function initD3TimelineEnhanced(data, nav) {
                     </div>
                 `);
 
+            // Larger offset to prevent tooltip from appearing under cursor
             const tooltipNode = tooltip.node();
-            const x = event.clientX + 20;
-            const y = event.clientY - 10;
+            const x = event.clientX + 25;
+            const y = event.clientY + 25;
             const constrained = constrainToViewport(x, y, tooltipNode);
             tooltip
                 .style('left', constrained.x + 'px')
                 .style('top', constrained.y + 'px')
                 .style('visibility', 'visible');
+
+            // Enable pointer events after a short delay to allow dragging
+            setTimeout(() => {
+                if (tooltip.style('visibility') === 'visible') {
+                    tooltip.style('pointer-events', 'auto');
+                }
+            }, 100);
         })
         .on('mousemove', function(event) {
-            if (!isDraggingTooltip) {
-                const tooltipNode = tooltip.node();
-                const x = event.clientX + 20;
-                const y = event.clientY - 10;
-                const constrained = constrainToViewport(x, y, tooltipNode);
-                tooltip
-                    .style('left', constrained.x + 'px')
-                    .style('top', constrained.y + 'px');
-            }
+            // Disable position updates on mousemove to prevent shaking
+            // Tooltip position is set once on mouseover
         })
         .on('mouseout', function(event, d) {
             d3.select(this)
@@ -675,11 +683,15 @@ async function initD3TimelineEnhanced(data, nav) {
                 .style('opacity', 0.85)
                 .attr('d', d3.symbol().type(d3.symbolSquare).size(1024)); // Restore to 32x32 default size
 
-            tooltip.style('visibility', 'hidden');
+            tooltip
+                .style('visibility', 'hidden')
+                .style('pointer-events', 'none');
         })
         .on('click', function(event, d) {
             event.stopPropagation();
-            tooltip.style('visibility', 'hidden');
+            tooltip
+                .style('visibility', 'hidden')
+                .style('pointer-events', 'none');
             // Show commit detail panel
             showCommitDetailPanel(d, nav);
         });
