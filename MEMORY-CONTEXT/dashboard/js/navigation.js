@@ -432,13 +432,28 @@ class NavigationController {
                                     Next ►
                                 </button>
                                 <div style="flex: 1;"></div>
-                                <div>
-                                    <label for="timeline-zoom-level" style="display: block; font-weight: 600; margin-bottom: var(--space-2); color: var(--text-primary);">Zoom Level:</label>
-                                    <select id="timeline-zoom-level" class="form-control" style="min-width: 150px;">
-                                        <option value="month">Monthly View</option>
-                                        <option value="week">Weekly View</option>
-                                        <option value="day">Daily View</option>
-                                    </select>
+                                <div style="display: flex; gap: var(--space-4); align-items: flex-end;">
+                                    <div>
+                                        <label style="display: block; font-weight: 600; margin-bottom: var(--space-2); color: var(--text-primary);">Show:</label>
+                                        <div style="display: flex; gap: var(--space-3);">
+                                            <label style="display: flex; align-items: center; gap: var(--space-1); cursor: pointer;">
+                                                <input type="checkbox" id="timeline-show-sessions" checked style="cursor: pointer;" />
+                                                <span>Sessions</span>
+                                            </label>
+                                            <label style="display: flex; align-items: center; gap: var(--space-1); cursor: pointer;">
+                                                <input type="checkbox" id="timeline-show-commits" checked style="cursor: pointer;" />
+                                                <span>Commits</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="timeline-zoom-level" style="display: block; font-weight: 600; margin-bottom: var(--space-2); color: var(--text-primary);">Zoom Level:</label>
+                                        <select id="timeline-zoom-level" class="form-control" style="min-width: 150px;">
+                                            <option value="month">Monthly View</option>
+                                            <option value="week">Weekly View</option>
+                                            <option value="day">Daily View</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                             <div id="timeline-period-info" style="padding: var(--space-2); background: var(--primary-100); border-radius: var(--radius-sm); font-size: var(--text-sm); margin-bottom: var(--space-4); font-weight: 600; color: var(--primary-900);"></div>
@@ -465,22 +480,57 @@ class NavigationController {
                             <h3 class="card-title">Legend</h3>
                         </div>
                         <div class="card-content">
-                            <div class="flex gap-4" style="flex-wrap: wrap;">
-                                <div class="flex items-center gap-2">
-                                    <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--primary-500);"></div>
-                                    <span>1-50 messages</span>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6);">
+                                <div>
+                                    <h4 style="margin-bottom: var(--space-2); font-size: 14px; font-weight: 600;">Sessions (Circles)</h4>
+                                    <div class="flex gap-4" style="flex-wrap: wrap;">
+                                        <div class="flex items-center gap-2">
+                                            <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--primary-500);"></div>
+                                            <span style="font-size: 13px;">1-50 messages</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div style="width: 18px; height: 18px; border-radius: 50%; background: var(--primary-500);"></div>
+                                            <span style="font-size: 13px;">51-200 messages</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary-500);"></div>
+                                            <span style="font-size: 13px;">201-500 messages</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--primary-500);"></div>
+                                            <span style="font-size: 13px;">501+ messages</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <div style="width: 18px; height: 18px; border-radius: 50%; background: var(--primary-500);"></div>
-                                    <span>51-200 messages</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary-500);"></div>
-                                    <span>201-500 messages</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--primary-500);"></div>
-                                    <span>501+ messages</span>
+                                <div>
+                                    <h4 style="margin-bottom: var(--space-2); font-size: 14px; font-weight: 600;">Git Commits (Diamonds)</h4>
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2);">
+                                        <div class="flex items-center gap-1">
+                                            <div style="width: 12px; height: 12px; background: #22c55e; transform: rotate(45deg);"></div>
+                                            <span style="font-size: 12px;">feat</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <div style="width: 12px; height: 12px; background: #ef4444; transform: rotate(45deg);"></div>
+                                            <span style="font-size: 12px;">fix</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <div style="width: 12px; height: 12px; background: #3b82f6; transform: rotate(45deg);"></div>
+                                            <span style="font-size: 12px;">docs</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <div style="width: 12px; height: 12px; background: #a855f7; transform: rotate(45deg);"></div>
+                                            <span style="font-size: 12px;">refactor</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <div style="width: 12px; height: 12px; background: #f59e0b; transform: rotate(45deg);"></div>
+                                            <span style="font-size: 12px;">test</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <div style="width: 12px; height: 12px; background: #6b7280; transform: rotate(45deg);"></div>
+                                            <span style="font-size: 12px;">chore</span>
+                                        </div>
+                                    </div>
+                                    <p style="margin-top: var(--space-2); font-size: 12px; color: var(--text-secondary);">💡 Click commits to view on GitHub</p>
                                 </div>
                             </div>
                         </div>

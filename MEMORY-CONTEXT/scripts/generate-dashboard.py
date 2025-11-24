@@ -19,9 +19,10 @@ import json
 import os
 import shutil
 import sys
+import subprocess
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Optional
 from collections import defaultdict
 import re
 
@@ -622,6 +623,135 @@ class DashboardGenerator:
 
         print(f"✓ Exported {len(commands)} commands")
         return command_data
+
+    def get_github_repo_url(self) -> Optional[str]:
+        """Extract GitHub repository URL from git remote"""
+        try:
+            result = subprocess.run(
+                ['git', 'config', '--get', 'remote.origin.url'],
+                cwd=self.db_path.parent.parent,  # Go to repo root
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            if result.returncode == 0:
+                remote_url = result.stdout.strip()
+                # Convert SSH to HTTPS URL
+                if remote_url.startswith('git@github.com:'):
+                    remote_url = remote_url.replace('git@github.com:', 'https://github.com/')
+                if remote_url.endswith('.git'):
+                    remote_url = remote_url[:-4]
+                return remote_url
+        except Exception as e:
+            print(f"  Warning: Could not extract GitHub URL: {e}")
+        return None
+
+    def export_git_commits(self, limit: int = 500) -> Dict[str, Any]:
+        """Export git commit history with GitHub links"""
+        print("\n🔧 Exporting git commits...")
+
+        commits = []
+        github_url = self.get_github_repo_url()
+
+        if not github_url:
+            print("  Warning: GitHub URL not found, commit links will be unavailable")
+
+        try:
+            # Get git log with separator to avoid JSON parsing issues
+            git_format = '%H%n%h%n%an%n%ae%n%aI%n%s%n%b%n===COMMIT_END==='
+
+            result = subprocess.run(
+                ['git', 'log', f'--pretty=format:{git_format}', f'-{limit}'],
+                cwd=self.db_path.parent.parent,  # Go to repo root
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+
+            if result.returncode == 0:
+                # Parse git log output by splitting on separator
+                commit_blocks = result.stdout.split('===COMMIT_END===')
+                commits_raw = []
+
+                for block in commit_blocks:
+                    lines = block.strip().split('\n')
+                    if len(lines) >= 6:  # Must have at least hash, short_hash, author, email, date, subject
+                        # Body is everything after subject (index 5 onwards)
+                        body_lines = lines[6:] if len(lines) > 6 else []
+                        commits_raw.append({
+                            'hash': lines[0],
+                            'short_hash': lines[1],
+                            'author': lines[2],
+                            'email': lines[3],
+                            'date': lines[4],
+                            'subject': lines[5],
+                            'body': '\n'.join(body_lines)
+                        })
+
+                for commit_raw in commits_raw:
+                    # Parse commit date
+                    commit_date = datetime.fromisoformat(commit_raw['date'].replace('Z', '+00:00'))
+
+                    # Extract commit type from subject (feat:, fix:, docs:, etc.)
+                    subject = commit_raw['subject']
+                    commit_type = 'other'
+                    if ':' in subject or '(' in subject:
+                        # Handle both "feat:" and "feat(scope):" formats
+                        type_part = subject.split(':')[0].strip().lower()
+                        if '(' in type_part:
+                            type_part = type_part.split('(')[0].strip()
+                        if type_part in ['feat', 'fix', 'docs', 'refactor', 'test', 'chore', 'ci', 'style', 'perf']:
+                            commit_type = type_part
+
+                    commit = {
+                        'hash': commit_raw['hash'],
+                        'short_hash': commit_raw['short_hash'],
+                        'author': commit_raw['author'],
+                        'email': commit_raw['email'],
+                        'date': commit_date.isoformat(),
+                        'timestamp': int(commit_date.timestamp() * 1000),  # JavaScript timestamp
+                        'subject': subject,
+                        'body': commit_raw['body'].strip(),
+                        'type': commit_type,
+                        'github_url': f"{github_url}/commit/{commit_raw['hash']}" if github_url else None
+                    }
+                    commits.append(commit)
+
+                print(f"  Found {len(commits)} commits")
+            else:
+                print(f"  Warning: git log failed: {result.stderr}")
+
+        except subprocess.TimeoutExpired:
+            print("  Warning: git log timed out")
+        except Exception as e:
+            print(f"  Warning: Could not extract git commits: {e}")
+
+        commit_data = {
+            'version': '1.0',
+            'generated_at': datetime.utcnow().isoformat() + 'Z',
+            'github_url': github_url,
+            'commits': commits,
+            'commit_types': {
+                'feat': 'New features',
+                'fix': 'Bug fixes',
+                'docs': 'Documentation',
+                'refactor': 'Code refactoring',
+                'test': 'Tests',
+                'chore': 'Maintenance',
+                'ci': 'CI/CD',
+                'style': 'Code style',
+                'perf': 'Performance',
+                'other': 'Other changes'
+            }
+        }
+
+        # Write git commits file
+        commits_file = self.output_dir / 'data' / 'git-commits.json'
+        with open(commits_file, 'w') as f:
+            json.dump(commit_data, f, indent=2)
+
+        print(f"✓ Exported {len(commits)} git commits")
+        return commit_data
 
     def copy_static_assets(self):
         """Copy CSS, JS, and asset files"""
@@ -1253,6 +1383,7 @@ def main():
         files = generator.export_files()
         checkpoints = generator.export_checkpoints()
         commands = generator.export_commands()
+        git_commits = generator.export_git_commits(limit=500)
 
         # Copy static assets (only if explicitly requested)
         if include_static:

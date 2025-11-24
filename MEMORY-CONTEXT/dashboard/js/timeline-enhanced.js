@@ -3,11 +3,14 @@
 // Timeline state
 let timelineState = {
     allData: [],
+    allCommits: [],
     currentPeriodStart: null,
     currentPeriodEnd: null,
     zoomLevel: 'month', // month, week, day
     currentTopic: '',
-    currentProject: ''
+    currentProject: '',
+    showSessions: true,
+    showCommits: true
 };
 
 // Constrain element position to viewport bounds
@@ -79,8 +82,22 @@ function makeDraggable(element) {
     });
 }
 
-function initD3TimelineEnhanced(data, nav) {
+async function initD3TimelineEnhanced(data, nav) {
     timelineState.allData = data;
+
+    // Load git commits
+    try {
+        const gitData = await window.dashboardData.loadGitCommits();
+        timelineState.allCommits = gitData.commits.map(commit => ({
+            ...commit,
+            date: new Date(commit.date),
+            type: 'commit'
+        }));
+        console.log(`✓ Loaded ${timelineState.allCommits.length} git commits`);
+    } catch (error) {
+        console.warn('⚠️  Could not load git commits:', error);
+        timelineState.allCommits = [];
+    }
 
     // Initialize period to show latest data
     if (!timelineState.currentPeriodStart) {
@@ -92,7 +109,14 @@ function initD3TimelineEnhanced(data, nav) {
     // Filter data to current period
     const periodData = data.filter(d =>
         d.date >= timelineState.currentPeriodStart &&
-        d.date <= timelineState.currentPeriodEnd
+        d.date <= timelineState.currentPeriodEnd &&
+        timelineState.showSessions
+    );
+
+    const periodCommits = timelineState.allCommits.filter(d =>
+        d.date >= timelineState.currentPeriodStart &&
+        d.date <= timelineState.currentPeriodEnd &&
+        timelineState.showCommits
     );
 
     // Update period info
@@ -338,6 +362,85 @@ function initD3TimelineEnhanced(data, nav) {
             showDetailPanel(d, nav);
         });
 
+    // Plot git commits as diamonds (separate y position to avoid overlap)
+    const commitYPosition = height + 40; // Below x-axis
+
+    svg.selectAll('.commit-marker')
+        .data(periodCommits)
+        .enter()
+        .append('path')
+        .attr('class', 'commit-marker')
+        .attr('d', d3.symbol().type(d3.symbolDiamond).size(120))
+        .attr('transform', d => `translate(${xScale(d.date)},${commitYPosition})`)
+        .style('fill', d => getCommitColor(d.type))
+        .style('opacity', 0.8)
+        .style('stroke', '#fff')
+        .style('stroke-width', '1.5px')
+        .style('cursor', 'pointer')
+        .on('mouseover', function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(150)
+                .style('opacity', 1)
+                .attr('d', d3.symbol().type(d3.symbolDiamond).size(180));
+
+            tooltip
+                .html(`
+                    <div style="color: var(--text-primary);">
+                        <strong style="display: block; margin-bottom: 10px; font-size: 15px; color: #22c55e;">
+                            🔧 ${nav.escapeHtml(d.subject).substring(0, 80)}${d.subject?.length > 80 ? '...' : ''}
+                        </strong>
+                        <div style="font-size: 13px; line-height: 1.6;">
+                            <div style="margin-bottom: 6px;"><strong>📅 Date:</strong> ${d.date.toLocaleString()}</div>
+                            <div style="margin-bottom: 6px;"><strong>👤 Author:</strong> ${d.author}</div>
+                            <div style="margin-bottom: 6px;"><strong>🏷️ Type:</strong> ${d.type}</div>
+                            <div style="margin-bottom: 6px;"><strong>🔗 Commit:</strong> <code>${d.short_hash}</code></div>
+                            ${d.body ? `<div style="margin-top: 8px; padding: 8px; background: var(--bg-secondary); border-radius: 4px; max-height: 150px; overflow-y: auto;">${nav.escapeHtml(d.body).substring(0, 300)}${d.body.length > 300 ? '...' : ''}</div>` : ''}
+                            ${d.github_url ? `<div style="margin-top: 10px; padding-top: 10px; border-top: 2px solid var(--border-primary); font-size: 12px; color: #22c55e; font-weight: 600;">
+                                🔗 Click to view on GitHub →
+                            </div>` : ''}
+                        </div>
+                    </div>
+                `);
+
+            const tooltipNode = tooltip.node();
+            const x = event.clientX + 20;
+            const y = event.clientY - 10;
+            const constrained = constrainToViewport(x, y, tooltipNode);
+            tooltip
+                .style('left', constrained.x + 'px')
+                .style('top', constrained.y + 'px')
+                .style('visibility', 'visible');
+        })
+        .on('mousemove', function(event) {
+            if (!isDraggingTooltip) {
+                const tooltipNode = tooltip.node();
+                const x = event.clientX + 20;
+                const y = event.clientY - 10;
+                const constrained = constrainToViewport(x, y, tooltipNode);
+                tooltip
+                    .style('left', constrained.x + 'px')
+                    .style('top', constrained.y + 'px');
+            }
+        })
+        .on('mouseout', function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(150)
+                .style('opacity', 0.8)
+                .attr('d', d3.symbol().type(d3.symbolDiamond).size(120));
+
+            tooltip.style('visibility', 'hidden');
+        })
+        .on('click', function(event, d) {
+            event.stopPropagation();
+            tooltip.style('visibility', 'hidden');
+            // Open GitHub link in new tab
+            if (d.github_url) {
+                window.open(d.github_url, '_blank', 'noopener,noreferrer');
+            }
+        });
+
     // Setup navigation handlers
     setupNavigationHandlers(nav);
 
@@ -346,6 +449,17 @@ function initD3TimelineEnhanced(data, nav) {
         timelineState.zoomLevel = e.target.value;
         // Recalculate period based on new zoom level
         timelineState.currentPeriodStart = calculatePeriodStart(timelineState.currentPeriodEnd, timelineState.zoomLevel);
+        initD3TimelineEnhanced(data, nav);
+    };
+
+    // Setup filter handlers
+    document.getElementById('timeline-show-sessions').onchange = (e) => {
+        timelineState.showSessions = e.target.checked;
+        initD3TimelineEnhanced(data, nav);
+    };
+
+    document.getElementById('timeline-show-commits').onchange = (e) => {
+        timelineState.showCommits = e.target.checked;
         initD3TimelineEnhanced(data, nav);
     };
 }
@@ -389,6 +503,22 @@ function getTickCount(zoomLevel) {
         default:
             return 30;
     }
+}
+
+function getCommitColor(commitType) {
+    const colors = {
+        feat: '#22c55e',      // Green
+        fix: '#ef4444',       // Red
+        docs: '#3b82f6',      // Blue
+        refactor: '#a855f7',  // Purple
+        test: '#f59e0b',      // Orange
+        chore: '#6b7280',     // Gray
+        ci: '#8b5cf6',        // Violet
+        style: '#ec4899',     // Pink
+        perf: '#10b981',      // Emerald
+        other: '#64748b'      // Slate
+    };
+    return colors[commitType] || colors.other;
 }
 
 function updatePeriodInfo() {
