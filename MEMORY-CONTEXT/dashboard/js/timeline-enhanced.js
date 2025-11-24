@@ -92,6 +92,31 @@ function positionTooltipAwayFromCursor(mouseX, mouseY, element) {
     return { x, y };
 }
 
+// Simple viewport constraint for centered panels (not tooltips)
+function constrainToViewport(x, y, element) {
+    element.offsetWidth; // Trigger reflow
+
+    const rect = element.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let width = rect.width;
+    let height = rect.height;
+
+    if (width === 0 || height === 0) {
+        const computed = window.getComputedStyle(element);
+        width = parseInt(computed.width) || 400;
+        height = parseInt(computed.height) || 300;
+    }
+
+    const padding = 30;
+
+    const constrainedX = Math.max(padding, Math.min(x, viewportWidth - width - padding));
+    const constrainedY = Math.max(padding, Math.min(y, viewportHeight - height - padding));
+
+    return { x: constrainedX, y: constrainedY };
+}
+
 // Make element draggable
 function makeDraggable(element) {
     let isDragging = false;
@@ -1186,8 +1211,153 @@ function showDetailPanel(checkpoint, nav) {
     }
 }
 
+// Show detailed session information panel
+function showDetailPanel(sessionData, nav) {
+    const panel = document.getElementById('timeline-detail-panel');
+    const content = document.getElementById('detail-panel-content');
+
+    // Format the session details
+    content.innerHTML = `
+        <div style="margin-bottom: var(--space-6);">
+            <h2 style="margin: 0 0 var(--space-4) 0; color: var(--primary-500); font-size: 24px;">
+                Session Details
+            </h2>
+            <button onclick="document.getElementById('timeline-detail-panel').style.display='none'"
+                    style="position: absolute; top: var(--space-4); right: var(--space-4); background: #ffffff; color: #24292f; font-weight: 600; font-size: 14px; padding: 10px 20px; border-radius: 6px; border: 2px solid #d0d7de; min-height: 44px; min-width: 44px; cursor: pointer; transition: all 0.2s ease;"
+                    onmouseover="this.style.background='#f6f8fa'; this.style.borderColor='#d0d7de';"
+                    onmouseout="this.style.background='#ffffff'; this.style.borderColor='#d0d7de';"
+                    onfocus="this.style.outline='3px solid #0969da'; this.style.outlineOffset='2px';"
+                    onblur="this.style.outline='none';">
+                Close
+            </button>
+        </div>
+
+        <div style="display: grid; gap: var(--space-4);">
+            <div>
+                <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Title</div>
+                <div style="font-size: 18px; color: var(--text-primary);">${sessionData.title || 'Untitled Session'}</div>
+            </div>
+
+            <div>
+                <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Date</div>
+                <div style="color: var(--text-primary);">${sessionData.date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+            </div>
+
+            <div>
+                <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Messages</div>
+                <div style="color: var(--text-primary); font-size: 20px; font-weight: 600;">${sessionData.messageCount.toLocaleString()}</div>
+            </div>
+
+            ${sessionData.filename ? `
+                <div>
+                    <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Filename</div>
+                    <div style="color: var(--text-primary); font-family: monospace; background: var(--bg-secondary); padding: var(--space-2); border-radius: var(--radius-sm);">${sessionData.filename}</div>
+                </div>
+            ` : ''}
+
+            ${sessionData.topics && sessionData.topics.length > 0 ? `
+                <div>
+                    <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Topics</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+                        ${sessionData.topics.map(topic => `
+                            <span style="background: var(--primary-100); color: var(--primary-700); padding: 4px 12px; border-radius: var(--radius-full); font-size: 13px; font-weight: 500;">
+                                ${topic}
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
+
+            ${sessionData.summary ? `
+                <div>
+                    <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Summary</div>
+                    <div style="color: var(--text-primary); line-height: 1.6;">${sessionData.summary}</div>
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    panel.style.display = 'block';
+}
+
+// Show detailed commit information panel
+function showCommitDetailPanel(commitData, nav) {
+    const panel = document.getElementById('timeline-detail-panel');
+    const content = document.getElementById('detail-panel-content');
+
+    // Format the commit details
+    content.innerHTML = `
+        <div style="margin-bottom: var(--space-6);">
+            <h2 style="margin: 0 0 var(--space-4) 0; color: var(--primary-500); font-size: 24px;">
+                Git Commit Details
+            </h2>
+            <button onclick="document.getElementById('timeline-detail-panel').style.display='none'"
+                    style="position: absolute; top: var(--space-4); right: var(--space-4); background: #ffffff; color: #24292f; font-weight: 600; font-size: 14px; padding: 10px 20px; border-radius: 6px; border: 2px solid #d0d7de; min-height: 44px; min-width: 44px; cursor: pointer; transition: all 0.2s ease;"
+                    onmouseover="this.style.background='#f6f8fa'; this.style.borderColor='#d0d7de';"
+                    onmouseout="this.style.background='#ffffff'; this.style.borderColor='#d0d7de';"
+                    onfocus="this.style.outline='3px solid #0969da'; this.style.outlineOffset='2px';"
+                    onblur="this.style.outline='none';">
+                Close
+            </button>
+        </div>
+
+        <div style="display: grid; gap: var(--space-4);">
+            ${commitData.github_url ? `
+                <div style="margin-bottom: var(--space-4);">
+                    <a href="${commitData.github_url}" target="_blank" rel="noopener noreferrer"
+                       style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #0969da; color: #ffffff; font-weight: 600; font-size: 14px; padding: 10px 16px; border-radius: 6px; text-decoration: none; border: 2px solid #0969da; min-height: 44px; min-width: 44px; transition: all 0.2s ease;"
+                       onmouseover="this.style.background='#0550ae'; this.style.borderColor='#0550ae';"
+                       onmouseout="this.style.background='#0969da'; this.style.borderColor='#0969da';"
+                       onfocus="this.style.outline='3px solid #0969da'; this.style.outlineOffset='2px';"
+                       onblur="this.style.outline='none';">
+                        <svg style="width: 20px; height: 20px; fill: #ffffff;" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        <span>View on GitHub</span>
+                    </a>
+                </div>
+            ` : ''}
+
+            <div>
+                <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Commit Message</div>
+                <div style="font-size: 16px; color: var(--text-primary); line-height: 1.6;">${commitData.message || 'No message'}</div>
+            </div>
+
+            <div>
+                <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Date</div>
+                <div style="color: var(--text-primary);">${commitData.date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+            </div>
+
+            ${commitData.author ? `
+                <div>
+                    <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Author</div>
+                    <div style="color: var(--text-primary);">${commitData.author}</div>
+                </div>
+            ` : ''}
+
+            ${commitData.hash ? `
+                <div>
+                    <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Commit Hash</div>
+                    <div style="color: var(--text-primary); font-family: monospace; background: var(--bg-secondary); padding: var(--space-2); border-radius: var(--radius-sm);">${commitData.hash}</div>
+                </div>
+            ` : ''}
+
+            ${commitData.files ? `
+                <div>
+                    <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Files Changed</div>
+                    <div style="color: var(--text-primary); font-size: 20px; font-weight: 600;">${commitData.files}</div>
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    panel.style.display = 'block';
+}
+
 // Export for use in navigation.js
 if (typeof window !== 'undefined') {
     window.initD3TimelineEnhanced = initD3TimelineEnhanced;
     window.showDateRangeModal = showDateRangeModal;
+    window.showDetailPanel = showDetailPanel;
+    window.showCommitDetailPanel = showCommitDetailPanel;
 }
