@@ -34,6 +34,22 @@ except ImportError:
     LlmConfig = None
     get_agent_config = None
 
+# Framework knowledge registration (Phase 2C)
+try:
+    from .framework_knowledge import (
+        FrameworkKnowledgeLoader,
+        ComponentMetadata,
+        FrameworkRegistry,
+        get_framework_knowledge
+    )
+    from .system_prompt_builder import SystemPromptBuilder
+except ImportError:
+    FrameworkKnowledgeLoader = None
+    ComponentMetadata = None
+    FrameworkRegistry = None
+    get_framework_knowledge = None
+    SystemPromptBuilder = None
+
 # Import providers (lazy loaded by factory)
 
 # Cloud/API providers
@@ -81,6 +97,12 @@ __all__ = [
     "AgentLlmConfig",
     "LlmConfig",
     "get_agent_config",
+    # Framework knowledge registration (Phase 2C)
+    "FrameworkKnowledgeLoader",
+    "ComponentMetadata",
+    "FrameworkRegistry",
+    "get_framework_knowledge",
+    "SystemPromptBuilder",
     # Cloud/API providers
     "AnthropicLlm",
     "OpenAILlm",

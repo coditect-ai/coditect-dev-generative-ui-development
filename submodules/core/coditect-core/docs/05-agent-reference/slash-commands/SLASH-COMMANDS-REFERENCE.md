@@ -35,6 +35,7 @@
 | /founder_mode | Experimental feature development | Work on experimental features without formal ticketing |
 | /full_review | Orchestrate comprehensive multi-dimensional code review | Coordinate multiple review agents for thorough code analysis |
 | /generate-curriculum-content | Generate comprehensive AI curriculum content | Create multi-level educational content with NotebookLM optimization |
+| /hello | A simple hello world command for testing and demonstration. | For testing and demonstration |
 | /implement | Production-ready implementation mode | Build production code with error handling, circuit breakers, observability, and tests |
 | /implement_plan | Implement Plan | Execute implementation based on existing plan |
 | /incident_response | Orchestrate multi-agent incident response with modern SRE practices | Coordinate incident response with rapid resolution strategies |
@@ -77,7 +78,7 @@
 
 ---
 
-**Total Commands:** 72
+**Total Commands:** 73
 
 **Usage:** Type `/` in Claude Code to see available commands, or use specific commands for targeted workflows.
 

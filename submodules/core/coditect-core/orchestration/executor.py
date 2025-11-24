@@ -68,6 +68,13 @@ try:
 except ImportError:
     AGENT_LLM_CONFIG_AVAILABLE = False
 
+# Import Framework Knowledge System (Phase 2C)
+try:
+    from llm_abstractions import SystemPromptBuilder, get_framework_knowledge
+    FRAMEWORK_KNOWLEDGE_AVAILABLE = True
+except ImportError:
+    FRAMEWORK_KNOWLEDGE_AVAILABLE = False
+
 
 class ExecutionStatus(str, Enum):
     """Status of task execution."""
@@ -340,53 +347,105 @@ class TaskExecutor:
         """
         Execute task via direct API call (async).
 
+        Phase 2C: Injects framework knowledge into system prompts for LLM awareness.
+        Phase 2A: Uses agent-llm-bindings.yaml to map agents to optimal LLM providers.
         Phase 1C: Uses LlmFactory for direct LLM integration (7 providers).
         Falls back to script-based execution if LLM abstraction unavailable.
 
+        Agent-LLM Binding Process:
+            1. Get agent ID from agent_config.name
+            2. Load agent-llm-bindings.yaml configuration
+            3. Get LLM config for agent (provider, model, API key, etc.)
+            4. Instantiate LLM via LlmFactory
+            5. Build framework-aware system prompt (Phase 2C)
+            6. Execute task and return result
+
+        Framework Knowledge Injection (Phase 2C):
+            - Loads component metadata (agents, skills, commands, scripts)
+            - Builds task-specific system prompts with framework awareness
+            - Enables LLMs to recommend appropriate components
+            - Provides proper invocation syntax and usage examples
+
         Supported Providers:
-            - Anthropic Claude (claude-3-5-sonnet-20241022, etc.)
-            - OpenAI GPT (gpt-4o, gpt-5.1-codex-max, etc.)
-            - Google Gemini (gemini-2.0-flash, etc.)
-            - Hugging Face (Llama 3, Mistral, etc.)
-            - Ollama (local - llama3.2, codellama, etc.)
+            - Anthropic Claude (claude-3-5-sonnet-20241022, claude-3-5-haiku-20241022, etc.)
+            - OpenAI GPT (gpt-4o, gpt-4, etc.)
+            - Google Gemini (gemini-pro, gemini-pro-vision, etc.)
+            - Hugging Face (100,000+ models)
+            - Ollama (local - llama3.2, codellama, mistral, etc.)
             - LM Studio (local - any GGUF model)
 
         Args:
             task: Task to execute
-            agent_config: Agent configuration
+            agent_config: Agent configuration (agent_config.name used for binding lookup)
             result: Execution result (in progress)
 
         Returns:
-            Updated ExecutionResult
+            Updated ExecutionResult with execution_method="llm_bindings", framework_aware=True
         """
         result.status = ExecutionStatus.IN_PROGRESS
 
-        # Phase 1C: Try direct LLM integration first
-        if LLM_ABSTRACTIONS_AVAILABLE:
+        # Phase 2A: Try agent-LLM bindings first (if available)
+        if LLM_ABSTRACTIONS_AVAILABLE and AGENT_LLM_CONFIG_AVAILABLE:
             try:
-                # Handle both enum and string agent types
-                agent_type_str = (agent_config.agent_type.value
-                                if hasattr(agent_config.agent_type, 'value')
-                                else agent_config.agent_type)
+                # Get agent ID from agent_config.name
+                agent_id = agent_config.name
 
-                # Get LLM provider from factory
+                # Load agent-specific LLM configuration
+                config_loader = AgentLlmConfig.get_instance()
+                llm_config = config_loader.get_agent_config(agent_id)
+
+                # Get LLM provider from factory using agent's config
                 llm = LlmFactory.get_provider(
-                    agent_type=agent_type_str,
-                    model=agent_config.model,
-                    api_key=agent_config.api_key,
-                    max_tokens=agent_config.metadata.get("max_tokens", 4096),
-                    temperature=agent_config.metadata.get("temperature", 0.7)
+                    agent_type=llm_config.provider,
+                    model=llm_config.model,
+                    api_key=llm_config.api_key,
+                    max_tokens=llm_config.max_tokens,
+                    temperature=llm_config.temperature
                 )
 
                 # Prepare messages from task
                 messages = []
 
-                # Add system prompt if available
-                if agent_config.metadata.get("system_prompt"):
-                    messages.append({
-                        "role": "system",
-                        "content": agent_config.metadata["system_prompt"]
-                    })
+                # Phase 2C: Build framework-aware system prompt
+                if FRAMEWORK_KNOWLEDGE_AVAILABLE:
+                    try:
+                        prompt_builder = SystemPromptBuilder()
+
+                        # Determine task type from metadata
+                        task_type = task.metadata.get("task_type", "general")
+
+                        # Build comprehensive system prompt with framework knowledge
+                        system_prompt = prompt_builder.build_prompt(
+                            task_type=task_type,
+                            include_agents=True,
+                            include_skills=True,
+                            include_commands=True,
+                            custom_context=agent_config.metadata.get("system_prompt")
+                        )
+
+                        messages.append({
+                            "role": "system",
+                            "content": system_prompt
+                        })
+
+                        result.metadata["framework_aware"] = True  # Phase 2C
+                    except Exception as e:
+                        # Fallback to basic prompt if framework knowledge fails
+                        print(f"⚠️  Framework knowledge injection failed: {e}")
+                        if agent_config.metadata.get("system_prompt"):
+                            messages.append({
+                                "role": "system",
+                                "content": agent_config.metadata["system_prompt"]
+                            })
+                        result.metadata["framework_aware"] = False
+                else:
+                    # Fallback: Add system prompt if available (original behavior)
+                    if agent_config.metadata.get("system_prompt"):
+                        messages.append({
+                            "role": "system",
+                            "content": agent_config.metadata["system_prompt"]
+                        })
+                    result.metadata["framework_aware"] = False
 
                 # Add task description as user message
                 messages.append({
@@ -408,11 +467,18 @@ class TaskExecutor:
                 result.status = ExecutionStatus.SUCCESS
                 result.output = response
                 result.completed_at = datetime.now()
-                result.metadata["execution_method"] = "llm_factory"
-                result.metadata["provider"] = agent_type_str
-                result.metadata["model"] = agent_config.model
+                result.metadata["execution_method"] = "llm_bindings"  # Phase 2A
+                result.metadata["provider"] = llm_config.provider
+                result.metadata["model"] = llm_config.model
+                result.metadata["agent_id"] = agent_id
+                result.metadata["binding_source"] = "agent-llm-bindings.yaml"
 
                 return result
+
+            except FileNotFoundError as e:
+                # Bindings file not found - this is OK, fallback to script
+                print(f"⚠️  Agent-LLM bindings not found (will use script fallback): {e}")
+                result.metadata["bindings_error"] = "bindings_file_not_found"
 
             except ValueError as e:
                 # Provider not registered - fall back to script

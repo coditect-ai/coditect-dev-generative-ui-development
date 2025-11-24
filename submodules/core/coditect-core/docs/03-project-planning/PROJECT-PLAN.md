@@ -842,6 +842,16 @@ Phase 1C implemented a comprehensive multi-provider LLM integration system that 
 - Connect `/analyze`, `/implement`, etc. to agents
 - Route commands → agents → LLMs
 - Return results to user
+- Programmatic command execution via Python API
+
+**Phase 2B.1: REST API for Commands (2-3 days)**
+- FastAPI/Flask REST endpoints for command execution
+- WebSocket support for streaming results
+- JWT authentication and API key management
+- Rate limiting and quota enforcement
+- OpenAPI/Swagger documentation
+- API client SDK (Python)
+- Integration tests for all endpoints
 
 **Phase 2C: Skill Execution Pipeline (2-3 days)**
 - Convert 26 skills to executable Python
@@ -857,7 +867,7 @@ Phase 1C implemented a comprehensive multi-provider LLM integration system that 
 - Task Queue Manager
 - Full autonomous operation
 
-**Total Phase 2 Timeline:** 20-26 days
+**Total Phase 2 Timeline:** 22-29 days
 
 #### Success Criteria
 

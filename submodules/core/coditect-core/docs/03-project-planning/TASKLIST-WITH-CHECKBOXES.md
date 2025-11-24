@@ -627,13 +627,73 @@ This TASKLIST tracks the operational status of all CODITECT Core components and 
 - [ ] Implement AgentLlmConfig loader
 - [ ] Test with 5-10 agents
 
-**Phase 2B: Slash Command Pipeline (3-4 days) - PENDING**
-- [ ] Design command → agent → LLM routing
-- [ ] Connect /analyze to agents via LLMs
-- [ ] Connect /implement to agents via LLMs
-- [ ] Connect other commands to agents
-- [ ] Return results to user
-- [ ] Test all command workflows
+**Phase 2B: Slash Command Pipeline (3-4 days) - COMPLETE ✅**
+- [x] Design command → agent → LLM routing
+- [x] Implement CommandResult data structures
+- [x] Implement CommandSpec registry
+- [x] Implement CommandParser
+- [x] Implement SlashCommandRouter class
+- [x] Connect /analyze to code-reviewer agent
+- [x] Connect /implement to rust-expert-developer agent
+- [x] Connect /research to web-search-researcher agent
+- [x] Connect /strategy to software-design-architect agent
+- [x] Connect /optimize to senior-architect agent
+- [x] Connect /document to codi-documentation-writer agent
+- [x] Connect /new-project to orchestrator agent
+- [x] Integrate with TaskExecutor and Phase 2A bindings
+- [x] Write comprehensive tests (29 tests, 100% passing)
+- [x] Document slash command pipeline
+
+**Phase 2B.1: REST API for Commands (2-3 days) - PENDING**
+
+**Day 1: API Foundation**
+- [ ] Choose framework (FastAPI recommended for async + OpenAPI)
+- [ ] Setup project structure for API module
+- [ ] Design REST API schema and endpoints
+  - [ ] POST /api/v1/commands/execute
+  - [ ] GET /api/v1/commands/{command_id}/status
+  - [ ] GET /api/v1/commands/list
+  - [ ] GET /api/v1/commands/{name}/help
+  - [ ] WebSocket /api/v1/commands/stream
+- [ ] Implement core FastAPI application
+- [ ] Add CORS configuration
+- [ ] Add error handling middleware
+
+**Day 2: Authentication & Rate Limiting**
+- [ ] Design JWT authentication system
+- [ ] Implement API key generation and management
+- [ ] Add authentication middleware
+- [ ] Implement rate limiting (Redis-based)
+  - [ ] Per-user quotas
+  - [ ] Per-endpoint throttling
+- [ ] Add quota tracking and enforcement
+- [ ] Create admin endpoints for key management
+
+**Day 3: WebSocket & Documentation**
+- [ ] Implement WebSocket endpoint for streaming results
+- [ ] Add streaming support to CommandRouter
+- [ ] Generate OpenAPI/Swagger documentation
+- [ ] Create Postman collection
+- [ ] Write API client SDK (Python)
+  - [ ] Synchronous client
+  - [ ] Async client
+  - [ ] WebSocket client
+- [ ] Write integration tests
+  - [ ] Test all endpoints
+  - [ ] Test authentication
+  - [ ] Test rate limiting
+  - [ ] Test WebSocket streaming
+- [ ] Document API usage and examples
+
+**Deliverables:**
+- [ ] FastAPI application (api/main.py)
+- [ ] Authentication system (api/auth.py)
+- [ ] Rate limiting (api/rate_limit.py)
+- [ ] WebSocket handler (api/websocket.py)
+- [ ] Python SDK (api/client.py)
+- [ ] OpenAPI spec (api/openapi.json)
+- [ ] Integration tests (tests/test_api.py)
+- [ ] API documentation (docs/API.md)
 
 **Phase 2C: Skill Execution Pipeline (2-3 days) - PENDING**
 - [ ] Convert skills to executable Python
@@ -1615,55 +1675,56 @@ Complete design documentation created (Nov 22, 2025):
 
 **Completed:**
 - Phase 0: 350+ tasks (Foundation)
-- Phase 1C: 100+ tasks (LLM Integration)
-- **Total Completed: 450+ tasks**
+- Phase 1C: 100+ tasks (7 LLM Providers)
+- Phase 2A: 15+ tasks (Agent-LLM Bindings)
+- Phase 2B: 30+ tasks (Slash Command Pipeline)
+- Phase 2C: 20+ tasks (Framework Knowledge Registration)
+- **Total Completed: 515+ tasks ✅**
 
 **In Planning:** 8 tasks (Phase 0.5 pre-implementation analysis)
 
 **Pending:**
 - Phase 0.5 (Hooks): 50+ tasks (7 weeks, can start immediately)
-- Phase 2 (LLM Integration): 25+ tasks (20-26 days, depends on Phase 1C ✅)
+- Phase 2 (LLM Integration): 10+ tasks remaining (5-7 days, Phase 2A/2B/2C complete ✅)
+  - Phase 2B.1 (REST API): 25 tasks (2-3 days)
+  - Phase 2D (Memory Integration): 10 tasks (3-4 days)
+  - Phase 2E (Multi-Agent Orchestration): 45 tasks (8-10 days)
 - Phase 1 (Foundation Infrastructure): 45+ tasks (8 weeks)
 - Phase 2 (Resilience): 30+ tasks (4 weeks)
 - Phase 3 (Observability): 30+ tasks (4 weeks)
 - Phase 4 (Production): 25+ tasks (4 weeks)
 - Phase 5 (Universal Agents): 50+ tasks (12 weeks)
 
-**Total:** 705+ tasks (Phase 0-5 inclusive, Phase 1C complete)
+**Total:** 730+ tasks (Phase 0-5 inclusive, Phase 1C/2A/2B/2C complete ✅)
 
 ### Next Immediate Actions
 
 **Immediate (This Week - Nov 23-30, 2025):**
 
 **✅ PHASE 1C COMPLETE (Nov 23)** - All 7 LLM providers operational
+**✅ PHASE 2A COMPLETE (Nov 23)** - Agent-to-LLM bindings operational (14 agents mapped)
+**✅ PHASE 2B COMPLETE (Nov 23)** - Slash command pipeline operational (7 commands, 29 tests)
+**✅ PHASE 2C COMPLETE (Nov 23)** - Framework knowledge registration operational (188 components)
 
-**NEXT: Phase 2 - LLM Integration (20-26 days) - START NOW:**
+**NEXT: Phase 2 - LLM Integration (22-29 days) - CONTINUE:**
 
-1. **Phase 2A: Agent-to-LLM Bindings (2-3 days) - START THIS WEEK**
-   - [ ] Design agent-llm-bindings.yaml schema
-   - [ ] Create .claude/config/agent-llm-bindings.yaml
-   - [ ] Map first 10 agents to LLM providers:
-     - ai-specialist → anthropic-claude (claude-3-5-sonnet)
-     - rust-expert-developer → openai-gpt (gpt-4o)
-     - codebase-locator → ollama (llama3.2) - fast, local, cheap
-     - orchestrator → anthropic-claude (claude-3-5-sonnet)
-     - senior-architect → openai-gpt (gpt-4o)
-     - research-agent → google-gemini (gemini-pro) - free
-     - codebase-analyzer → ollama (llama3.2)
-     - qa-reviewer → anthropic-claude (claude-3-5-haiku) - fast, cheap
-     - documentation-writer → openai-gpt (gpt-4o)
-     - web-search-researcher → search-augmented + anthropic-claude
-   - [ ] Implement AgentLlmConfig loader class
-   - [ ] Test bindings with 5 agents
-   - [ ] Document binding configuration
+1. **Phase 2B.1: REST API for Commands (2-3 days) - START THIS WEEK**
+   - [ ] Design REST API schema and endpoints (POST /execute, GET /status, WebSocket /stream)
+   - [ ] Implement FastAPI application with authentication
+   - [ ] Add JWT authentication and API key management
+   - [ ] Implement rate limiting (Redis-based)
+   - [ ] Add WebSocket support for streaming results
+   - [ ] Generate OpenAPI/Swagger documentation
+   - [ ] Create Python SDK for API client
+   - [ ] Write integration tests for all endpoints
+   - [ ] Document REST API usage and examples
 
-2. **Phase 2B: Slash Command Pipeline (3-4 days) - NEXT WEEK**
-   - [ ] Design command → agent → LLM routing architecture
-   - [ ] Implement SlashCommandRouter class
-   - [ ] Connect /analyze command to code-reviewer agent
-   - [ ] Connect /implement command to rust-expert-developer agent
-   - [ ] Test command execution end-to-end
-   - [ ] Document command pipeline
+2. **Phase 2D: Memory Integration (3-4 days) - WEEK OF DEC 2**
+   - [ ] Setup ChromaDB for vector search
+   - [ ] Index 7,507+ messages from MEMORY-CONTEXT
+   - [ ] Implement semantic search for context retrieval
+   - [ ] Inject relevant context into LLM prompts
+   - [ ] Test memory retrieval and relevance
 
 **Phase 0.5: Hooks (Parallel Path - Can Start Immediately):**
 1. [ ] Review and approve hooks implementation roadmap

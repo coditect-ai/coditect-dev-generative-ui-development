@@ -6,7 +6,7 @@ Architecture Decision Records (ADRs) documenting key architectural decisions for
 
 **Purpose:** Document significant architectural decisions with context, alternatives considered, and rationale to enable future developers to understand "why" decisions were made, not just "what" was decided.
 
-**Status:** Active (1 ADR documented as of 2025-11-23)
+**Status:** Active (3 ADRs documented as of 2025-11-23)
 
 ---
 
@@ -35,6 +35,58 @@ Architecture Decision Records (ADRs) documenting key architectural decisions for
 - [PROJECT-PLAN-EXECUTOR-REFACTORING.md](../../../PROJECT-PLAN-EXECUTOR-REFACTORING.md)
 - [ASYNC-EXECUTOR-STRATEGIC-PLAN.md](../../ASYNC-EXECUTOR-STRATEGIC-PLAN.md)
 - [docs/03-project-planning/PROJECT-PLAN.md](../../03-project-planning/PROJECT-PLAN.md)
+
+---
+
+### ADR-002: Hybrid Deployment Architecture ✅ ACCEPTED
+
+**File:** [ADR-002-hybrid-deployment-architecture.md](ADR-002-hybrid-deployment-architecture.md)
+
+**Date:** 2025-11-23
+
+**Status:** ✅ ACCEPTED
+
+**Decision:** CODITECT will use a HYBRID DEPLOYMENT MODEL (local-first execution + cloud services) similar to Docker Desktop, Figma Desktop, and Postman.
+
+**Context:** CODITECT is AZ1.AI INC's flagship product requiring deployment architecture that balances developer preferences (local-first), revenue model (SaaS subscriptions), enterprise needs (on-premise), and competitive positioning.
+
+**Impact:**
+- ✅ Local-first execution (privacy, performance, offline work)
+- ✅ Cloud-based licensing and collaboration
+- ✅ Enterprise on-premise deployment option
+- ✅ SaaS revenue model with subscription tiers (Free, Pro, Team, Enterprise)
+- 📊 4 deployment options: Free (local only), Pro (local + cloud sync), Team (collaboration), Enterprise (on-premise)
+
+**Diagrams:**
+- [Hybrid Architecture Overview](../diagrams/adr-002-deployment/01-hybrid-architecture-overview.md)
+- [Deployment Options Comparison](../diagrams/adr-002-deployment/02-deployment-options.md)
+- [Cloud Services Architecture](../diagrams/adr-002-deployment/03-cloud-services.md)
+
+---
+
+### ADR-003: User Registration and Authentication ✅ ACCEPTED
+
+**File:** [ADR-003-user-registration-authentication.md](ADR-003-user-registration-authentication.md)
+
+**Date:** 2025-11-23
+
+**Status:** ✅ ACCEPTED
+
+**Decision:** Multi-layered authentication system with Firebase Auth (primary), JWT tokens (API access), and enterprise SSO (SAML/OIDC).
+
+**Context:** CODITECT requires robust user identity and authentication supporting cloud registration, local engine auth, multi-tier access, enterprise SSO, API security, and account management.
+
+**Impact:**
+- ✅ Industry-standard security (OWASP Top 10 compliance)
+- ✅ Multiple auth methods (email/password, OAuth, SSO)
+- ✅ JWT tokens with 1-hour access tokens + 30-day refresh tokens
+- ✅ Enterprise SSO (SAML 2.0, OAuth 2.0/OIDC)
+- ✅ Multi-factor authentication (TOTP)
+- ✅ Session management with device tracking
+- 🔐 bcrypt password hashing (12 rounds), offline mode with 7-day grace period
+
+**Diagrams:**
+- [Authentication Flows](../diagrams/adr-003-authentication/01-authentication-flows.md)
 
 ---
 
@@ -127,13 +179,14 @@ Related Documents: [List related docs]
 
 ## Statistics
 
-- **Total ADRs:** 1
+- **Total ADRs:** 3
 - **Status Breakdown:**
-  - ✅ ACCEPTED: 1 (100%)
+  - ✅ ACCEPTED: 3 (100%)
   - 📋 PROPOSED: 0
   - 🚫 DEPRECATED: 0
   - ⏭️ SUPERSEDED: 0
-- **Total Documentation:** ~30K words
+- **Total Documentation:** ~70K words (ADR-001: 30K, ADR-002: 25K, ADR-003: 15K)
+- **Total Diagrams:** 4 (ADR-002: 3, ADR-003: 1)
 - **Last Updated:** 2025-11-23
 
 ---

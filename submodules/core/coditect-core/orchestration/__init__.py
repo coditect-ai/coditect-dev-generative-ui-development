@@ -85,6 +85,20 @@ from .executor import (
     ParallelExecutor,
 )
 
+# Phase 2B: Slash Command Pipeline
+from .command_router import (
+    SlashCommandRouter,
+    CommandParser,
+    get_command_router,
+)
+
+from .command_result import (
+    CommandResult,
+    CommandStatus,
+    CommandSpec,
+    COMMAND_REGISTRY,
+)
+
 __all__ = [
     # Core classes
     "ProjectOrchestrator",
@@ -95,6 +109,11 @@ __all__ = [
     "TaskExecutor",
     "ParallelExecutor",
 
+    # Phase 2B: Command Router
+    "SlashCommandRouter",
+    "CommandParser",
+    "get_command_router",
+
     # Enums
     "TaskPriority",
     "TaskStatus",
@@ -102,10 +121,16 @@ __all__ = [
     "StateFormatVersion",
     "AgentType",
     "AgentInterface",
+    "CommandStatus",
 
     # Data classes
     "BackupMetadata",
     "ExecutionResult",
+    "CommandResult",
+    "CommandSpec",
+
+    # Constants
+    "COMMAND_REGISTRY",
 
     # Exceptions
     "DependencyError",
