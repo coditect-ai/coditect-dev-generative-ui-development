@@ -172,7 +172,8 @@ class DashboardDataManager {
             topics: 'data/topics.json',
             files: 'data/files.json',
             checkpoints: 'data/checkpoints.json',
-            commands: 'data/commands.json'
+            commands: 'data/commands.json',
+            gitCommits: 'data/git-commits.json'
         };
     }
 
@@ -235,6 +236,96 @@ class DashboardDataManager {
     }
 
     /**
+     * Load checkpoint markdown file with git commit data
+     */
+    async loadCheckpointMarkdown(checkpointId) {
+        console.log(`📄 Loading checkpoint markdown: ${checkpointId}`);
+
+        // Try different possible paths
+        const possiblePaths = [
+            `../checkpoints/${checkpointId}.md`,
+            `../../checkpoints/${checkpointId}.md`,
+            `checkpoints/${checkpointId}.md`
+        ];
+
+        for (const path of possiblePaths) {
+            try {
+                const response = await fetch(path);
+                if (response.ok) {
+                    const markdown = await response.text();
+                    console.log(`✓ Loaded checkpoint markdown from ${path}`);
+                    return this.parseCheckpointMarkdown(markdown);
+                }
+            } catch (error) {
+                // Continue to next path
+            }
+        }
+
+        console.warn(`⚠️  Could not load checkpoint markdown for ${checkpointId}`);
+        return null;
+    }
+
+    /**
+     * Parse checkpoint markdown to extract git data
+     */
+    parseCheckpointMarkdown(markdown) {
+        const data = {
+            commits: [],
+            branch: '',
+            workingDirStatus: '',
+            submodules: [],
+            filesChanged: []
+        };
+
+        // Extract branch
+        const branchMatch = markdown.match(/### Current Branch\s*```\s*([^\s]+)\s*```/);
+        if (branchMatch) {
+            data.branch = branchMatch[1];
+        }
+
+        // Extract recent commits
+        const commitsMatch = markdown.match(/### Recent Commits\s*```\s*([\s\S]*?)```/);
+        if (commitsMatch) {
+            const commitLines = commitsMatch[1].trim().split('\n');
+            data.commits = commitLines.map(line => {
+                const match = line.match(/^([a-f0-9]+)\s+(.+)$/);
+                if (match) {
+                    return { hash: match[1], message: match[2] };
+                }
+                return null;
+            }).filter(c => c !== null);
+        }
+
+        // Extract working directory status
+        const statusMatch = markdown.match(/### Working Directory Status\s*```\s*([\s\S]*?)```/);
+        if (statusMatch) {
+            data.workingDirStatus = statusMatch[1].trim();
+        }
+
+        // Extract submodules
+        const submoduleSection = markdown.match(/### Updated Submodules.*?\n\n([\s\S]*?)(?=\n---|\n##|$)/);
+        if (submoduleSection) {
+            const submoduleBlocks = submoduleSection[1].split('\n\n**');
+            data.submodules = submoduleBlocks.map(block => {
+                const nameMatch = block.match(/^([^\*]+)/);
+                const commitMatch = block.match(/- Commit: `([^`]+)`/);
+                const latestMatch = block.match(/- Latest: ([a-f0-9]+)\s+(.+)/);
+
+                if (nameMatch) {
+                    return {
+                        name: nameMatch[1].replace('**', '').trim(),
+                        commit: commitMatch ? commitMatch[1] : '',
+                        latest: latestMatch ? { hash: latestMatch[1], message: latestMatch[2] } : null
+                    };
+                }
+                return null;
+            }).filter(s => s !== null);
+        }
+
+        return data;
+    }
+
+    /**
      * Load all commands
      */
     async loadCommands() {
@@ -250,6 +341,25 @@ class DashboardDataManager {
         console.log('📁 Loading files...');
         const data = await this.loader.load(this.dataFiles.files);
         return data;
+    }
+
+    /**
+     * Load all git commits
+     */
+    async loadGitCommits() {
+        console.log('🔀 Loading git commits...');
+        const data = await this.loader.load(this.dataFiles.gitCommits);
+        return data;
+    }
+
+    /**
+     * Load git commits for specific checkpoint
+     */
+    async loadGitCommitsForCheckpoint(checkpointId) {
+        console.log(`🔀 Loading git commits for: ${checkpointId}`);
+        const data = await this.loadGitCommits();
+        const session = data.sessions.find(s => s.checkpoint_id === checkpointId);
+        return session || null;
     }
 
     /**
