@@ -1299,9 +1299,13 @@ function showDetailPanel(sessionData, nav) {
     `;
 
     console.log('Setting session panel display to block');
-    panel.style.display = 'block';
+    panel.style.setProperty('display', 'block', 'important');
     console.log('Session panel display is now:', panel.style.display);
     console.log('Session panel computed display:', window.getComputedStyle(panel).display);
+    console.log('Session panel position:', window.getComputedStyle(panel).position);
+    console.log('Session panel top:', window.getComputedStyle(panel).top);
+    console.log('Session panel left:', window.getComputedStyle(panel).left);
+    console.log('Session panel z-index:', window.getComputedStyle(panel).zIndex);
 }
 
 // Show detailed commit information panel
@@ -1385,9 +1389,13 @@ function showCommitDetailPanel(commitData, nav) {
     `;
 
     console.log('Setting commit panel display to block');
-    panel.style.display = 'block';
+    panel.style.setProperty('display', 'block', 'important');
     console.log('Commit panel display is now:', panel.style.display);
     console.log('Commit panel computed display:', window.getComputedStyle(panel).display);
+    console.log('Commit panel position:', window.getComputedStyle(panel).position);
+    console.log('Commit panel top:', window.getComputedStyle(panel).top);
+    console.log('Commit panel left:', window.getComputedStyle(panel).left);
+    console.log('Commit panel z-index:', window.getComputedStyle(panel).zIndex);
 }
 
 // Export for use in navigation.js
