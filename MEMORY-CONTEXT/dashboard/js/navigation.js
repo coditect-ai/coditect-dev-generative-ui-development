@@ -1726,6 +1726,13 @@ class NavigationController {
                 };
             }
 
+            // Normalize directory names (case-insensitive for known directories)
+            // CHECKPOINTS -> checkpoints, SESSIONS -> sessions, etc.
+            cleanPath = cleanPath.replace(/^CHECKPOINTS\//i, 'checkpoints/')
+                                 .replace(/^SESSIONS\//i, 'sessions/')
+                                 .replace(/^EXPORTS\//i, 'exports/')
+                                 .replace(/^DOCS\//i, 'docs/');
+
             // Try multiple possible paths relative to dashboard location
             const paths = [
                 `../${cleanPath}`,              // Up from dashboard to MEMORY-CONTEXT/
@@ -1735,7 +1742,7 @@ class NavigationController {
             ];
 
             console.log(`Trying to load: ${filePath}`);
-            console.log(`Cleaned path: ${cleanPath}`);
+            console.log(`Normalized path: ${cleanPath}`);
 
             for (const path of paths) {
                 try {
