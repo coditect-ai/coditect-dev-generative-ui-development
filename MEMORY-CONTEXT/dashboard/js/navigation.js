@@ -1559,14 +1559,17 @@ class NavigationController {
                                     <span class="card-collapse-icon">▼</span>
                                 </div>
                                 <div class="card-content">
-                                    <div style="max-height: 400px; overflow-y: auto;">
+                                    <div style="max-height: 600px; overflow-y: auto;">
                                         ${cmds.slice(0, 50).map(cmd => `
-                                            <div style="padding: var(--space-2); margin: var(--space-2) 0; background: var(--bg-tertiary); border-radius: var(--radius-md); font-family: monospace; font-size: var(--text-sm);">
-                                                <div style="color: var(--primary-600); font-weight: var(--font-semibold); margin-bottom: var(--space-1);">
-                                                    ${this.escapeHtml(cmd.command_text.substring(0, 100))}${cmd.command_text.length > 100 ? '...' : ''}
+                                            <div style="padding: var(--space-3); margin: var(--space-2) 0; background: var(--bg-tertiary); border-radius: var(--radius-md); font-family: monospace; font-size: var(--text-sm); border-left: 3px solid var(--primary-500);">
+                                                <div style="color: var(--primary-600); font-weight: var(--font-semibold); margin-bottom: var(--space-2); word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word;">
+                                                    ${this.escapeHtml(cmd.command_text)}
                                                 </div>
-                                                <div style="color: var(--text-tertiary); font-size: var(--text-xs);">
-                                                    ${new Date(cmd.timestamp).toLocaleString()} • Session: ${this.escapeHtml(cmd.checkpoint_id).substring(0, 50)}...
+                                                <div style="color: var(--text-tertiary); font-size: var(--text-xs); word-wrap: break-word; overflow-wrap: break-word;">
+                                                    📅 ${new Date(cmd.timestamp).toLocaleString()}
+                                                </div>
+                                                <div style="color: var(--text-tertiary); font-size: var(--text-xs); margin-top: var(--space-1); word-wrap: break-word; overflow-wrap: break-word;">
+                                                    📂 Session: ${this.escapeHtml(cmd.checkpoint_id)}
                                                 </div>
                                             </div>
                                         `).join('')}
