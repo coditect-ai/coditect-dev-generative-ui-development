@@ -361,11 +361,12 @@ async function initD3TimelineEnhanced(data, nav) {
     if (periodCommits.length > 0) {
         svgContainer.append('text')
             .attr('x', 5)
-            .attr('y', 30)
+            .attr('y', 0)
             .style('font-size', '30px')
             .style('font-weight', '700')
             .style('fill', 'var(--text-primary)')
             .style('text-anchor', 'start')
+            .style('dominant-baseline', 'hanging')
             .text('Git Commits:');
     }
 
