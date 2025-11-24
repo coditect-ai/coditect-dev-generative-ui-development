@@ -583,6 +583,18 @@ async function initD3TimelineEnhanced(data, nav) {
     // Plot git commits as squares (separate row above sessions)
     const commitYPosition = -40; // Positioned above the chart area (negative y = above)
 
+    // Add "Git Commits:" label
+    if (periodCommits.length > 0) {
+        svg.append('text')
+            .attr('x', -60)
+            .attr('y', commitYPosition + 5)
+            .style('font-size', '13px')
+            .style('font-weight', '600')
+            .style('fill', 'var(--text-primary)')
+            .style('text-anchor', 'end')
+            .text('Git Commits:');
+    }
+
     // Group commits by date to add horizontal offset for same-day commits
     const commitsByDate = d3.group(periodCommits, d => d.date.toDateString());
     let commitIndex = 0;
