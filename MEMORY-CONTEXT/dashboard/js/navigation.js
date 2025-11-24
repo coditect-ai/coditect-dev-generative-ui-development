@@ -489,6 +489,18 @@ class NavigationController {
             `;
 
             // Initialize enhanced D3 timeline
+            if (typeof d3 === 'undefined') {
+                console.error('D3.js is not loaded. Timeline visualization requires D3.js');
+                mainContent.innerHTML += '<div class="card" style="margin-top: var(--space-4);"><div class="card-content"><p style="color: var(--error-500);">❌ D3.js library failed to load. Timeline visualization is unavailable.</p></div></div>';
+                return;
+            }
+
+            if (typeof window.initD3TimelineEnhanced !== 'function') {
+                console.error('Timeline initialization function not found');
+                mainContent.innerHTML += '<div class="card" style="margin-top: var(--space-4);"><div class="card-content"><p style="color: var(--error-500);">❌ Timeline initialization failed. Please refresh the page.</p></div></div>';
+                return;
+            }
+
             window.initD3TimelineEnhanced(timelineData, this);
 
         } catch (error) {
