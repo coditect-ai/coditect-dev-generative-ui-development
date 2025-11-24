@@ -20,7 +20,7 @@
 
 ## Work Completed
 
-(See checkpoint: `MEMORY-CONTEXT/checkpoints/2025-11-24T16-39-03Z-Automated-export-and-deduplication.md`)
+(See checkpoint: `MEMORY-CONTEXT/checkpoints/2025-11-24T20-20-01Z-Automated-export-and-deduplication.md`)
 
 ---
 
@@ -31,4 +31,4 @@ See Sprint +1 tasks in project TASKLISTs.
 ---
 
 **Session Export Format:** MEMORY-CONTEXT v1.0
-**Generated:** 2025-11-24T16-39-03Z
+**Generated:** 2025-11-24T20-20-01Z

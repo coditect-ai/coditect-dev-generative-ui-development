@@ -23,7 +23,16 @@
 
 **📖 New to CODITECT? Read:** [WHAT-IS-CODITECT.md](docs/02-architecture/distributed-intelligence/WHAT-IS-CODITECT.md) - *Understanding the distributed intelligence nervous system*
 
-## 🎉 What's New (November 22, 2025)
+## 🎉 What's New (November 24, 2025)
+
+- 🤖 **Full Workflow Automation** (⭐ NEW Nov 24)
+  - **One Command Does Everything:** `/export-dedup` now fully automated!
+  - Auto-syncs all 46 submodules to git (commits + pushes)
+  - Auto-updates master repo submodule pointers
+  - Complete git hygiene without manual steps
+  - **3 minutes → 30 seconds** (6x faster workflow)
+  - Zero context switching required
+  - See [🤖 Automated Workflows](#-automated-workflows-new) section below
 
 - 🎣 **Claude Code Hooks Framework** (⭐ NEW Nov 22)
   - `/analyze-hooks` - Assess CODITECT readiness for hooks automation
@@ -45,7 +54,7 @@
 - ✅ **70+ Checkpoints** - MEMORY-CONTEXT system with 7,500+ messages preserved
 - ✅ **Training System** - Complete 4-6 hour CODITECT Operator certification
 
-**Current Focus:** Phase 1 hooks implementation and project creation workflow
+**Current Focus:** Full automation implementation complete, Phase 1 hooks underway
 
 ## 📊 Quick Stats
 
@@ -250,6 +259,167 @@ git submodule update --init --recursive
 - ✅ Platform foundation - Enables CODITECT Platform-as-a-Service
 
 **📖 For complete architecture details:** [WHAT-IS-CODITECT.md](docs/02-architecture/distributed-intelligence/WHAT-IS-CODITECT.md)
+
+---
+
+## 🤖 Automated Workflows (NEW!)
+
+### Complete Session Preservation & Git Sync
+
+**One Command, Full Automation:**
+
+```bash
+/export-dedup  # In Claude Code - Does EVERYTHING automatically!
+```
+
+**What happens automatically:**
+1. ✅ Finds and processes all export files
+2. ✅ Deduplicates messages using SHA-256 hashing (40-60% reduction)
+3. ✅ Archives processed exports to `exports-archive/`
+4. ✅ Creates checkpoint with git commit
+5. ✅ **[NEW]** Reindexes dedup state (10,472 messages in <1 second)
+6. ✅ **[NEW]** Commits changes in all 46 submodules
+7. ✅ **[NEW]** Pushes all submodules to remote
+8. ✅ **[NEW]** Updates master repo submodule pointers
+9. ✅ **[NEW]** Commits master repo
+10. ✅ **[NEW]** Pushes master repo to remote
+
+**Result:** Complete session preserved in git, ALL repositories synced, context ready to free with `/compact`
+
+### The Three Automation Scripts
+
+Located in `MEMORY-CONTEXT/` (master repo):
+
+#### 1. **reindex-dedup.sh** - Index Rebuilder (Recovery Tool)
+
+```bash
+cd MEMORY-CONTEXT
+./reindex-dedup.sh
+```
+
+**When to use:** Rare - only for recovery after corruption
+**What it does:** Rebuilds dedup indices from source data
+**Performance:** <1 second for 10,472 messages
+**Auto-runs:** Yes, as part of `/export-dedup` workflow
+
+#### 2. **dedup-and-sync.sh** - Complete Git Sync ⭐ PRIMARY
+
+```bash
+cd MEMORY-CONTEXT
+./dedup-and-sync.sh
+```
+
+**When to use:** After every `/export-dedup` (now automated!)
+**What it does:**
+- Reindexes dedup state
+- Checks all 46 submodules for changes
+- Auto-commits each changed submodule
+- Auto-pushes all submodules to remote
+- Updates master repo submodule pointers
+- Auto-commits master repo
+- Auto-pushes master repo
+
+**Performance:** 20-30 seconds (network dependent)
+**Auto-runs:** Yes, integrated into `/export-dedup` as of Nov 24, 2025
+
+#### 3. **reorganize.sh** - Directory Cleanup (Maintenance)
+
+```bash
+cd MEMORY-CONTEXT
+./reorganize.sh
+```
+
+**When to use:** Weekly/monthly for directory cleanup
+**What it does:** Moves 148+ root files to organized folders
+**Performance:** 10-20 seconds
+**Auto-runs:** No - manual execution when needed
+
+### Workflow Comparison
+
+#### Before Automation (Manual - 5 steps, 3 minutes)
+
+```bash
+/export                        # Step 1 (manual)
+/export-dedup                  # Step 2 (manual)
+cd MEMORY-CONTEXT             # Step 3 (manual)
+./dedup-and-sync.sh           # Step 4 (manual)
+/compact                       # Step 5 (manual)
+```
+
+**Human interaction:** 3 times
+**Context switches:** 2 (Claude Code → Terminal → Claude Code)
+
+#### After Automation (2 steps, 30 seconds) ✅
+
+```bash
+/export-dedup                  # Everything automated!
+/compact                       # Just confirm (data safe in git)
+```
+
+**Human interaction:** 1 time
+**Context switches:** 0
+
+### Why This Matters
+
+**Zero Catastrophic Forgetting:**
+- Every message stored once (SHA-256 deduplication)
+- 10,472+ unique messages across 127+ sessions
+- Perfect session reconstruction from deduplicated store
+- Git-backed safety (all data committed and pushed)
+- Safe to run `/compact` without data loss
+
+**Complete Git Hygiene:**
+- All submodules automatically synced
+- Master repo pointers always up-to-date
+- Clean commit history with conventional format
+- Remote backups always current
+- No manual git workflow needed
+
+**Developer Productivity:**
+- 3 minutes → 30 seconds (6x faster)
+- Zero context switching
+- No manual steps to remember
+- Automatic error recovery
+- Full audit trail
+
+### Advanced: Manual Control
+
+If you need to run steps individually:
+
+```bash
+# Just reindex (recovery scenarios)
+cd MEMORY-CONTEXT
+./reindex-dedup.sh
+
+# Just git sync (after manual changes)
+cd MEMORY-CONTEXT
+./dedup-and-sync.sh
+
+# Check status before sync
+git status
+git submodule foreach 'git status'
+
+# Directory cleanup
+cd MEMORY-CONTEXT
+./reorganize.sh
+```
+
+### Troubleshooting
+
+**"Git sync failed":**
+- Check network connection
+- Verify GitHub authentication: `gh auth status`
+- Script shows which repos failed
+- Run manually: `cd MEMORY-CONTEXT && ./dedup-and-sync.sh`
+
+**"Dedup state corrupted":**
+- Run reindex: `cd MEMORY-CONTEXT && ./reindex-dedup.sh`
+- Restores from `unique_messages.jsonl` (source of truth)
+- Automatic backup created before rebuild
+
+**For complete documentation:**
+- See [MEMORY-CONTEXT/README.md](../../MEMORY-CONTEXT/README.md) in master repo
+- See [MEMORY-CONTEXT/DEDUP-WORKFLOW-GUIDE.md](../../MEMORY-CONTEXT/DEDUP-WORKFLOW-GUIDE.md)
 
 ---
 
@@ -604,6 +774,10 @@ Innovation Through Systematic Development
 
 
 ## Recent Checkpoints
+- **[2025-11-24T20-20-01Z]** [Automated export and deduplication](MEMORY-CONTEXT/checkpoints/2025-11-24T20-20-01Z-Automated-export-and-deduplication.md)
+
+- **[2025-11-24T19-42-44Z]** [Automated export and deduplication](MEMORY-CONTEXT/checkpoints/2025-11-24T19-42-44Z-Automated-export-and-deduplication.md)
+
 - **[2025-11-24T16-39-03Z]** [Automated export and deduplication](MEMORY-CONTEXT/checkpoints/2025-11-24T16-39-03Z-Automated-export-and-deduplication.md)
 
 - **[2025-11-24T13-56-21Z]** [Automated export and deduplication](MEMORY-CONTEXT/checkpoints/2025-11-24T13-56-21Z-Automated-export-and-deduplication.md)

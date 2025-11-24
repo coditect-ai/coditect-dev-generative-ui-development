@@ -228,6 +228,46 @@ def create_backup(filepath: Path, logger: logging.Logger) -> Path:
         raise OutputError(f"Failed to create backup of {filepath}: {e}") from e
 
 
+def find_master_repo(start_path: Path) -> Path:
+    """
+    Intelligently find the master repository root.
+
+    Walks up the directory tree from start_path looking for a directory that:
+    1. Contains a .git directory (is a git repo)
+    2. Contains a submodules/ directory (is the master repo with submodules)
+
+    This allows the script to work from anywhere:
+    - Run from PROJECTS folder
+    - Run from master repo
+    - Run from any submodule
+    - Run from any subdirectory
+
+    Args:
+        start_path: Starting point for search (usually script location)
+
+    Returns:
+        Path to master repo root, or None if not found
+    """
+    current = start_path if start_path.is_dir() else start_path.parent
+
+    # Walk up directory tree (max 10 levels to prevent infinite loop)
+    for _ in range(10):
+        # Check if this directory is the master repo
+        has_git = (current / ".git").exists()
+        has_submodules = (current / "submodules").exists() and (current / "submodules").is_dir()
+
+        if has_git and has_submodules:
+            return current
+
+        # Move up one level
+        parent = current.parent
+        if parent == current:  # Reached filesystem root
+            break
+        current = parent
+
+    return None
+
+
 def verify_script_exists(script_path: Path) -> None:
     """
     Verify export-dedup.py script exists.
@@ -386,8 +426,13 @@ def main() -> int:
     # Initialize graceful exit handler
     graceful_exit = GracefulExit()
 
-    # Paths
-    repo_root = Path(__file__).resolve().parent.parent.parent.parent.parent
+    # Paths - Smart repo detection
+    repo_root = find_master_repo(Path(__file__).resolve())
+    if not repo_root:
+        logger.error("❌ Could not find master repository root")
+        logger.error("   Looking for directory with .git and submodules/")
+        return 1
+
     script_path = repo_root / "submodules" / "core" / "coditect-core" / "scripts" / "export-dedup.py"
     memory_context = repo_root / "MEMORY-CONTEXT"
     status_log = memory_context / "export-dedup-status.txt"
@@ -395,6 +440,11 @@ def main() -> int:
 
     # Setup logging
     logger = setup_logging(log_dir)
+
+    # Log repo detection for debugging
+    logger.info(f"✅ Master repo detected: {repo_root}")
+    logger.debug(f"   Script location: {Path(__file__).resolve()}")
+    logger.debug(f"   MEMORY-CONTEXT: {memory_context}")
 
     # Ensure MEMORY-CONTEXT exists
     try:
@@ -502,6 +552,65 @@ def main() -> int:
 
         # Print log location to user
         logger.info(f"📝 Full report saved to: {status_log.relative_to(repo_root)}\n")
+
+        # ================================================================
+        # AUTO-SYNC: Automatically sync git repositories after success
+        # ================================================================
+        if result.returncode == 0:
+            logger.info(f"{'='*80}")
+            logger.info("STEP 5: AUTO-SYNCING GIT REPOSITORIES")
+            logger.info(f"{'='*80}\n")
+
+            # Find dedup-and-sync.sh script in master repo
+            # repo_root is already the master repo (calculated at line 390)
+            memory_context_dir = repo_root / "MEMORY-CONTEXT"
+            sync_script = memory_context_dir / "dedup-and-sync.sh"
+
+            if sync_script.exists() and sync_script.is_file():
+                logger.info("🔄 Running dedup-and-sync.sh...")
+                logger.info(f"   Script: {sync_script.relative_to(repo_root)}\n")
+
+                try:
+                    # Run sync script (pass through output in real-time)
+                    sync_result = subprocess.run(
+                        [str(sync_script)],
+                        cwd=str(memory_context_dir),
+                        capture_output=False,  # Show output in real-time
+                        text=True,
+                        timeout=300  # 5 minutes max for git operations
+                    )
+
+                    if sync_result.returncode == 0:
+                        logger.info("\n✅ Git sync completed successfully!")
+                        logger.info("   All changes committed and pushed to remote\n")
+                    else:
+                        logger.warning(f"\n⚠️  Git sync exited with code {sync_result.returncode}")
+                        logger.warning("   Check output above for details")
+                        logger.warning("   You may need to run manually:\n")
+                        logger.warning(f"     cd MEMORY-CONTEXT && ./dedup-and-sync.sh\n")
+
+                except subprocess.TimeoutExpired:
+                    logger.error("\n❌ Git sync timed out (>5 minutes)")
+                    logger.error("   Network issues or too many changes")
+                    logger.error("   Run manually: cd MEMORY-CONTEXT && ./dedup-and-sync.sh\n")
+
+                except Exception as e:
+                    logger.error(f"\n❌ Git sync failed: {e}")
+                    logger.error("   Run manually: cd MEMORY-CONTEXT && ./dedup-and-sync.sh\n")
+
+            else:
+                logger.warning("\n⚠️  dedup-and-sync.sh not found")
+                logger.warning(f"   Expected location: {sync_script}")
+                logger.warning("   Skipping git sync - run manually if needed:\n")
+                logger.warning(f"     cd MEMORY-CONTEXT && ./dedup-and-sync.sh\n")
+
+        else:
+            # Export-dedup failed, don't try to sync
+            logger.info("\n⚠️  Skipping git sync (export-dedup had errors)\n")
+
+        # ================================================================
+        # End of auto-sync integration
+        # ================================================================
 
         # Exit with same code as script
         return result.returncode
