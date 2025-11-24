@@ -10,6 +10,62 @@ let timelineState = {
     currentProject: ''
 };
 
+// Constrain element position to viewport bounds
+function constrainToViewport(x, y, element) {
+    const rect = element.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Calculate actual dimensions (might be 0 if element is hidden)
+    const width = rect.width || 400; // fallback to max-width
+    const height = rect.height || 300; // reasonable fallback
+
+    // Ensure element stays within viewport
+    const constrainedX = Math.max(10, Math.min(x, viewportWidth - width - 10));
+    const constrainedY = Math.max(10, Math.min(y, viewportHeight - height - 10));
+
+    return { x: constrainedX, y: constrainedY };
+}
+
+// Make element draggable
+function makeDraggable(element) {
+    let isDragging = false;
+    let dragOffset = { x: 0, y: 0 };
+
+    element.style.cursor = 'move';
+
+    element.addEventListener('mousedown', function(event) {
+        if (event.button === 0 && event.target === this || event.target.closest('.drag-handle')) {
+            event.preventDefault();
+            event.stopPropagation();
+            isDragging = true;
+            const rect = this.getBoundingClientRect();
+            dragOffset = {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top
+            };
+            this.style.cursor = 'grabbing';
+        }
+    });
+
+    document.addEventListener('mousemove', function(event) {
+        if (isDragging) {
+            const x = event.clientX - dragOffset.x;
+            const y = event.clientY - dragOffset.y;
+            const constrained = constrainToViewport(x, y, element);
+            element.style.left = constrained.x + 'px';
+            element.style.top = constrained.y + 'px';
+        }
+    });
+
+    document.addEventListener('mouseup', function() {
+        if (isDragging) {
+            isDragging = false;
+            element.style.cursor = 'move';
+        }
+    });
+}
+
 function initD3TimelineEnhanced(data, nav) {
     timelineState.allData = data;
 
@@ -114,11 +170,11 @@ function initD3TimelineEnhanced(data, nav) {
         .style('fill', 'var(--text-primary)')
         .text('Messages per Session');
 
-    // Tooltip
+    // Tooltip with drag functionality
     const tooltip = d3.select('body')
         .append('div')
         .attr('class', 'timeline-tooltip')
-        .style('position', 'absolute')
+        .style('position', 'fixed')
         .style('visibility', 'hidden')
         .style('background', 'var(--bg-primary)')
         .style('border', '2px solid var(--primary-500)')
@@ -126,13 +182,60 @@ function initD3TimelineEnhanced(data, nav) {
         .style('padding', 'var(--space-4)')
         .style('box-shadow', 'var(--shadow-xl)')
         .style('pointer-events', 'auto')
-        .style('cursor', 'pointer')
+        .style('cursor', 'move')
         .style('z-index', '1000')
         .style('font-size', '13px')
-        .style('max-width', '400px')
-        .on('click', function() {
+        .style('max-width', '400px');
+
+    // Make tooltip draggable
+    let isDraggingTooltip = false;
+    let tooltipDragOffset = { x: 0, y: 0 };
+
+    tooltip.on('mousedown', function(event) {
+        if (event.button === 0) { // Left click only
+            event.preventDefault();
+            event.stopPropagation();
+            isDraggingTooltip = true;
+            const rect = this.getBoundingClientRect();
+            tooltipDragOffset = {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top
+            };
+            d3.select(this).style('cursor', 'grabbing');
+        }
+    });
+
+    d3.select('body').on('mousemove.tooltip-drag', function(event) {
+        if (isDraggingTooltip) {
+            const tooltipNode = tooltip.node();
+            const x = event.clientX - tooltipDragOffset.x;
+            const y = event.clientY - tooltipDragOffset.y;
+            const constrained = constrainToViewport(x, y, tooltipNode);
+            tooltip
+                .style('left', constrained.x + 'px')
+                .style('top', constrained.y + 'px');
+        }
+    });
+
+    d3.select('body').on('mouseup.tooltip-drag', function() {
+        if (isDraggingTooltip) {
+            isDraggingTooltip = false;
+            tooltip.style('cursor', 'move');
+        }
+    });
+
+    // Click to dismiss (only if not dragging)
+    let tooltipMouseDownTime = 0;
+    tooltip.on('mousedown.dismiss', function() {
+        tooltipMouseDownTime = Date.now();
+    });
+
+    tooltip.on('click', function(event) {
+        if (Date.now() - tooltipMouseDownTime < 200) { // Quick click (not drag)
+            event.stopPropagation();
             tooltip.style('visibility', 'hidden');
-        });
+        }
+    });
 
     // ESC key to dismiss tooltip
     d3.select('body').on('keydown', function(event) {
@@ -186,9 +289,15 @@ function initD3TimelineEnhanced(data, nav) {
                 `);
         })
         .on('mousemove', function(event) {
-            tooltip
-                .style('top', (event.pageY - 10) + 'px')
-                .style('left', (event.pageX + 20) + 'px');
+            if (!isDraggingTooltip) { // Only update position if not being dragged
+                const tooltipNode = tooltip.node();
+                const x = event.clientX + 20;
+                const y = event.clientY - 10;
+                const constrained = constrainToViewport(x, y, tooltipNode);
+                tooltip
+                    .style('left', constrained.x + 'px')
+                    .style('top', constrained.y + 'px');
+            }
         })
         .on('mouseout', function(event, d) {
             d3.select(this)
@@ -392,7 +501,22 @@ function showDetailPanel(checkpoint, nav) {
     `;
 
     panel.style.display = 'block';
-    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Center panel in viewport initially
+    const panelWidth = 800; // max-width from CSS
+    const panelHeight = Math.min(window.innerHeight * 0.8, panel.scrollHeight);
+    const centerX = (window.innerWidth - panelWidth) / 2;
+    const centerY = (window.innerHeight - panelHeight) / 4; // Slight bias toward top
+
+    const constrained = constrainToViewport(centerX, centerY, panel);
+    panel.style.left = constrained.x + 'px';
+    panel.style.top = constrained.y + 'px';
+
+    // Make panel draggable (only needs to be done once)
+    if (!panel.dataset.draggable) {
+        makeDraggable(panel);
+        panel.dataset.draggable = 'true';
+    }
 }
 
 // Export for use in navigation.js

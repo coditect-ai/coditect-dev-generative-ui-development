@@ -451,10 +451,10 @@ class NavigationController {
                         <div id="timeline-chart"></div>
                     </div>
 
-                    <div id="timeline-detail-panel" class="card" style="margin-top: var(--space-4); display: none;" onclick="event.target === this && (this.style.display='none')">
-                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                            <h3 class="card-title" id="timeline-detail-title">Session Details</h3>
-                            <button onclick="document.getElementById('timeline-detail-panel').style.display='none'" class="btn btn-sm btn-secondary">✕ Close</button>
+                    <div id="timeline-detail-panel" class="card" style="position: fixed; display: none; z-index: 2000; max-width: 800px; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-2xl);">
+                        <div class="card-header drag-handle" style="display: flex; justify-content: space-between; align-items: center; cursor: move; user-select: none;">
+                            <h3 class="card-title" id="timeline-detail-title" style="cursor: move;">📋 Session Details (drag to move)</h3>
+                            <button onclick="document.getElementById('timeline-detail-panel').style.display='none'" class="btn btn-sm btn-secondary" style="cursor: pointer;">✕ Close</button>
                         </div>
                         <div class="card-content" id="timeline-detail-content"></div>
                     </div>
