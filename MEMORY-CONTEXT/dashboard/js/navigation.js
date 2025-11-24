@@ -504,35 +504,19 @@ class NavigationController {
                                     </div>
                                 </div>
                                 <div>
-                                    <h4 style="margin-bottom: var(--space-2); font-size: 14px; font-weight: 600;">Git Commits (Squares - Above Timeline)</h4>
-                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2);">
-                                        <div class="flex items-center gap-1">
-                                            <div style="width: 16px; height: 16px; background: #22c55e;"></div>
-                                            <span style="font-size: 12px;">feat</span>
+                                    <h4 style="margin-bottom: var(--space-2); font-size: 14px; font-weight: 600;">Git Commits (32×32 Squares - Above Timeline)</h4>
+                                    <div style="display: flex; gap: var(--space-4); margin-bottom: var(--space-2);">
+                                        <div class="flex items-center gap-2">
+                                            <div style="width: 32px; height: 32px; background: #3b82f6; border: 3px solid #fff;"></div>
+                                            <span style="font-size: 13px; font-weight: 600;">Even Commits (Blue)</span>
                                         </div>
-                                        <div class="flex items-center gap-1">
-                                            <div style="width: 16px; height: 16px; background: #ef4444;"></div>
-                                            <span style="font-size: 12px;">fix</span>
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            <div style="width: 16px; height: 16px; background: #3b82f6;"></div>
-                                            <span style="font-size: 12px;">docs</span>
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            <div style="width: 16px; height: 16px; background: #a855f7;"></div>
-                                            <span style="font-size: 12px;">refactor</span>
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            <div style="width: 16px; height: 16px; background: #f59e0b;"></div>
-                                            <span style="font-size: 12px;">test</span>
-                                        </div>
-                                        <div class="flex items-center gap-1">
-                                            <div style="width: 16px; height: 16px; background: #6b7280;"></div>
-                                            <span style="font-size: 12px;">chore</span>
+                                        <div class="flex items-center gap-2">
+                                            <div style="width: 32px; height: 32px; background: #22c55e; border: 3px solid #fff;"></div>
+                                            <span style="font-size: 13px; font-weight: 600;">Odd Commits (Green)</span>
                                         </div>
                                     </div>
-                                    <p style="margin-top: var(--space-2); font-size: 12px; color: var(--text-secondary);">💡 Commits alternate border styles for easy differentiation</p>
-                                    <p style="margin-top: var(--space-1); font-size: 12px; color: var(--text-secondary);">🔍 Click any commit to view full details</p>
+                                    <p style="margin-top: var(--space-2); font-size: 12px; color: var(--text-secondary);">💡 Commits alternate blue/green for easy visual separation</p>
+                                    <p style="margin-top: var(--space-1); font-size: 12px; color: var(--text-secondary);">🔍 Click any commit to view full details with green GitHub button</p>
                                 </div>
                             </div>
                         </div>

@@ -374,24 +374,21 @@ async function initD3TimelineEnhanced(data, nav) {
         .enter()
         .append('path')
         .attr('class', 'commit-marker')
-        .attr('d', d3.symbol().type(d3.symbolSquare).size(256)) // Increased from 100 to 256 (16x16 pixels)
+        .attr('d', d3.symbol().type(d3.symbolSquare).size(1024)) // Increased to 1024 (32x32 pixels)
         .attr('transform', d => {
             // Add small horizontal offset for commits on same day
             const sameDayCommits = commitsByDate.get(d.date.toDateString());
             const indexInDay = sameDayCommits.indexOf(d);
-            const offset = (indexInDay - (sameDayCommits.length - 1) / 2) * 5; // 5px spacing
+            const offset = (indexInDay - (sameDayCommits.length - 1) / 2) * 8; // 8px spacing for larger squares
             return `translate(${xScale(d.date) + offset},${commitYPosition})`;
         })
-        .style('fill', d => getCommitColor(d.type))
-        .style('opacity', 0.75)
-        .style('stroke', (d, i) => {
-            // Alternate between white and darker stroke for better differentiation
-            return i % 2 === 0 ? '#fff' : '#333';
+        .style('fill', (d, i) => {
+            // Alternate between blue and green for easy differentiation
+            return i % 2 === 0 ? '#3b82f6' : '#22c55e'; // Blue (#3b82f6) and Green (#22c55e)
         })
-        .style('stroke-width', (d, i) => {
-            // Alternate stroke width for additional differentiation
-            return i % 2 === 0 ? '2px' : '3px';
-        })
+        .style('opacity', 0.85)
+        .style('stroke', '#fff')
+        .style('stroke-width', '3px')
         .style('cursor', 'pointer')
         .attr('data-commit-index', (d, i) => i)
         .on('mouseover', function(event, d) {
@@ -399,7 +396,7 @@ async function initD3TimelineEnhanced(data, nav) {
                 .transition()
                 .duration(150)
                 .style('opacity', 1)
-                .attr('d', d3.symbol().type(d3.symbolSquare).size(324)); // Increased from 150 to 324 (18x18 pixels on hover)
+                .attr('d', d3.symbol().type(d3.symbolSquare).size(1600)); // Increased to 1600 (40x40 pixels on hover)
 
             tooltip
                 .html(`
@@ -444,8 +441,8 @@ async function initD3TimelineEnhanced(data, nav) {
             d3.select(this)
                 .transition()
                 .duration(150)
-                .style('opacity', 0.75)
-                .attr('d', d3.symbol().type(d3.symbolSquare).size(256)); // Restore to new default size
+                .style('opacity', 0.85)
+                .attr('d', d3.symbol().type(d3.symbolSquare).size(1024)); // Restore to 32x32 default size
 
             tooltip.style('visibility', 'hidden');
         })
@@ -682,7 +679,7 @@ function showCommitDetailPanel(commit, nav) {
 
         <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border-primary); display: flex; gap: var(--space-3);">
             ${commit.github_url ? `
-                <a href="${commit.github_url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="flex: 1;">
+                <a href="${commit.github_url}" target="_blank" rel="noopener noreferrer" class="btn" style="flex: 1; background: #22c55e; color: white; font-weight: 600; border: 2px solid #16a34a; text-decoration: none;">
                     🔗 View on GitHub →
                 </a>
             ` : ''}
