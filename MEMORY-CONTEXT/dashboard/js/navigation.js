@@ -1580,9 +1580,32 @@ class NavigationController {
 
         this.loadFileContentForModal(filePath).then(content => {
             if (content) {
-                // Convert markdown to HTML (basic conversion)
-                const html = this.markdownToHtml(content);
-                contentEl.innerHTML = html;
+                // Check if this is an external file indicator
+                if (typeof content === 'object' && content.external) {
+                    contentEl.innerHTML = `
+                        <div style="padding: var(--space-8); text-align: center;">
+                            <div style="font-size: 3em; margin-bottom: var(--space-4);">📍</div>
+                            <h3 style="color: var(--text-primary); margin-bottom: var(--space-4);">External File</h3>
+                            <p style="color: var(--text-secondary); margin-bottom: var(--space-6); max-width: 600px; margin-left: auto; margin-right: auto;">
+                                ${this.escapeHtml(content.message)}
+                            </p>
+                            <div style="background: var(--bg-tertiary); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-6);">
+                                <div style="color: var(--text-tertiary); font-size: var(--text-sm); margin-bottom: var(--space-2);">File Location:</div>
+                                <code style="color: var(--primary-500); font-size: var(--text-base); word-break: break-all; display: block; text-align: left;">
+                                    ${this.escapeHtml(content.path)}
+                                </code>
+                            </div>
+                            <div style="color: var(--text-tertiary); font-size: var(--text-sm);">
+                                <p>This file is from a different project or directory outside the MEMORY-CONTEXT folder.</p>
+                                <p style="margin-top: var(--space-2);">To view it, please open the file directly in your editor or file manager.</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Convert markdown to HTML (basic conversion)
+                    const html = this.markdownToHtml(content);
+                    contentEl.innerHTML = html;
+                }
             } else {
                 contentEl.innerHTML = `
                     <div style="text-align: center; padding: var(--space-8); color: var(--text-tertiary);">
@@ -1609,6 +1632,9 @@ class NavigationController {
             // Clean up the path
             let cleanPath = filePath;
 
+            // Check if this is an absolute path outside MEMORY-CONTEXT
+            const isExternalPath = cleanPath.startsWith('/') && !cleanPath.startsWith('/MEMORY-CONTEXT');
+
             // Remove leading slashes and fix malformed paths
             cleanPath = cleanPath.replace(/^\/+/, '');
 
@@ -1616,6 +1642,16 @@ class NavigationController {
             if (cleanPath.startsWith('-') || cleanPath.length === 0) {
                 console.warn(`Invalid file path: ${filePath}`);
                 return null;
+            }
+
+            // If it's an external path, return a special indicator
+            if (isExternalPath) {
+                console.log(`📍 External file (outside MEMORY-CONTEXT): ${filePath}`);
+                return {
+                    external: true,
+                    path: filePath,
+                    message: 'This file is located outside the MEMORY-CONTEXT directory and cannot be previewed in the dashboard.'
+                };
             }
 
             // Try multiple possible paths relative to dashboard location
