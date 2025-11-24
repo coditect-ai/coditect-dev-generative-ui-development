@@ -1213,8 +1213,17 @@ function showDetailPanel(checkpoint, nav) {
 
 // Show detailed session information panel
 function showDetailPanel(sessionData, nav) {
+    console.log('showDetailPanel called with:', sessionData);
     const panel = document.getElementById('timeline-detail-panel');
     const content = document.getElementById('detail-panel-content');
+
+    console.log('Panel element:', panel);
+    console.log('Content element:', content);
+
+    if (!panel || !content) {
+        console.error('Panel or content element not found!');
+        return;
+    }
 
     // Format the session details
     content.innerHTML = `
@@ -1277,13 +1286,25 @@ function showDetailPanel(sessionData, nav) {
         </div>
     `;
 
+    console.log('Setting session panel display to block');
     panel.style.display = 'block';
+    console.log('Session panel display is now:', panel.style.display);
+    console.log('Session panel computed display:', window.getComputedStyle(panel).display);
 }
 
 // Show detailed commit information panel
 function showCommitDetailPanel(commitData, nav) {
+    console.log('showCommitDetailPanel called with:', commitData);
     const panel = document.getElementById('timeline-detail-panel');
     const content = document.getElementById('detail-panel-content');
+
+    console.log('Commit Panel element:', panel);
+    console.log('Commit Content element:', content);
+
+    if (!panel || !content) {
+        console.error('Commit panel or content element not found!');
+        return;
+    }
 
     // Format the commit details
     content.innerHTML = `
@@ -1351,7 +1372,10 @@ function showCommitDetailPanel(commitData, nav) {
         </div>
     `;
 
+    console.log('Setting commit panel display to block');
     panel.style.display = 'block';
+    console.log('Commit panel display is now:', panel.style.display);
+    console.log('Commit panel computed display:', window.getComputedStyle(panel).display);
 }
 
 // Export for use in navigation.js
