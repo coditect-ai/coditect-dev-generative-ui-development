@@ -26,9 +26,9 @@ This command will:
 import subprocess
 import sys
 
-# Use the new wrapper that guarantees output display
+# Use the script from coditect-core submodule (correct path)
 result = subprocess.run([
-    "python3", "scripts/export-dedup-with-status.py"
+    "python3", "submodules/core/coditect-core/scripts/export-dedup-with-status.py"
 ], cwd=".", capture_output=False, text=True)
 
 # Exit with same code
