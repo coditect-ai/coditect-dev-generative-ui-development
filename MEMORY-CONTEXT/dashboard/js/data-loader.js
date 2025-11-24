@@ -183,18 +183,19 @@ class DashboardDataManager {
         console.log('📊 Loading overview data...');
 
         try {
-            const [messages, topics, checkpoints, commands] = await Promise.all([
+            const [messages, topics, checkpoints, commands, files] = await Promise.all([
                 this.loader.load(this.dataFiles.messages),
                 this.loader.load(this.dataFiles.topics),
                 this.loader.load(this.dataFiles.checkpoints),
-                this.loader.load(this.dataFiles.commands)
+                this.loader.load(this.dataFiles.commands),
+                this.loader.load(this.dataFiles.files)
             ]);
 
             return {
                 stats: {
                     totalMessages: messages.total_messages,
                     totalCheckpoints: checkpoints.checkpoints.length,
-                    totalFiles: messages.total_files,
+                    totalFiles: files.total_files || 0,
                     totalCommands: commands.commands.length
                 },
                 recentSessions: checkpoints.checkpoints.slice(0, 5),
