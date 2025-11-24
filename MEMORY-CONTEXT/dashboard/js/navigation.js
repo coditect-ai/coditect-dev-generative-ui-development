@@ -357,11 +357,29 @@ class NavigationController {
         try {
             const checkpoints = await window.dashboardData.loadCheckpoints();
 
+            // Extract date from checkpoint ID using regex
+            const extractDateFromId = (id) => {
+                // Pattern 1: 2025-11-17T20:08:18Z (ISO timestamp)
+                const isoMatch = id.match(/(\d{4}-\d{2}-\d{2}T[\d:]+Z)/);
+                if (isoMatch) {
+                    return new Date(isoMatch[1]);
+                }
+
+                // Pattern 2: 2025-11-17 (date only)
+                const dateMatch = id.match(/(\d{4}-\d{2}-\d{2})/);
+                if (dateMatch) {
+                    return new Date(dateMatch[1] + 'T00:00:00Z');
+                }
+
+                // Fallback to current date if no pattern found
+                return new Date();
+            };
+
             // Parse dates and sort chronologically
             const timelineData = checkpoints
                 .map(c => ({
                     ...c,
-                    date: new Date(c.date || c.timestamp),
+                    date: extractDateFromId(c.id),
                     messageCount: c.message_count || 0
                 }))
                 .filter(c => !isNaN(c.date.getTime()))
