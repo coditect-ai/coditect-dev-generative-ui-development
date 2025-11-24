@@ -530,7 +530,8 @@ class NavigationController {
                                             <span style="font-size: 12px;">chore</span>
                                         </div>
                                     </div>
-                                    <p style="margin-top: var(--space-2); font-size: 12px; color: var(--text-secondary);">💡 Click commits to view on GitHub</p>
+                                    <p style="margin-top: var(--space-2); font-size: 12px; color: var(--text-secondary);">💡 Commits alternate border styles for easy differentiation</p>
+                                    <p style="margin-top: var(--space-1); font-size: 12px; color: var(--text-secondary);">🔍 Click any commit to view full details</p>
                                 </div>
                             </div>
                         </div>

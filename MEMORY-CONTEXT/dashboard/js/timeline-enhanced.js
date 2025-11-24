@@ -365,18 +365,35 @@ async function initD3TimelineEnhanced(data, nav) {
     // Plot git commits as squares (separate row above sessions)
     const commitYPosition = -40; // Positioned above the chart area (negative y = above)
 
+    // Group commits by date to add horizontal offset for same-day commits
+    const commitsByDate = d3.group(periodCommits, d => d.date.toDateString());
+    let commitIndex = 0;
+
     svg.selectAll('.commit-marker')
         .data(periodCommits)
         .enter()
         .append('path')
         .attr('class', 'commit-marker')
         .attr('d', d3.symbol().type(d3.symbolSquare).size(256)) // Increased from 100 to 256 (16x16 pixels)
-        .attr('transform', d => `translate(${xScale(d.date)},${commitYPosition})`)
+        .attr('transform', d => {
+            // Add small horizontal offset for commits on same day
+            const sameDayCommits = commitsByDate.get(d.date.toDateString());
+            const indexInDay = sameDayCommits.indexOf(d);
+            const offset = (indexInDay - (sameDayCommits.length - 1) / 2) * 5; // 5px spacing
+            return `translate(${xScale(d.date) + offset},${commitYPosition})`;
+        })
         .style('fill', d => getCommitColor(d.type))
         .style('opacity', 0.75)
-        .style('stroke', '#fff')
-        .style('stroke-width', '2px')
+        .style('stroke', (d, i) => {
+            // Alternate between white and darker stroke for better differentiation
+            return i % 2 === 0 ? '#fff' : '#333';
+        })
+        .style('stroke-width', (d, i) => {
+            // Alternate stroke width for additional differentiation
+            return i % 2 === 0 ? '2px' : '3px';
+        })
         .style('cursor', 'pointer')
+        .attr('data-commit-index', (d, i) => i)
         .on('mouseover', function(event, d) {
             d3.select(this)
                 .transition()
@@ -435,10 +452,8 @@ async function initD3TimelineEnhanced(data, nav) {
         .on('click', function(event, d) {
             event.stopPropagation();
             tooltip.style('visibility', 'hidden');
-            // Open GitHub link in new tab
-            if (d.github_url) {
-                window.open(d.github_url, '_blank', 'noopener,noreferrer');
-            }
+            // Show commit detail panel
+            showCommitDetailPanel(d, nav);
         });
 
     // Setup navigation handlers
@@ -579,6 +594,105 @@ function extractProject(id) {
 function extractSubmodule(id) {
     const match = id.match(/submodules\/[^\/]+\/([^\/]+)/i);
     return match ? match[1] : null;
+}
+
+function showCommitDetailPanel(commit, nav) {
+    const panel = document.getElementById('timeline-detail-panel');
+    const title = document.getElementById('timeline-detail-title');
+    const content = document.getElementById('timeline-detail-content');
+
+    // Set title with commit type badge
+    const typeColor = getCommitColor(commit.type);
+    title.innerHTML = `
+        <span style="display: inline-block; padding: 4px 12px; background: ${typeColor}; color: white; border-radius: 4px; font-size: 12px; font-weight: 600; margin-right: 10px;">
+            ${commit.type.toUpperCase()}
+        </span>
+        <span>${nav.escapeHtml(commit.subject)}</span>
+    `;
+
+    content.innerHTML = `
+        <div class="grid grid-cols-2" style="gap: var(--space-4); margin-bottom: var(--space-6);">
+            <div class="stat-card">
+                <h4>📅 Commit Date</h4>
+                <p class="stat-value">${commit.date.toLocaleDateString()}</p>
+                <p class="text-xs text-tertiary">${commit.date.toLocaleTimeString()}</p>
+            </div>
+            <div class="stat-card">
+                <h4>👤 Author</h4>
+                <p class="stat-value" style="font-size: 16px;">${nav.escapeHtml(commit.author)}</p>
+            </div>
+            <div class="stat-card">
+                <h4>🔗 Commit Hash</h4>
+                <p class="stat-value" style="font-family: monospace; font-size: 14px;">${commit.short_hash}</p>
+                <p class="text-xs text-tertiary">${commit.hash ? commit.hash.substring(0, 16) + '...' : ''}</p>
+            </div>
+            <div class="stat-card">
+                <h4>🏷️ Type</h4>
+                <p class="stat-value">
+                    <span style="display: inline-block; padding: 4px 12px; background: ${typeColor}; color: white; border-radius: 4px; font-size: 14px;">
+                        ${commit.type}
+                    </span>
+                </p>
+            </div>
+        </div>
+
+        <div style="margin-bottom: var(--space-4);">
+            <h4 style="margin-bottom: var(--space-2); color: var(--text-primary);">📝 Commit Message</h4>
+            <p style="color: var(--text-secondary); font-weight: 600; font-size: 15px;">${nav.escapeHtml(commit.subject)}</p>
+        </div>
+
+        ${commit.body ? `
+            <div style="margin-bottom: var(--space-4);">
+                <h4 style="margin-bottom: var(--space-2); color: var(--text-primary);">📄 Description</h4>
+                <div style="padding: var(--space-3); background: var(--bg-tertiary); border-radius: var(--radius-sm); max-height: 300px; overflow-y: auto;">
+                    <pre style="margin: 0; white-space: pre-wrap; font-family: 'SF Mono', Monaco, monospace; font-size: 13px; line-height: 1.6; color: var(--text-secondary);">${nav.escapeHtml(commit.body)}</pre>
+                </div>
+            </div>
+        ` : ''}
+
+        ${commit.files_changed && commit.files_changed.length > 0 ? `
+            <div style="margin-bottom: var(--space-4);">
+                <h4 style="margin-bottom: var(--space-2); color: var(--text-primary);">📂 Files Changed (${commit.files_changed.length})</h4>
+                <div style="max-height: 200px; overflow-y: auto; background: var(--bg-tertiary); padding: var(--space-3); border-radius: var(--radius-sm);">
+                    ${commit.files_changed.slice(0, 30).map(file => `
+                        <div style="margin-bottom: var(--space-1); font-family: monospace; font-size: 12px; color: var(--text-secondary);">
+                            📄 ${nav.escapeHtml(file)}
+                        </div>
+                    `).join('')}
+                    ${commit.files_changed.length > 30 ? `<div style="margin-top: var(--space-2); font-style: italic; color: var(--text-tertiary);">...and ${commit.files_changed.length - 30} more</div>` : ''}
+                </div>
+            </div>
+        ` : ''}
+
+        <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border-primary); display: flex; gap: var(--space-3);">
+            ${commit.github_url ? `
+                <a href="${commit.github_url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="flex: 1;">
+                    🔗 View on GitHub →
+                </a>
+            ` : ''}
+            <button onclick="document.getElementById('timeline-detail-panel').style.display='none'" class="btn" style="flex: 1;">
+                Close
+            </button>
+        </div>
+    `;
+
+    panel.style.display = 'block';
+
+    // Center panel in viewport initially
+    const panelWidth = 800; // max-width from CSS
+    const panelHeight = Math.min(window.innerHeight * 0.8, panel.scrollHeight);
+    const centerX = (window.innerWidth - panelWidth) / 2;
+    const centerY = (window.innerHeight - panelHeight) / 4; // Slight bias toward top
+
+    const constrained = constrainToViewport(centerX, centerY, panel);
+    panel.style.left = constrained.x + 'px';
+    panel.style.top = constrained.y + 'px';
+
+    // Make panel draggable (only needs to be done once)
+    if (!panel.dataset.draggable) {
+        makeDraggable(panel);
+        panel.dataset.draggable = 'true';
+    }
 }
 
 function showDetailPanel(checkpoint, nav) {
