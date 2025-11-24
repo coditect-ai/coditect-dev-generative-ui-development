@@ -340,33 +340,83 @@ class NavigationController {
         `;
     }
 
-    renderTopics(filter) {
+    async renderTopics(filter) {
         const mainContent = document.querySelector('.main-content');
 
         if (filter) {
-            // Show specific topic
+            // Show specific topic (placeholder for now - Task 1.5)
             mainContent.innerHTML = `
                 <div class="topic-detail-view">
-                    <h2>Topic: ${filter}</h2>
-                    <div style="padding: 2rem; background: #f9f9f9; border-radius: 8px; text-align: center; margin-top: 2rem;">
-                        <p><strong>Task 1.5: Message Rendering</strong></p>
-                        <p>Topic-filtered message list will be implemented next</p>
-                        <p>Shows all messages tagged with topic "${filter}"</p>
+                    <button onclick="window.location.hash='#topics'" class="btn-secondary" style="margin-bottom: var(--space-4);">
+                        ← Back to All Topics
+                    </button>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Topic: ${this.escapeHtml(filter)}</h2>
+                        </div>
+                        <div class="card-content">
+                            <p><strong>Task 1.5: Message Rendering</strong></p>
+                            <p>Topic-filtered message list will be implemented next</p>
+                            <p>Shows all messages tagged with topic "${this.escapeHtml(filter)}"</p>
+                        </div>
                     </div>
                 </div>
             `;
         } else {
             // Show all topics
-            mainContent.innerHTML = `
-                <div class="topics-view">
-                    <h2>🏷️ Topics</h2>
-                    <div id="topics-grid" style="padding: 2rem; background: #f9f9f9; border-radius: 8px; text-align: center; margin-top: 2rem;">
-                        <p><strong>Task 1.4: Data Loading</strong></p>
-                        <p>Dynamic topic grid will be loaded next</p>
-                        <p>Will display all 14 topics with statistics</p>
+            mainContent.innerHTML = '<div class="loading">Loading topics...</div>';
+
+            try {
+                const topics = await window.dashboardData.loadTopics();
+
+                mainContent.innerHTML = `
+                    <div class="topics-view">
+                        <h2>🏷️ Topics (${topics.length} total)</h2>
+
+                        <div class="grid grid-cols-3" style="gap: var(--space-4); margin-top: var(--space-6);">
+                            ${topics.map(topic => `
+                                <div class="card clickable" onclick="window.location.hash='#topics/${encodeURIComponent(topic.name)}'" style="cursor: pointer;">
+                                    <div class="card-header">
+                                        <h3 class="card-title">${this.escapeHtml(topic.display_name || topic.name)}</h3>
+                                        <div class="badge" style="background-color: ${topic.color}; color: white;">
+                                            ${topic.category}
+                                        </div>
+                                    </div>
+                                    <div class="card-content">
+                                        <p style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--primary-500); text-align: center; margin: var(--space-4) 0;">
+                                            ${topic.message_count.toLocaleString()}
+                                        </p>
+                                        <p style="text-align: center; color: var(--text-tertiary);">
+                                            ${topic.percentage}% of all messages
+                                        </p>
+                                        ${topic.top_files && topic.top_files.length > 0 ? `
+                                            <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-primary);">
+                                                <p style="font-size: var(--text-sm); font-weight: var(--font-semibold); margin-bottom: var(--space-2);">Top Files:</p>
+                                                ${topic.top_files.slice(0, 3).map(f => `
+                                                    <div style="font-size: var(--text-xs); color: var(--text-secondary); font-family: monospace; margin: var(--space-1) 0;">
+                                                        ${this.escapeHtml(f.file)} (${f.count})
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            } catch (error) {
+                mainContent.innerHTML = `
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title" style="color: var(--error-500);">Failed to Load Topics</h2>
+                        </div>
+                        <div class="card-content">
+                            <p>Error: ${error.message}</p>
+                        </div>
+                    </div>
+                `;
+            }
         }
     }
 
@@ -516,18 +566,88 @@ class NavigationController {
         }
     }
 
-    renderCommands(filter) {
+    async renderCommands(filter) {
         const mainContent = document.querySelector('.main-content');
-        mainContent.innerHTML = `
-            <div class="commands-view">
-                <h2>⚡ Commands (1,732 total)</h2>
-                <div style="padding: 2rem; background: #f9f9f9; border-radius: 8px; text-align: center; margin-top: 2rem;">
-                    <p><strong>Task 1.4: Data Loading</strong></p>
-                    <p>Command history with filtering will be implemented next</p>
-                    <p>Will display all 1,732 executed commands with timestamps</p>
+        mainContent.innerHTML = '<div class="loading">Loading commands...</div>';
+
+        try {
+            const commands = await window.dashboardData.loadCommands();
+
+            // Group by command type
+            const grouped = {};
+            commands.forEach(cmd => {
+                if (!grouped[cmd.command_type]) {
+                    grouped[cmd.command_type] = [];
+                }
+                grouped[cmd.command_type].push(cmd);
+            });
+
+            mainContent.innerHTML = `
+                <div class="commands-view">
+                    <h2>⚡ Commands (${commands.length} total)</h2>
+
+                    <div class="grid grid-cols-1" style="gap: var(--space-4); margin-top: var(--space-6);">
+                        ${Object.entries(grouped).map(([type, cmds]) => `
+                            <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')">
+                                <div class="card-header" style="cursor: pointer;">
+                                    <div>
+                                        <h3 class="card-title">${type.toUpperCase()} Commands</h3>
+                                        <p class="card-subtitle">${cmds.length} commands executed</p>
+                                    </div>
+                                    <span class="card-collapse-icon">▼</span>
+                                </div>
+                                <div class="card-content">
+                                    <div style="max-height: 400px; overflow-y: auto;">
+                                        ${cmds.slice(0, 50).map(cmd => `
+                                            <div style="padding: var(--space-2); margin: var(--space-2) 0; background: var(--bg-tertiary); border-radius: var(--radius-md); font-family: monospace; font-size: var(--text-sm);">
+                                                <div style="color: var(--primary-600); font-weight: var(--font-semibold); margin-bottom: var(--space-1);">
+                                                    ${this.escapeHtml(cmd.command_text.substring(0, 100))}${cmd.command_text.length > 100 ? '...' : ''}
+                                                </div>
+                                                <div style="color: var(--text-tertiary); font-size: var(--text-xs);">
+                                                    ${new Date(cmd.timestamp).toLocaleString()} • Session: ${this.escapeHtml(cmd.checkpoint_id).substring(0, 50)}...
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                        ${cmds.length > 50 ? `
+                                            <p class="text-sm text-tertiary" style="text-align: center; margin-top: var(--space-4);">
+                                                ... and ${cmds.length - 50} more ${type} commands
+                                            </p>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="card" style="margin-top: var(--space-6);">
+                        <div class="card-header">
+                            <h3 class="card-title">Command Statistics</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="grid grid-cols-4">
+                                ${Object.entries(grouped).map(([type, cmds]) => `
+                                    <div class="stat-card">
+                                        <h4>${type}</h4>
+                                        <p class="stat-value">${cmds.length}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        } catch (error) {
+            mainContent.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title" style="color: var(--error-500);">Failed to Load Commands</h2>
+                    </div>
+                    <div class="card-content">
+                        <p>Error: ${error.message}</p>
+                    </div>
+                </div>
+            `;
+        }
     }
 
     handleSearch(e) {
