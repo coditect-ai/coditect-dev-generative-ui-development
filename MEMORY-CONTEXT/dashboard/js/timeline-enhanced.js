@@ -558,10 +558,10 @@ async function initD3TimelineEnhanced(data, nav) {
                 `);
 
             // Set initial position constrained to viewport BEFORE making visible
-            // Larger offset to prevent tooltip from appearing under cursor
+            // Large offset to prevent tooltip from appearing under cursor or interfering with mouse events
             const tooltipNode = tooltip.node();
-            const x = event.clientX + 25;
-            const y = event.clientY + 25;
+            const x = event.clientX + 50;
+            const y = event.clientY + 50;
             const constrained = constrainToViewport(x, y, tooltipNode);
             tooltip
                 .style('left', constrained.x + 'px')
@@ -655,10 +655,10 @@ async function initD3TimelineEnhanced(data, nav) {
                     </div>
                 `);
 
-            // Larger offset to prevent tooltip from appearing under cursor
+            // Large offset to prevent tooltip from appearing under cursor or interfering with mouse events
             const tooltipNode = tooltip.node();
-            const x = event.clientX + 25;
-            const y = event.clientY + 25;
+            const x = event.clientX + 50;
+            const y = event.clientY + 50;
             const constrained = constrainToViewport(x, y, tooltipNode);
             tooltip
                 .style('left', constrained.x + 'px')
