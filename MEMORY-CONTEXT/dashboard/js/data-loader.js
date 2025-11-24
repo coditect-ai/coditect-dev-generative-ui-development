@@ -244,6 +244,15 @@ class DashboardDataManager {
     }
 
     /**
+     * Load all files
+     */
+    async loadFiles() {
+        console.log('📁 Loading files...');
+        const data = await this.loader.load(this.dataFiles.files);
+        return data;
+    }
+
+    /**
      * Load message page
      */
     async loadMessagePage(pageNum) {

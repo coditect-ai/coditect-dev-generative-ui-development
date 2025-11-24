@@ -505,19 +505,221 @@ class NavigationController {
         }
     }
 
-    renderFiles(filter) {
+    async renderFiles(filter) {
         const mainContent = document.querySelector('.main-content');
-        mainContent.innerHTML = `
-            <div class="files-view">
-                <h2>📁 Files (4,060 references)</h2>
-                <div style="padding: 2rem; background: #f9f9f9; border-radius: 8px; text-align: center; margin-top: 2rem;">
-                    <h3>File Tree Browser</h3>
-                    <p><strong>Task 2.4 (Week 2)</strong></p>
-                    <p>Hierarchical file browser will show all 4,060 referenced files</p>
-                    <p>Collapsible folders, reference counts, click to view history</p>
+        mainContent.innerHTML = '<div class="loading">Loading files...</div>';
+
+        try {
+            const filesData = await window.dashboardData.loadFiles();
+
+            // Build hierarchical tree structure
+            const tree = this.buildFileTree(filesData.files || []);
+
+            mainContent.innerHTML = `
+                <div class="files-view">
+                    <div class="section-header">
+                        <h1>📁 Files & Code References</h1>
+                        <p class="text-secondary">
+                            ${filesData.total_files.toLocaleString()} file references across ${filesData.total_unique_files.toLocaleString()} unique files
+                        </p>
+                    </div>
+
+                    <div class="card" style="margin-bottom: var(--space-4);">
+                        <div class="grid grid-cols-4">
+                            <div class="stat-card">
+                                <h4>Total References</h4>
+                                <p class="stat-value">${filesData.total_files.toLocaleString()}</p>
+                            </div>
+                            <div class="stat-card">
+                                <h4>Unique Files</h4>
+                                <p class="stat-value">${filesData.total_unique_files.toLocaleString()}</p>
+                            </div>
+                            <div class="stat-card">
+                                <h4>Most Referenced</h4>
+                                <p class="stat-value">${filesData.top_files[0]?.count || 0}×</p>
+                                <p class="text-xs" style="margin-top: var(--space-1);">${this.getFileName(filesData.top_files[0]?.path || '')}</p>
+                            </div>
+                            <div class="stat-card">
+                                <h4>File Types</h4>
+                                <p class="stat-value">${filesData.file_types?.length || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom: var(--space-4);">Top Referenced Files</h3>
+                        <div style="display: grid; gap: var(--space-2);">
+                            ${filesData.top_files.slice(0, 10).map(file => `
+                                <div class="file-item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); background: var(--bg-secondary); border-radius: var(--radius-md); transition: all var(--transition-fast);">
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="display: flex; align-items: center; gap: var(--space-2);">
+                                            <span style="font-size: 1.2em;">${this.getFileIcon(file.path)}</span>
+                                            <code style="font-size: var(--text-sm); color: var(--text-primary); word-break: break-all;">${this.escapeHtml(file.path)}</code>
+                                        </div>
+                                    </div>
+                                    <span class="badge" style="margin-left: var(--space-3); white-space: nowrap;">
+                                        ${file.count} reference${file.count > 1 ? 's' : ''}
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: var(--space-6);">
+                        <h3 style="margin-bottom: var(--space-4);">File Tree Browser</h3>
+                        <div class="file-tree">
+                            ${this.renderFileTree(tree, '')}
+                        </div>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+
+            // Add click handlers for collapsible folders
+            this.attachFileTreeHandlers();
+
+        } catch (error) {
+            console.error('Failed to load files:', error);
+            mainContent.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title" style="color: var(--error-500);">Failed to Load Files</h2>
+                    </div>
+                    <div class="card-content">
+                        <p>Error: ${error.message}</p>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    buildFileTree(files) {
+        const tree = {};
+
+        files.forEach(file => {
+            const parts = file.path.split('/');
+            let current = tree;
+
+            parts.forEach((part, index) => {
+                if (!current[part]) {
+                    current[part] = {
+                        name: part,
+                        path: parts.slice(0, index + 1).join('/'),
+                        isFile: index === parts.length - 1,
+                        count: 0,
+                        children: {}
+                    };
+                }
+
+                if (index === parts.length - 1) {
+                    current[part].count = file.count;
+                }
+
+                current = current[part].children;
+            });
+        });
+
+        return tree;
+    }
+
+    renderFileTree(tree, indent = '') {
+        const entries = Object.values(tree);
+
+        // Sort: folders first, then files, alphabetically
+        entries.sort((a, b) => {
+            if (a.isFile !== b.isFile) {
+                return a.isFile ? 1 : -1;
+            }
+            return a.name.localeCompare(b.name);
+        });
+
+        return entries.map(entry => {
+            const hasChildren = Object.keys(entry.children).length > 0;
+            const icon = entry.isFile ? this.getFileIcon(entry.path) : '📁';
+
+            if (entry.isFile) {
+                return `
+                    <div class="file-tree-item file-tree-file" style="padding-left: ${indent}px;">
+                        <span class="file-tree-icon">${icon}</span>
+                        <span class="file-tree-name">${this.escapeHtml(entry.name)}</span>
+                        ${entry.count > 0 ? `<span class="badge badge-sm">${entry.count}</span>` : ''}
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="file-tree-folder" data-path="${this.escapeHtml(entry.path)}">
+                        <div class="file-tree-item file-tree-folder-header" style="padding-left: ${indent}px;">
+                            <span class="file-tree-collapse-icon">▶</span>
+                            <span class="file-tree-icon">${icon}</span>
+                            <span class="file-tree-name">${this.escapeHtml(entry.name)}</span>
+                            ${hasChildren ? `<span class="badge badge-sm">${Object.keys(entry.children).length}</span>` : ''}
+                        </div>
+                        <div class="file-tree-children collapsed">
+                            ${this.renderFileTree(entry.children, indent + 20)}
+                        </div>
+                    </div>
+                `;
+            }
+        }).join('');
+    }
+
+    attachFileTreeHandlers() {
+        const folders = document.querySelectorAll('.file-tree-folder-header');
+        folders.forEach(folder => {
+            folder.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const parent = folder.parentElement;
+                const children = parent.querySelector('.file-tree-children');
+                const icon = folder.querySelector('.file-tree-collapse-icon');
+
+                if (children.classList.contains('collapsed')) {
+                    children.classList.remove('collapsed');
+                    icon.textContent = '▼';
+                } else {
+                    children.classList.add('collapsed');
+                    icon.textContent = '▶';
+                }
+            });
+        });
+    }
+
+    getFileIcon(path) {
+        const ext = path.split('.').pop().toLowerCase();
+        const iconMap = {
+            'js': '📜',
+            'ts': '📘',
+            'tsx': '⚛️',
+            'jsx': '⚛️',
+            'py': '🐍',
+            'rs': '🦀',
+            'go': '🔷',
+            'java': '☕',
+            'cpp': '⚙️',
+            'c': '⚙️',
+            'h': '📋',
+            'json': '📋',
+            'yaml': '📋',
+            'yml': '📋',
+            'md': '📝',
+            'txt': '📄',
+            'html': '🌐',
+            'css': '🎨',
+            'scss': '🎨',
+            'sql': '🗄️',
+            'sh': '🔧',
+            'bash': '🔧',
+            'dockerfile': '🐳',
+            'xml': '📰',
+            'svg': '🖼️',
+            'png': '🖼️',
+            'jpg': '🖼️',
+            'gif': '🖼️',
+            'pdf': '📕'
+        };
+        return iconMap[ext] || '📄';
+    }
+
+    getFileName(path) {
+        return path.split('/').pop();
     }
 
     async renderCheckpoints(id) {
