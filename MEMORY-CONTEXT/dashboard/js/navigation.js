@@ -1273,16 +1273,16 @@ class NavigationController {
                                             <span class="badge badge-${result.message.role}">${result.message.role}</span>
                                             ${result.message.has_code ? '<span class="badge">📝 Code</span>' : ''}
                                         </div>
-                                        <span class="text-xs text-tertiary">${this.formatDate(result.message.timestamp)}</span>
+                                        <span class="text-xs text-tertiary">${this.formatDate(result.message.first_seen || result.message.timestamp)}</span>
                                     </div>
 
-                                    <div class="search-match-preview" style="margin: var(--space-3) 0;">
+                                    <div class="search-match-preview" style="margin: var(--space-3) 0; white-space: pre-wrap;">
                                         ${this.highlightSearchTerms(result.preview, query)}
                                     </div>
 
-                                    <div style="display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--text-tertiary);">
+                                    <div style="display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--text-tertiary); flex-wrap: wrap;">
                                         <span>Words: ${result.message.word_count}</span>
-                                        <span>Session: ${this.escapeHtml(result.message.checkpoint_id)}</span>
+                                        <span style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Session: ${this.escapeHtml(result.message.checkpoint_id)}</span>
                                         <span>Match score: ${result.score.toFixed(2)}</span>
                                     </div>
                                 </div>
@@ -1322,6 +1322,15 @@ class NavigationController {
         const allMessages = messagesData.stats ? await this.loadAllMessages() : [];
 
         const queryLower = query.toLowerCase();
+
+        // Detect and normalize date queries
+        const dateFormats = this.detectDateQuery(query);
+        const isDateQuery = dateFormats.length > 0;
+
+        if (isDateQuery) {
+            console.log('📅 Detected date query, searching dates:', dateFormats);
+        }
+
         const queryWords = queryLower.split(/\s+/).filter(w => w.length > 0);
 
         // Search and score results
@@ -1329,35 +1338,61 @@ class NavigationController {
 
         for (const message of allMessages) {
             const contentLower = (message.content_preview || message.content || '').toLowerCase();
+            const checkpointLower = (message.checkpoint_id || '').toLowerCase();
+            const firstSeen = message.first_seen || '';
 
-            // Calculate match score
             let score = 0;
             let matchedWords = 0;
+            let matchedInDate = false;
 
+            // Check date fields if this is a date query
+            if (isDateQuery) {
+                for (const dateStr of dateFormats) {
+                    if (firstSeen.includes(dateStr) || checkpointLower.includes(dateStr)) {
+                        score += 10; // High score for date matches
+                        matchedInDate = true;
+                        matchedWords = queryWords.length; // Count as matching all words
+                        break;
+                    }
+                }
+            }
+
+            // Search content
             queryWords.forEach(word => {
+                // Check content
                 if (contentLower.includes(word)) {
                     matchedWords++;
-                    // More points for exact whole word matches
                     const wordRegex = new RegExp(`\\b${word}\\b`, 'gi');
                     const exactMatches = (contentLower.match(wordRegex) || []).length;
                     score += exactMatches * 2;
 
-                    // Points for partial matches
                     const partialMatches = (contentLower.match(new RegExp(word, 'gi')) || []).length;
                     score += partialMatches;
+                }
+
+                // Also check checkpoint ID for keywords
+                if (checkpointLower.includes(word)) {
+                    matchedWords++;
+                    score += 1;
                 }
             });
 
             // Only include if at least one word matched
             if (matchedWords > 0) {
                 // Find the best preview snippet with the match
-                const preview = this.extractSearchPreview(message.content_preview || message.content || '', query, queryWords);
+                let preview;
+                if (matchedInDate) {
+                    // Show date info in preview for date matches
+                    preview = `Date: ${this.formatDate(firstSeen)} | Session: ${message.checkpoint_id}\n\n${message.content_preview || ''}`;
+                } else {
+                    preview = this.extractSearchPreview(message.content_preview || message.content || '', query, queryWords);
+                }
 
                 results.push({
                     message: message,
                     score: score,
                     matchedWords: matchedWords,
-                    preview: preview
+                    preview: preview.substring(0, 500)
                 });
             }
         }
@@ -1368,6 +1403,38 @@ class NavigationController {
         console.log(`✓ Found ${results.length} matching messages`);
 
         return results;
+    }
+
+    detectDateQuery(query) {
+        const dateFormats = [];
+
+        // Detect MM/DD/YYYY or M/D/YYYY format
+        const slashDateRegex = /(\d{1,2})\/(\d{1,2})\/(\d{4})/g;
+        let match;
+        while ((match = slashDateRegex.exec(query)) !== null) {
+            const month = match[1].padStart(2, '0');
+            const day = match[2].padStart(2, '0');
+            const year = match[3];
+            // Convert to ISO format YYYY-MM-DD
+            dateFormats.push(`${year}-${month}-${day}`);
+        }
+
+        // Detect YYYY-MM-DD format (ISO)
+        const isoDateRegex = /(\d{4})-(\d{2})-(\d{2})/g;
+        while ((match = isoDateRegex.exec(query)) !== null) {
+            dateFormats.push(match[0]);
+        }
+
+        // Detect YYYY/MM/DD format
+        const yearFirstRegex = /(\d{4})\/(\d{1,2})\/(\d{1,2})/g;
+        while ((match = yearFirstRegex.exec(query)) !== null) {
+            const year = match[1];
+            const month = match[2].padStart(2, '0');
+            const day = match[3].padStart(2, '0');
+            dateFormats.push(`${year}-${month}-${day}`);
+        }
+
+        return [...new Set(dateFormats)]; // Remove duplicates
     }
 
     async loadAllMessages() {
