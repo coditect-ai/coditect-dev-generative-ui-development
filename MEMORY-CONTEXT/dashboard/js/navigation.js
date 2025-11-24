@@ -21,7 +21,9 @@ class NavigationController {
             'topics': { title: 'Topics', icon: '🏷️' },
             'files': { title: 'Files', icon: '📁' },
             'checkpoints': { title: 'Sessions', icon: '💬' },
-            'commands': { title: 'Commands', icon: '⚡' }
+            'commands': { title: 'Commands', icon: '⚡' },
+            'about': { title: 'About MEMORY-CONTEXT', icon: 'ℹ️' },
+            'help': { title: 'Help', icon: '❓' }
         };
 
         // Initialize
@@ -162,82 +164,156 @@ class NavigationController {
             case 'commands':
                 this.renderCommands(filter);
                 break;
+            case 'about':
+                this.renderAbout();
+                break;
+            case 'help':
+                this.renderHelp();
+                break;
             default:
                 this.renderOverview();
         }
     }
 
-    renderOverview() {
+    async renderOverview() {
         const mainContent = document.querySelector('.main-content');
 
-        mainContent.innerHTML = `
-            <div class="dashboard-overview">
-                <section class="quick-stats">
-                    <div class="stat-card clickable" onclick="window.location.hash='#checkpoints'">
-                        <h3>Total Messages</h3>
-                        <p class="stat-value">10,206</p>
-                        <p class="stat-label">Click to view all sessions</p>
-                    </div>
-                    <div class="stat-card clickable" onclick="window.location.hash='#checkpoints'">
-                        <h3>Checkpoints</h3>
-                        <p class="stat-value">124</p>
-                        <p class="stat-label">Conversation sessions</p>
-                    </div>
-                    <div class="stat-card clickable" onclick="window.location.hash='#files'">
-                        <h3>Files Referenced</h3>
-                        <p class="stat-value">4,060</p>
-                        <p class="stat-label">Click to browse files</p>
-                    </div>
-                    <div class="stat-card clickable" onclick="window.location.hash='#commands'">
-                        <h3>Commands Executed</h3>
-                        <p class="stat-value">1,732</p>
-                        <p class="stat-label">Click to view history</p>
-                    </div>
-                </section>
+        // Show loading state
+        mainContent.innerHTML = '<div class="loading">Loading overview data...</div>';
 
-                <section class="welcome-section">
-                    <h2>Welcome to CODITECT Knowledge Base</h2>
-                    <p>
-                        This dashboard provides interactive access to your entire conversation history.
-                        Navigate using the sidebar or use the search bar above.
-                    </p>
+        try {
+            // Load overview data using data loader
+            const data = await window.dashboardData.loadOverviewData();
 
-                    <div class="quick-actions">
-                        <h3>Quick Actions</h3>
-                        <button onclick="window.location.hash='#timeline'" class="action-btn">
-                            📅 View Activity Timeline
-                        </button>
-                        <button onclick="window.location.hash='#topics'" class="action-btn">
-                            🏷️ Browse Topics
-                        </button>
-                        <button onclick="window.location.hash='#checkpoints'" class="action-btn">
-                            💬 View All Sessions
-                        </button>
-                        <button onclick="document.getElementById('global-search').focus()" class="action-btn">
-                            🔍 Search Messages
-                        </button>
-                    </div>
-                </section>
+            mainContent.innerHTML = `
+                <div class="dashboard-overview">
+                    <section class="quick-stats">
+                        <div class="stat-card clickable" onclick="window.location.hash='#checkpoints'">
+                            <h3>Total Messages</h3>
+                            <p class="stat-value">${data.stats.totalMessages.toLocaleString()}</p>
+                            <p class="stat-label">Click to view all sessions</p>
+                        </div>
+                        <div class="stat-card clickable" onclick="window.location.hash='#checkpoints'">
+                            <h3>Checkpoints</h3>
+                            <p class="stat-value">${data.stats.totalCheckpoints.toLocaleString()}</p>
+                            <p class="stat-label">Conversation sessions</p>
+                        </div>
+                        <div class="stat-card clickable" onclick="window.location.hash='#files'">
+                            <h3>Files Referenced</h3>
+                            <p class="stat-value">${data.stats.totalFiles.toLocaleString()}</p>
+                            <p class="stat-label">Click to browse files</p>
+                        </div>
+                        <div class="stat-card clickable" onclick="window.location.hash='#commands'">
+                            <h3>Commands Executed</h3>
+                            <p class="stat-value">${data.stats.totalCommands.toLocaleString()}</p>
+                            <p class="stat-label">Click to view history</p>
+                        </div>
+                    </section>
 
-                <section class="recent-activity">
-                    <h2>Recent Sessions</h2>
-                    <div id="recent-sessions-list" style="padding: 2rem; background: #f9f9f9; border-radius: 8px; text-align: center;">
-                        <p><strong>Task 1.4: Data Loading</strong></p>
-                        <p>Dynamic data loading will be implemented next</p>
-                        <p>This will fetch and display the 5 most recent sessions</p>
-                    </div>
-                </section>
+                    <section class="section">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Welcome to CODITECT Knowledge Base</h2>
+                                <p class="card-subtitle">Interactive dashboard for exploring ${data.stats.totalMessages.toLocaleString()} conversation messages</p>
+                            </div>
+                            <div class="card-content">
+                                <p>
+                                    This dashboard provides comprehensive access to your entire CODITECT conversation history.
+                                    Navigate using the sidebar or search above to find specific conversations, topics, files, or commands.
+                                </p>
 
-                <section class="top-topics-section">
-                    <h2>Top Topics</h2>
-                    <div id="top-topics-list" style="padding: 2rem; background: #f9f9f9; border-radius: 8px; text-align: center;">
-                        <p><strong>Task 1.4: Data Loading</strong></p>
-                        <p>Dynamic data loading will be implemented next</p>
-                        <p>This will display top 6 topics with progress bars</p>
+                                <div class="flex gap-2" style="margin-top: var(--space-4); flex-wrap: wrap;">
+                                    <button onclick="window.location.hash='#timeline'" class="btn btn-primary">
+                                        📅 View Timeline
+                                    </button>
+                                    <button onclick="window.location.hash='#topics'" class="btn btn-secondary">
+                                        🏷️ Browse Topics
+                                    </button>
+                                    <button onclick="window.location.hash='#checkpoints'" class="btn btn-secondary">
+                                        💬 All Sessions
+                                    </button>
+                                    <button onclick="window.location.hash='#about'" class="btn btn-secondary">
+                                        ℹ️ What is MEMORY-CONTEXT?
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <h2 class="section-title">Recent Sessions</h2>
+                        <div class="grid">
+                            ${data.recentSessions.map(session => `
+                                <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')">
+                                    <div class="card-header">
+                                        <div>
+                                            <h3 class="card-title">${this.escapeHtml(session.title || session.id)}</h3>
+                                            <p class="card-subtitle">${session.message_count} messages • ${this.formatDate(session.timestamp)}</p>
+                                        </div>
+                                        <span class="card-collapse-icon">▼</span>
+                                    </div>
+                                    <div class="card-content">
+                                        <p><strong>Topics:</strong> ${session.top_topics.slice(0, 3).join(', ') || 'None'}</p>
+                                        <p><strong>Files:</strong> ${session.files_modified || 0} modified</p>
+                                        <p><strong>Commands:</strong> ${session.commands_executed || 0} executed</p>
+                                        <a href="#checkpoints/${session.id}" class="btn btn-sm btn-primary" style="margin-top: var(--space-2);">
+                                            View Full Session →
+                                        </a>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <h2 class="section-title">Top Topics</h2>
+                        <div class="grid grid-cols-2">
+                            ${data.topTopics.map(topic => `
+                                <div class="card clickable" onclick="window.location.hash='#topics/${topic.name}'">
+                                    <h3 class="card-title">${this.escapeHtml(topic.name)}</h3>
+                                    <p style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--primary-500); margin: var(--space-2) 0;">
+                                        ${topic.count.toLocaleString()}
+                                    </p>
+                                    <p class="text-sm" style="color: var(--text-tertiary);">
+                                        ${topic.percentage}% of all messages
+                                    </p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </section>
+                </div>
+            `;
+        } catch (error) {
+            console.error('Failed to load overview data:', error);
+            mainContent.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title" style="color: var(--error-500);">Failed to Load Data</h2>
                     </div>
-                </section>
-            </div>
-        `;
+                    <div class="card-content">
+                        <p>Could not load overview data. Please ensure:</p>
+                        <ol style="margin-left: var(--space-6); margin-top: var(--space-2);">
+                            <li>You are running an HTTP server (not file://)</li>
+                            <li>The data files exist in the <code>data/</code> directory</li>
+                        </ol>
+                        <p style="margin-top: var(--space-4);">
+                            <strong>To start HTTP server:</strong><br>
+                            <code>cd dashboard && python3 -m http.server 8080</code><br>
+                            Then open <code>http://localhost:8080</code>
+                        </p>
+                        <p style="margin-top: var(--space-4); font-size: var(--text-sm); color: var(--text-tertiary);">
+                            Error: ${error.message}
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     renderTimeline() {
@@ -367,6 +443,325 @@ class NavigationController {
 
     closeModals() {
         // Modal close logic for Task 1.5
+    }
+
+    renderAbout() {
+        const mainContent = document.querySelector('.main-content');
+        mainContent.innerHTML = `
+            <div class="dashboard-overview">
+                <section class="section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h1 class="card-title">What is MEMORY-CONTEXT?</h1>
+                            <p class="card-subtitle">Understanding CODITECT's Conversation Intelligence System</p>
+                        </div>
+                        <div class="card-content">
+                            <h3>Overview</h3>
+                            <p>
+                                <strong>MEMORY-CONTEXT</strong> is CODITECT's comprehensive conversation intelligence system that captures,
+                                indexes, and makes searchable your entire Claude Code conversation history. Think of it as your project's
+                                permanent memory - every decision, implementation detail, and problem-solving session preserved and accessible.
+                            </p>
+
+                            <h3 style="margin-top: var(--space-6);">Key Features</h3>
+                            <div class="grid grid-cols-2" style="margin-top: var(--space-4);">
+                                <div class="card" style="background-color: var(--bg-tertiary);">
+                                    <h4>📊 Complete History</h4>
+                                    <p class="text-sm">
+                                        ${(10206).toLocaleString()} conversation messages from ${(124).toLocaleString()} sessions,
+                                        giving you complete visibility into your project's evolution.
+                                    </p>
+                                </div>
+                                <div class="card" style="background-color: var(--bg-tertiary);">
+                                    <h4>🔍 Smart Search</h4>
+                                    <p class="text-sm">
+                                        Find any conversation, decision, or code snippet instantly with full-text search
+                                        powered by SQLite FTS5.
+                                    </p>
+                                </div>
+                                <div class="card" style="background-color: var(--bg-tertiary);">
+                                    <h4>🏷️ Topic Organization</h4>
+                                    <p class="text-sm">
+                                        Conversations automatically categorized into 14 topics including Documentation,
+                                        Testing, Agents, and more.
+                                    </p>
+                                </div>
+                                <div class="card" style="background-color: var(--bg-tertiary);">
+                                    <h4>📁 File Tracking</h4>
+                                    <p class="text-sm">
+                                        ${(4060).toLocaleString()} file references tracked across all sessions, showing
+                                        what was read, written, or edited.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <h3 style="margin-top: var(--space-6);">How It Works</h3>
+                            <ol style="margin-left: var(--space-6); margin-top: var(--space-2);">
+                                <li><strong>Automatic Export</strong> - After each Claude Code session, conversations are automatically exported to JSON format.</li>
+                                <li><strong>Intelligent Deduplication</strong> - Content-based hashing removes duplicate messages while preserving unique context.</li>
+                                <li><strong>Database Indexing</strong> - Messages are indexed into SQLite with full-text search capabilities.</li>
+                                <li><strong>Dashboard Generation</strong> - This web dashboard is generated from the indexed data for easy browsing.</li>
+                            </ol>
+
+                            <h3 style="margin-top: var(--space-6);">Use Cases</h3>
+                            <ul style="margin-left: var(--space-6); margin-top: var(--space-2);">
+                                <li><strong>Onboarding</strong> - New team members can review the complete project history to get up to speed.</li>
+                                <li><strong>Decision Auditing</strong> - Review why certain architectural choices were made and when.</li>
+                                <li><strong>Knowledge Retrieval</strong> - Find solutions to problems you've already solved in past sessions.</li>
+                                <li><strong>Progress Tracking</strong> - See the evolution of your project over time with timeline visualizations.</li>
+                                <li><strong>Documentation</strong> - Generate project documentation from actual implementation conversations.</li>
+                            </ul>
+
+                            <h3 style="margin-top: var(--space-6);">Technical Stack</h3>
+                            <div class="grid grid-cols-3" style="margin-top: var(--space-4);">
+                                <div>
+                                    <h4 class="text-sm font-semibold">Backend</h4>
+                                    <ul class="text-sm" style="list-style: none; padding: 0; color: var(--text-secondary);">
+                                        <li>Python 3.10+</li>
+                                        <li>SQLite + FTS5</li>
+                                        <li>Jinja2 Templates</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-semibold">Frontend</h4>
+                                    <ul class="text-sm" style="list-style: none; padding: 0; color: var(--text-secondary);">
+                                        <li>Vanilla JavaScript</li>
+                                        <li>CSS Grid Layout</li>
+                                        <li>Zero dependencies</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-semibold">Data Format</h4>
+                                    <ul class="text-sm" style="list-style: none; padding: 0; color: var(--text-secondary);">
+                                        <li>JSON exports</li>
+                                        <li>Paginated files</li>
+                                        <li>Gzip compression</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: var(--space-8); padding: var(--space-4); background-color: var(--primary-50); border-left: 4px solid var(--primary-500); border-radius: var(--radius-md);">
+                                <p class="font-semibold" style="color: var(--primary-700);">
+                                    💡 Pro Tip
+                                </p>
+                                <p class="text-sm" style="margin-top: var(--space-2); color: var(--text-secondary);">
+                                    Use the <a href="#checkpoints" style="color: var(--primary-600);">Sessions view</a> to browse all conversations,
+                                    or try the <a href="#topics" style="color: var(--primary-600);">Topics view</a> to find conversations by category.
+                                    The search bar above works across all ${(10206).toLocaleString()} messages!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        `;
+    }
+
+    renderHelp() {
+        const mainContent = document.querySelector('.main-content');
+        mainContent.innerHTML = `
+            <div class="dashboard-overview">
+                <section class="section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h1 class="card-title">Help & User Guide</h1>
+                            <p class="card-subtitle">Learn how to navigate and use the CODITECT Knowledge Base Dashboard</p>
+                        </div>
+                        <div class="card-content">
+                            <h3>Getting Started</h3>
+                            <div class="card" style="background-color: var(--warning-50); border-left: 4px solid var(--warning-500); margin-top: var(--space-2);">
+                                <p class="font-semibold" style="color: var(--warning-700);">⚠️ HTTP Server Required</p>
+                                <p class="text-sm" style="margin-top: var(--space-2); color: var(--text-secondary);">
+                                    This dashboard requires an HTTP server to load data (browser security blocks fetch() on file://).
+                                </p>
+                                <pre style="margin-top: var(--space-2); padding: var(--space-2); background-color: var(--bg-tertiary); border-radius: var(--radius-sm); font-size: var(--text-sm);">cd dashboard
+python3 -m http.server 8080</pre>
+                                <p class="text-sm" style="margin-top: var(--space-2); color: var(--text-secondary);">
+                                    Then open <code>http://localhost:8080</code> in your browser.
+                                </p>
+                            </div>
+
+                            <h3 style="margin-top: var(--space-6);">Navigation</h3>
+                            <div class="grid" style="margin-top: var(--space-4);">
+                                <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')">
+                                    <div class="card-header">
+                                        <h4 class="card-title">📊 Overview</h4>
+                                        <span class="card-collapse-icon">▼</span>
+                                    </div>
+                                    <div class="card-content">
+                                        <p class="text-sm">
+                                            Dashboard home with quick stats, recent sessions, and top topics.
+                                            Click stat cards to jump to detailed views.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')">
+                                    <div class="card-header">
+                                        <h4 class="card-title">📅 Timeline</h4>
+                                        <span class="card-collapse-icon">▼</span>
+                                    </div>
+                                    <div class="card-content">
+                                        <p class="text-sm">
+                                            Chronological view of all conversation sessions with D3.js visualization
+                                            (coming in Week 2 implementation).
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')">
+                                    <div class="card-header">
+                                        <h4 class="card-title">🏷️ Topics</h4>
+                                        <span class="card-collapse-icon">▼</span>
+                                    </div>
+                                    <div class="card-content">
+                                        <p class="text-sm">
+                                            Browse all 14 conversation topics. Click a topic to see all messages in that category.
+                                            Topics include Documentation, Testing, Agents, Python-Code, and more.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')">
+                                    <div class="card-header">
+                                        <h4 class="card-title">📁 Files</h4>
+                                        <span class="card-collapse-icon">▼</span>
+                                    </div>
+                                    <div class="card-content">
+                                        <p class="text-sm">
+                                            Hierarchical file browser showing all ${(4060).toLocaleString()} referenced files.
+                                            See which files were read, written, or edited across all sessions.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')">
+                                    <div class="card-header">
+                                        <h4 class="card-title">💬 Sessions</h4>
+                                        <span class="card-collapse-icon">▼</span>
+                                    </div>
+                                    <div class="card-content">
+                                        <p class="text-sm">
+                                            Browse all ${(124).toLocaleString()} conversation sessions. Search by title, filter by date,
+                                            sort by message count. Click a session to see full details, topics, files, and commands.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')">
+                                    <div class="card-header">
+                                        <h4 class="card-title">⚡ Commands</h4>
+                                        <span class="card-collapse-icon">▼</span>
+                                    </div>
+                                    <div class="card-content">
+                                        <p class="text-sm">
+                                            View all ${(1732).toLocaleString()} executed commands. Filter by type (git, bash, python, docker, gcloud).
+                                            See command history with timestamps and session context.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h3 style="margin-top: var(--space-6);">Features</h3>
+                            <div class="grid grid-cols-2" style="margin-top: var(--space-4);">
+                                <div>
+                                    <h4>🔍 Global Search</h4>
+                                    <p class="text-sm" style="color: var(--text-secondary);">
+                                        Use the search bar at the top to search across all ${(10206).toLocaleString()} messages.
+                                        Results show matching messages with context and links to full sessions.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4>🌙 Dark Mode</h4>
+                                    <p class="text-sm" style="color: var(--text-secondary);">
+                                        Click the moon/sun icon in the header to toggle between light and dark themes.
+                                        Your preference is saved to localStorage.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4>📋 Collapsible Cards</h4>
+                                    <p class="text-sm" style="color: var(--text-secondary);">
+                                        Click card headers to expand/collapse content. Keeps the interface compact
+                                        while giving you access to detailed information when needed.
+                                    </p>
+                                </div>
+                                <div>
+                                    <h4>🔗 Deep Linking</h4>
+                                    <p class="text-sm" style="color: var(--text-secondary);">
+                                        URLs update as you navigate. Share direct links to sessions, topics, or specific views.
+                                        Browser back/forward buttons work as expected.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <h3 style="margin-top: var(--space-6);">Keyboard Shortcuts</h3>
+                            <div style="margin-top: var(--space-4);">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="border-bottom: 2px solid var(--border-primary);">
+                                            <th style="text-align: left; padding: var(--space-2); font-weight: var(--font-semibold);">Shortcut</th>
+                                            <th style="text-align: left; padding: var(--space-2); font-weight: var(--font-semibold);">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr style="border-bottom: 1px solid var(--border-primary);">
+                                            <td style="padding: var(--space-2);"><code>/</code></td>
+                                            <td style="padding: var(--space-2); color: var(--text-secondary);">Focus search bar</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid var(--border-primary);">
+                                            <td style="padding: var(--space-2);"><code>Esc</code></td>
+                                            <td style="padding: var(--space-2); color: var(--text-secondary);">Close modals and dialogs</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: var(--space-2);"><code>← →</code></td>
+                                            <td style="padding: var(--space-2); color: var(--text-secondary);">Navigate browser history (back/forward)</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h3 style="margin-top: var(--space-6);">Troubleshooting</h3>
+                            <div class="grid" style="margin-top: var(--space-4);">
+                                <div class="card" style="background-color: var(--bg-tertiary);">
+                                    <h4 class="text-sm font-semibold">Data not loading?</h4>
+                                    <p class="text-xs" style="margin-top: var(--space-2); color: var(--text-secondary);">
+                                        Make sure you're running an HTTP server (<code>python3 -m http.server 8080</code>).
+                                        The dashboard won't work with the file:// protocol due to browser security.
+                                    </p>
+                                </div>
+                                <div class="card" style="background-color: var(--bg-tertiary);">
+                                    <h4 class="text-sm font-semibold">Search not working?</h4>
+                                    <p class="text-xs" style="margin-top: var(--space-2); color: var(--text-secondary);">
+                                        Full-text search requires the SQLite FTS5 extension. Make sure you've run the indexing
+                                        script: <code>python3 scripts/index-messages.py</code>
+                                    </p>
+                                </div>
+                                <div class="card" style="background-color: var(--bg-tertiary);">
+                                    <h4 class="text-sm font-semibold">Outdated data?</h4>
+                                    <p class="text-xs" style="margin-top: var(--space-2); color: var(--text-secondary);">
+                                        Regenerate the dashboard after new sessions: <code>python3 scripts/generate-dashboard.py</code>.
+                                        This updates all JSON files with the latest conversation data.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: var(--space-8); padding: var(--space-4); background-color: var(--info-50); border-left: 4px solid var(--info-500); border-radius: var(--radius-md);">
+                                <p class="font-semibold" style="color: var(--info-700);">
+                                    📚 Need More Help?
+                                </p>
+                                <p class="text-sm" style="margin-top: var(--space-2); color: var(--text-secondary);">
+                                    Check the <a href="#about" style="color: var(--info-600);">About MEMORY-CONTEXT</a> page to understand
+                                    how the system works, or visit the
+                                    <a href="https://github.com/coditect-ai" target="_blank" rel="noopener" style="color: var(--info-600);">
+                                        CODITECT GitHub repository
+                                    </a> for technical documentation.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        `;
     }
 
     formatDate(dateStr) {

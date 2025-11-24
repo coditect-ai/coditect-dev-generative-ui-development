@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CODITECT Knowledge Base Dashboard</title>
+    <meta name="description" content="Interactive dashboard for browsing 10,206 conversation messages from CODITECT MEMORY-CONTEXT system">
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' https://cdn.jsdelivr.net https://unpkg.com 'unsafe-inline';
+        script-src 'self' 'unsafe-inline';
         style-src 'self' 'unsafe-inline';
         img-src 'self' data:;
-        connect-src 'none';
+        connect-src 'self';
     ">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/layout.css">
@@ -17,13 +18,26 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Header -->
+        <!-- CODITECT Header -->
         <header class="app-header">
-            <div class="logo">
-                <h1>🧠 CODITECT Knowledge Base</h1>
-            </div>
-            <div class="global-search">
-                <input type="search" id="global-search" placeholder="Search 10,206 messages...">
+            <div class="header-content">
+                <!-- Logo -->
+                <a href="#overview" class="header-logo">
+                    <img src="assets/logo/az1-logo-light.svg" alt="AZ1.AI CODITECT" class="logo-light" height="40">
+                    <img src="assets/logo/az1-logo-dark.svg" alt="AZ1.AI CODITECT" class="logo-dark" height="40">
+                </a>
+
+                <!-- Global Search -->
+                <div class="global-search">
+                    <input type="search" id="global-search" class="form-control" placeholder="Search 10,206 messages..." aria-label="Search messages">
+                </div>
+
+                <!-- Header Actions -->
+                <div class="header-actions">
+                    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark/light mode">
+                        <span class="theme-toggle-icon">🌙</span>
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -31,72 +45,108 @@
         <aside class="sidebar">
             <nav>
                 <ul>
-                    <li><a href="#overview">📊 Overview</a></li>
+                    <li><a href="#overview" class="active">📊 Overview</a></li>
                     <li><a href="#timeline">📅 Timeline</a></li>
                     <li><a href="#topics">🏷️ Topics</a></li>
                     <li><a href="#files">📁 Files</a></li>
                     <li><a href="#checkpoints">💬 Sessions</a></li>
                     <li><a href="#commands">⚡ Commands</a></li>
                 </ul>
+
+                <hr style="margin: var(--space-4) 0; border: 0; border-top: 1px solid var(--border-primary);">
+
+                <ul>
+                    <li><a href="#about">ℹ️ About MEMORY-CONTEXT</a></li>
+                    <li><a href="#help">❓ Help</a></li>
+                </ul>
             </nav>
+
+            <div class="sidebar-footer">
+                <p class="text-xs text-tertiary">
+                    Generated: 2025-11-24<br>
+                    10,206 messages<br>
+                    124 sessions
+                </p>
+            </div>
         </aside>
 
         <!-- Main Content Area -->
         <main class="main-content">
-            <div class="dashboard-overview">
-                <!-- Quick Stats Panel -->
-                <section class="quick-stats">
-                    <div class="stat-card">
-                        <h3>Total Messages</h3>
-                        <p class="stat-value">10,206</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Checkpoints</h3>
-                        <p class="stat-value">124</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Files Referenced</h3>
-                        <p class="stat-value">4060</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Commands Executed</h3>
-                        <p class="stat-value">1732</p>
-                    </div>
-                </section>
-
-                <!-- Welcome Message -->
-                <section style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <h2>Welcome to CODITECT Knowledge Base</h2>
-                    <p style="margin: 1rem 0;">
-                        This dashboard provides interactive access to <strong>10,206 conversation messages</strong>
-                        from <strong>124 sessions</strong>.
-                    </p>
-                    <p style="margin: 1rem 0;">
-                        Navigate using the sidebar or use the search bar above to find specific conversations.
-                    </p>
-                    <p style="margin: 1rem 0;">
-                        <strong>Phase 2 Status:</strong> Static site generator complete ✅ |
-                        Full JavaScript interactivity coming in Task 1.3-1.5
-                    </p>
-                </section>
-
-                <!-- Top Topics Preview -->
-                <section style="background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <h2>Top Topics</h2>
-                    <ul style="list-style: none; padding: 0;">
-                        <li style="padding: 0.5rem; margin: 0.25rem 0; background: #f5f5f5; border-radius: 4px;"><strong>Documentation</strong>: 1,994 messages (19.5%)</li><li style="padding: 0.5rem; margin: 0.25rem 0; background: #f5f5f5; border-radius: 4px;"><strong>Submodules</strong>: 1,742 messages (17.1%)</li><li style="padding: 0.5rem; margin: 0.25rem 0; background: #f5f5f5; border-radius: 4px;"><strong>Shell-Command</strong>: 1,732 messages (17.0%)</li><li style="padding: 0.5rem; margin: 0.25rem 0; background: #f5f5f5; border-radius: 4px;"><strong>Agents</strong>: 1,199 messages (11.7%)</li><li style="padding: 0.5rem; margin: 0.25rem 0; background: #f5f5f5; border-radius: 4px;"><strong>Testing</strong>: 863 messages (8.5%)</li><li style="padding: 0.5rem; margin: 0.25rem 0; background: #f5f5f5; border-radius: 4px;"><strong>Python-Code</strong>: 747 messages (7.3%)</li>
-                    </ul>
-                </section>
-            </div>
+            <div class="loading">Loading dashboard...</div>
         </main>
 
-        <!-- Footer -->
+        <!-- CODITECT Footer -->
         <footer class="app-footer">
-            <p>CODITECT Knowledge Base • Generated 2025-11-24 13:41 UTC • 10,206 messages</p>
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="https://az1.ai" target="_blank" rel="noopener">About AZ1.AI</a></li>
+                        <li><a href="https://az1.ai/careers" target="_blank" rel="noopener">Careers</a></li>
+                        <li><a href="https://az1.ai/contact" target="_blank" rel="noopener">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="https://workflow.coditect.ai" target="_blank" rel="noopener">Workflow Platform</a></li>
+                        <li><a href="#about">MEMORY-CONTEXT</a></li>
+                        <li><a href="#help">Documentation</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="https://az1.ai/privacy" target="_blank" rel="noopener">Privacy Policy</a></li>
+                        <li><a href="https://az1.ai/terms" target="_blank" rel="noopener">Terms of Service</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#help">Help Center</a></li>
+                        <li><a href="https://github.com/coditect-ai" target="_blank" rel="noopener">GitHub</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 AZ1.AI Inc. All rights reserved.</p>
+                <div class="footer-social">
+                    <a href="https://github.com/coditect-ai" target="_blank" rel="noopener" aria-label="GitHub">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
         </footer>
     </div>
 
     <script src="js/navigation.js"></script>
     <script src="js/data-loader.js"></script>
+    <script>
+        // Dark Mode Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const themeIcon = document.querySelector('.theme-toggle-icon');
+
+        // Load saved theme preference or default to light mode
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            html.classList.add('dark');
+            themeIcon.textContent = '☀️';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            themeIcon.textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+    </script>
 </body>
 </html>
