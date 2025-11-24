@@ -376,41 +376,134 @@ class NavigationController {
         `;
     }
 
-    renderCheckpoints(id) {
+    async renderCheckpoints(id) {
         const mainContent = document.querySelector('.main-content');
 
         if (id) {
             // Show specific checkpoint
-            mainContent.innerHTML = `
-                <div class="checkpoint-detail-view">
-                    <h2>Session: ${id}</h2>
-                    <div id="checkpoint-content" style="padding: 2rem; background: #f9f9f9; border-radius: 8px; text-align: center; margin-top: 2rem;">
-                        <p><strong>Task 1.4: Data Loading</strong></p>
-                        <p>Session details will be loaded dynamically</p>
-                        <p>Will display full metadata, topics, files, and commands</p>
+            mainContent.innerHTML = '<div class="loading">Loading checkpoint details...</div>';
+
+            try {
+                const checkpoint = await window.dashboardData.loadCheckpoint(id);
+
+                mainContent.innerHTML = `
+                    <div class="checkpoint-detail-view">
+                        <button onclick="window.location.hash='#checkpoints'" class="btn-secondary" style="margin-bottom: var(--space-4);">
+                            ← Back to All Sessions
+                        </button>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">${this.escapeHtml(checkpoint.title)}</h2>
+                                <p class="card-subtitle">${checkpoint.summary}</p>
+                            </div>
+                            <div class="card-content">
+                                <div class="grid grid-cols-4" style="margin-bottom: var(--space-6);">
+                                    <div class="stat-card">
+                                        <h3>Total Messages</h3>
+                                        <p class="stat-value">${checkpoint.message_count}</p>
+                                    </div>
+                                    <div class="stat-card">
+                                        <h3>User Messages</h3>
+                                        <p class="stat-value">${checkpoint.user_messages}</p>
+                                    </div>
+                                    <div class="stat-card">
+                                        <h3>Assistant Messages</h3>
+                                        <p class="stat-value">${checkpoint.assistant_messages}</p>
+                                    </div>
+                                    <div class="stat-card">
+                                        <h3>Commands</h3>
+                                        <p class="stat-value">${checkpoint.commands_executed}</p>
+                                    </div>
+                                </div>
+
+                                <h3 style="margin-top: var(--space-6);">Top Topics</h3>
+                                <div class="grid grid-cols-3">
+                                    ${checkpoint.top_topics.map(topic => `
+                                        <div class="badge badge-primary" style="margin: var(--space-2);">
+                                            ${this.escapeHtml(topic)}
+                                        </div>
+                                    `).join('')}
+                                </div>
+
+                                ${checkpoint.files_modified && checkpoint.files_modified.length > 0 ? `
+                                    <h3 style="margin-top: var(--space-6);">Files Modified</h3>
+                                    <div class="grid grid-cols-1" style="gap: var(--space-2);">
+                                        ${checkpoint.files_modified.slice(0, 10).map(file => `
+                                            <div style="padding: var(--space-2); background: var(--bg-tertiary); border-radius: var(--radius-md); font-family: monospace; font-size: var(--text-sm);">
+                                                ${this.escapeHtml(file)}
+                                            </div>
+                                        `).join('')}
+                                        ${checkpoint.files_modified.length > 10 ? `
+                                            <p class="text-sm text-tertiary">... and ${checkpoint.files_modified.length - 10} more files</p>
+                                        ` : ''}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            } catch (error) {
+                mainContent.innerHTML = `
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title" style="color: var(--error-500);">Checkpoint Not Found</h2>
+                        </div>
+                        <div class="card-content">
+                            <p>Could not find checkpoint: ${this.escapeHtml(id)}</p>
+                            <button onclick="window.location.hash='#checkpoints'" class="btn-primary" style="margin-top: var(--space-4);">
+                                View All Sessions
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
         } else {
             // Show all checkpoints
-            mainContent.innerHTML = `
-                <div class="checkpoints-view">
-                    <h2>💬 Conversation Sessions (124 total)</h2>
-                    <div class="filters">
-                        <input type="search" id="checkpoint-search" placeholder="Search sessions..." disabled />
-                        <select id="checkpoint-sort" disabled>
-                            <option value="date-desc">Newest First</option>
-                            <option value="date-asc">Oldest First</option>
-                            <option value="messages-desc">Most Messages</option>
-                        </select>
+            mainContent.innerHTML = '<div class="loading">Loading sessions...</div>';
+
+            try {
+                const checkpoints = await window.dashboardData.loadCheckpoints();
+
+                mainContent.innerHTML = `
+                    <div class="checkpoints-view">
+                        <h2>💬 Conversation Sessions (${checkpoints.length} total)</h2>
+
+                        <div class="grid grid-cols-1" style="gap: var(--space-4); margin-top: var(--space-6);">
+                            ${checkpoints.map(checkpoint => `
+                                <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')">
+                                    <div class="card-header" style="cursor: pointer;">
+                                        <div>
+                                            <h3 class="card-title">${this.escapeHtml(checkpoint.title)}</h3>
+                                            <p class="card-subtitle">${checkpoint.message_count} messages • ${checkpoint.commands_executed} commands</p>
+                                        </div>
+                                        <span class="card-collapse-icon">▼</span>
+                                    </div>
+                                    <div class="card-content">
+                                        <p><strong>Summary:</strong> ${checkpoint.summary}</p>
+                                        <p style="margin-top: var(--space-2);"><strong>Topics:</strong> ${checkpoint.top_topics.slice(0, 3).join(', ')}</p>
+                                        <button onclick="event.stopPropagation(); window.location.hash='#checkpoints/${checkpoint.id}'"
+                                                class="btn-primary" style="margin-top: var(--space-4);">
+                                            View Full Details
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
-                    <div id="checkpoints-list" style="padding: 2rem; background: #f9f9f9; border-radius: 8px; text-align: center; margin-top: 2rem;">
-                        <p><strong>Task 1.4: Data Loading</strong></p>
-                        <p>Session list with search and sort will be implemented next</p>
-                        <p>Will display all 124 sessions with metadata</p>
+                `;
+            } catch (error) {
+                mainContent.innerHTML = `
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title" style="color: var(--error-500);">Failed to Load Sessions</h2>
+                        </div>
+                        <div class="card-content">
+                            <p>Error: ${error.message}</p>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
         }
     }
 
