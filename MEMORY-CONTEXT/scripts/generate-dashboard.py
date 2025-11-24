@@ -444,6 +444,85 @@ class DashboardGenerator:
         print(f"✓ Exported {len(files)} file references")
         return file_data
 
+    def scan_checkpoint_markdown_files(self) -> List[Dict[str, Any]]:
+        """Scan checkpoints/ directory for actual markdown files"""
+        checkpoints_dir = self.db_path.parent / 'checkpoints'
+        checkpoint_files = []
+
+        if not checkpoints_dir.exists():
+            print("  Warning: checkpoints/ directory not found")
+            return checkpoint_files
+
+        for md_file in sorted(checkpoints_dir.glob('*.md'), reverse=True):
+            # Use filename without extension as ID
+            checkpoint_id = md_file.stem
+
+            # Extract date from filename
+            checkpoint_date = 'Unknown'
+            # Try ISO format first (2025-11-16T09-26-41Z)
+            iso_match = re.match(r'(\d{4}-\d{2}-\d{2}T[\d-]+Z)', checkpoint_id)
+            if iso_match:
+                # Convert to proper ISO format
+                date_str = iso_match.group(1).replace('T', 'T').replace('-', ':', 2).replace('-', ':', 2)
+                checkpoint_date = date_str
+            else:
+                # Try simple date format (2025-11-16)
+                date_match = re.match(r'(\d{4}-\d{2}-\d{2})', checkpoint_id)
+                if date_match:
+                    checkpoint_date = date_match.group(1) + 'T12:00:00Z'
+
+            # Read first few lines for title/summary
+            try:
+                with open(md_file, 'r', encoding='utf-8') as f:
+                    lines = f.readlines()[:20]
+                    title = checkpoint_id  # Default to filename
+                    summary = ''
+
+                    # Look for markdown title
+                    for line in lines:
+                        if line.startswith('# '):
+                            title = line[2:].strip()
+                            break
+
+                    # Look for summary or first paragraph
+                    in_para = False
+                    for line in lines:
+                        if line.strip() and not line.startswith('#'):
+                            summary += line.strip() + ' '
+                            in_para = True
+                            if len(summary) > 200:
+                                break
+                        elif in_para and not line.strip():
+                            break
+
+                    summary = summary[:200].strip()
+            except Exception as e:
+                print(f"  Warning: Could not read {md_file.name}: {e}")
+                title = checkpoint_id
+                summary = ''
+
+            checkpoint_files.append({
+                'id': checkpoint_id,
+                'title': title,
+                'date': checkpoint_date,
+                'message_count': 0,  # Not tracked for checkpoint files
+                'user_messages': 0,
+                'assistant_messages': 0,
+                'top_topics': [],
+                'files_modified': [],
+                'commands_executed': 0,
+                'summary': summary if summary else 'Checkpoint session',
+                'project_name': '',
+                'repository': '',
+                'participants': [],
+                'objectives': '',
+                'export_tags': ['checkpoint'],
+                'export_time': '',
+                'source': 'markdown'  # Mark as coming from markdown file
+            })
+
+        return checkpoint_files
+
     def export_checkpoints(self) -> Dict[str, Any]:
         """Export checkpoint metadata and timeline"""
         print("\n💬 Exporting checkpoints...")
@@ -546,7 +625,17 @@ class DashboardGenerator:
                 timeline_data[date_key]['message_count'] += row['message_count']
                 timeline_data[date_key]['checkpoints'].append(checkpoint_id)
 
-        self.stats['checkpoints_exported'] = len(checkpoints)
+        # Scan for actual checkpoint markdown files
+        print("  Scanning checkpoints/ directory for markdown files...")
+        markdown_checkpoints = self.scan_checkpoint_markdown_files()
+        print(f"  Found {len(markdown_checkpoints)} checkpoint markdown files")
+
+        # Merge database checkpoints with markdown file checkpoints
+        # Database checkpoints come first (they have full stats)
+        all_checkpoints = checkpoints + markdown_checkpoints
+
+        self.stats['checkpoints_exported'] = len(all_checkpoints)
+        self.stats['checkpoint_markdown_files'] = len(markdown_checkpoints)
 
         # Convert timeline to sorted list
         timeline = [
@@ -561,8 +650,13 @@ class DashboardGenerator:
         checkpoint_data = {
             'version': '1.0',
             'generated_at': datetime.utcnow().isoformat() + 'Z',
-            'checkpoints': checkpoints,
-            'timeline': timeline
+            'checkpoints': all_checkpoints,
+            'timeline': timeline,
+            'stats': {
+                'total': len(all_checkpoints),
+                'from_database': len(checkpoints),
+                'from_markdown': len(markdown_checkpoints)
+            }
         }
 
         # Write checkpoints file
@@ -570,7 +664,7 @@ class DashboardGenerator:
         with open(checkpoints_file, 'w') as f:
             json.dump(checkpoint_data, f, indent=2)
 
-        print(f"✓ Exported {len(checkpoints)} checkpoints")
+        print(f"✓ Exported {len(all_checkpoints)} total checkpoints ({len(checkpoints)} from database, {len(markdown_checkpoints)} from markdown)")
         return checkpoint_data
 
     def export_commands(self) -> Dict[str, Any]:

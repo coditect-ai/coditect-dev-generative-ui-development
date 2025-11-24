@@ -1,8 +1,20 @@
 {
   "version": "1.0",
-  "generated_at": "2025-11-24T18:40:37.667372Z",
+  "generated_at": "2025-11-24T19:06:02.258642Z",
   "github_url": "https://github.com/coditect-ai/coditect-rollout-master",
   "commits": [
+    {
+      "hash": "8d5f388b0e3f901b58e8a17ff71c78b26d53525f",
+      "short_hash": "8d5f388",
+      "author": "Hal Casteel",
+      "email": "hal.casteel@gmail.com",
+      "date": "2025-11-24T13:41:04-05:00",
+      "timestamp": 1764009664000,
+      "subject": "refactor(dashboard): Script now ONLY generates data, never touches HTML/CSS/JS",
+      "body": "User's excellent point: Why would we EVER want to overwrite HTML/CSS/JS?\nThose are source code, not generated files!\n\nBREAKING CHANGE: Complete redesign of dashboard generation philosophy\n\nPhilosophy Change:\n- HTML/CSS/JS = Source code (version-controlled, edited directly)\n- JSON data = Generated from database (regenerated as needed)\n\nChanges Made:\n\n1. **Renamed Script Purpose**\n   - Old: \"Static Dashboard Generator\"\n   - New: \"Dashboard Data Generator\"\n   - Now explicitly states it only generates data\n\n2. **Removed All Overwrite Capability**\n   - Removed --rebuild flag\n   - Removed --include-static flag\n   - Removed all calls to copy_static_assets()\n   - Removed all calls to generate_html()\n   - No flags = no options to break things\n\n3. **Updated Console Output**\n   - Clear message: \"Generating JSON data files only\"\n   - Explicit: \"HTML/CSS/JS files unchanged (managed via git)\"\n   - Helpful: Shows exact data/ directory location\n\n4. **Updated Documentation**\n   - REGENERATION-WARNING.md now reflects data-only approach\n   - Removed obsolete manual backup instructions\n   - Clear list of what gets generated vs. what's source code\n\nScript Behavior:\n\u2705 python3 scripts/generate-dashboard.py\n   \u2192 Generates: data/*.json files\n   \u2192 Preserves: index.html, css/, js/, assets/\n   \u2192 Safe to run anytime\n\nThe Problem This Solves:\n\u274c Before: Script could overwrite application code (DANGEROUS!)\n\u2705 After: Script only generates data (SAFE!)\n\nThis is the correct separation of concerns:\n- Database \u2192 JSON data files (generated)\n- Application code \u2192 HTML/CSS/JS (version-controlled)\n\n\ud83e\udd16 Generated with Claude Code\nCo-Authored-By: Claude <noreply@anthropic.com>",
+      "type": "refactor",
+      "github_url": "https://github.com/coditect-ai/coditect-rollout-master/commit/8d5f388b0e3f901b58e8a17ff71c78b26d53525f"
+    },
     {
       "hash": "129311fa2ac98f6164f41f9abcc46c37d380ce3f",
       "short_hash": "129311f",

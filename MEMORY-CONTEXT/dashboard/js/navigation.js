@@ -503,30 +503,30 @@ class NavigationController {
                                     </div>
                                 </div>
                                 <div>
-                                    <h4 style="margin-bottom: var(--space-2); font-size: 14px; font-weight: 600;">Git Commits (Diamonds)</h4>
+                                    <h4 style="margin-bottom: var(--space-2); font-size: 14px; font-weight: 600;">Git Commits (Squares)</h4>
                                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2);">
                                         <div class="flex items-center gap-1">
-                                            <div style="width: 12px; height: 12px; background: #22c55e; transform: rotate(45deg);"></div>
+                                            <div style="width: 12px; height: 12px; background: #22c55e;"></div>
                                             <span style="font-size: 12px;">feat</span>
                                         </div>
                                         <div class="flex items-center gap-1">
-                                            <div style="width: 12px; height: 12px; background: #ef4444; transform: rotate(45deg);"></div>
+                                            <div style="width: 12px; height: 12px; background: #ef4444;"></div>
                                             <span style="font-size: 12px;">fix</span>
                                         </div>
                                         <div class="flex items-center gap-1">
-                                            <div style="width: 12px; height: 12px; background: #3b82f6; transform: rotate(45deg);"></div>
+                                            <div style="width: 12px; height: 12px; background: #3b82f6;"></div>
                                             <span style="font-size: 12px;">docs</span>
                                         </div>
                                         <div class="flex items-center gap-1">
-                                            <div style="width: 12px; height: 12px; background: #a855f7; transform: rotate(45deg);"></div>
+                                            <div style="width: 12px; height: 12px; background: #a855f7;"></div>
                                             <span style="font-size: 12px;">refactor</span>
                                         </div>
                                         <div class="flex items-center gap-1">
-                                            <div style="width: 12px; height: 12px; background: #f59e0b; transform: rotate(45deg);"></div>
+                                            <div style="width: 12px; height: 12px; background: #f59e0b;"></div>
                                             <span style="font-size: 12px;">test</span>
                                         </div>
                                         <div class="flex items-center gap-1">
-                                            <div style="width: 12px; height: 12px; background: #6b7280; transform: rotate(45deg);"></div>
+                                            <div style="width: 12px; height: 12px; background: #6b7280;"></div>
                                             <span style="font-size: 12px;">chore</span>
                                         </div>
                                     </div>
@@ -1489,6 +1489,11 @@ class NavigationController {
 
             try {
                 const checkpoint = await window.dashboardData.loadCheckpoint(id);
+
+                // Check if checkpoint exists
+                if (!checkpoint) {
+                    throw new Error('Checkpoint not found in data');
+                }
 
                 // Load git data for this checkpoint
                 const gitData = await window.dashboardData.loadGitCommitsForCheckpoint(id);

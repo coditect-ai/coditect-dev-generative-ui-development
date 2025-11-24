@@ -362,27 +362,27 @@ async function initD3TimelineEnhanced(data, nav) {
             showDetailPanel(d, nav);
         });
 
-    // Plot git commits as diamonds (separate y position to avoid overlap)
-    const commitYPosition = height + 40; // Below x-axis
+    // Plot git commits as squares (top of timeline, above sessions)
+    const commitYPosition = 30; // Top of timeline
 
     svg.selectAll('.commit-marker')
         .data(periodCommits)
         .enter()
         .append('path')
         .attr('class', 'commit-marker')
-        .attr('d', d3.symbol().type(d3.symbolDiamond).size(120))
+        .attr('d', d3.symbol().type(d3.symbolSquare).size(100))
         .attr('transform', d => `translate(${xScale(d.date)},${commitYPosition})`)
         .style('fill', d => getCommitColor(d.type))
-        .style('opacity', 0.8)
+        .style('opacity', 0.75)
         .style('stroke', '#fff')
-        .style('stroke-width', '1.5px')
+        .style('stroke-width', '2px')
         .style('cursor', 'pointer')
         .on('mouseover', function(event, d) {
             d3.select(this)
                 .transition()
                 .duration(150)
                 .style('opacity', 1)
-                .attr('d', d3.symbol().type(d3.symbolDiamond).size(180));
+                .attr('d', d3.symbol().type(d3.symbolSquare).size(150));
 
             tooltip
                 .html(`
@@ -427,8 +427,8 @@ async function initD3TimelineEnhanced(data, nav) {
             d3.select(this)
                 .transition()
                 .duration(150)
-                .style('opacity', 0.8)
-                .attr('d', d3.symbol().type(d3.symbolDiamond).size(120));
+                .style('opacity', 0.75)
+                .attr('d', d3.symbol().type(d3.symbolSquare).size(100));
 
             tooltip.style('visibility', 'hidden');
         })
