@@ -28,7 +28,7 @@ import sys
 
 # Use the new wrapper that guarantees output display
 result = subprocess.run([
-    "python3", ".coditect/scripts/export-dedup-with-status.py"
+    "python3", "scripts/export-dedup-with-status.py"
 ], cwd=".", capture_output=False, text=True)
 
 # Exit with same code
@@ -50,15 +50,15 @@ sys.exit(result.returncode)
 
 ```bash
 # After running /export, use automated mode:
-python3 .coditect/scripts/export-dedup.py --yes --description "Your description" --auto-compact
+python3 scripts/export-dedup.py --yes --description "Your description" --auto-compact
 
 # Or let it auto-generate description:
-python3 .coditect/scripts/export-dedup.py -y --auto-compact
+python3 scripts/export-dedup.py -y --auto-compact
 ```
 
 ## How export-dedup Works (Step-by-Step)
 
-When you run `python3 .coditect/scripts/export-dedup.py`, here's exactly what happens:
+When you run `python3 scripts/export-dedup.py`, here's exactly what happens:
 
 ### Step 1: Intelligent Export File Search
 
@@ -138,7 +138,7 @@ For **each** export file found, the script:
 ### Step 4: Create Checkpoint
 
 **What happens:**
-1. Runs `.coditect/scripts/create-checkpoint.py`
+1. Runs `scripts/create-checkpoint.py`
 2. Generates checkpoint document with:
    - Git status
    - Submodule states
@@ -229,7 +229,7 @@ All arguments are optional:
 ### Interactive Mode (Original Behavior)
 ```python
 import subprocess
-subprocess.run(["python3", ".coditect/scripts/export-dedup.py", "--auto-compact"])
+subprocess.run(["python3", "scripts/export-dedup.py", "--auto-compact"])
 # Will prompt for confirmation if export is old
 # Will prompt for checkpoint description
 ```
@@ -238,7 +238,7 @@ subprocess.run(["python3", ".coditect/scripts/export-dedup.py", "--auto-compact"
 ```python
 import subprocess
 subprocess.run([
-    "python3", ".coditect/scripts/export-dedup.py",
+    "python3", "scripts/export-dedup.py",
     "--yes",  # Skip all prompts
     "--description", "Project Intelligence Platform submodule created",
     "--auto-compact"
@@ -250,7 +250,7 @@ subprocess.run([
 ```python
 import subprocess
 subprocess.run([
-    "python3", ".coditect/scripts/export-dedup.py",
+    "python3", "scripts/export-dedup.py",
     "-y"  # Just auto-accept, use default description
 ])
 # Auto-description: "Automated export and deduplication"
@@ -260,7 +260,7 @@ subprocess.run([
 ```python
 import subprocess
 subprocess.run([
-    "python3", ".coditect/scripts/export-dedup.py",
+    "python3", "scripts/export-dedup.py",
     "--yes",
     "--no-archive"  # Don't move exports
 ])
@@ -457,7 +457,7 @@ MEMORY-CONTEXT/
 ```bash
 # Complete workflow (automated):
 /export
-python3 .coditect/scripts/export-dedup.py -y --description "Feature X complete" --auto-compact
+python3 scripts/export-dedup.py -y --description "Feature X complete" --auto-compact
 /compact
 
 # Or use the slash command wrapper:

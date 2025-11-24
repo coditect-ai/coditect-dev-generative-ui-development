@@ -604,6 +604,14 @@ Innovation Through Systematic Development
 
 
 ## Recent Checkpoints
+- **[2025-11-24T03-49-35Z]** [Process 2 remaining Claude exports (CURRENT-BUILD files)](MEMORY-CONTEXT/checkpoints/2025-11-24T03-49-35Z-Process-2-remaining-Claude-exports-(CURRENT-BUILD-files).md)
+
+- **[2025-11-24T03-41-48Z]** [Process remaining 10 exports with corrected spelling](MEMORY-CONTEXT/checkpoints/2025-11-24T03-41-48Z-Process-remaining-10-exports-with-corrected-spelling.md)
+
+- **[2025-11-24T03-36-18Z]** [Deduplicate 345 archived export files](MEMORY-CONTEXT/checkpoints/2025-11-24T03-36-18Z-Deduplicate-345-archived-export-files.md)
+
+- **[2025-11-24T03-30-21Z]** [Automated export and deduplication](MEMORY-CONTEXT/checkpoints/2025-11-24T03-30-21Z-Automated-export-and-deduplication.md)
+
 - **[2025-11-22T08-28-09Z]** [Submodule configuration cross-check and symlink verification complete](MEMORY-CONTEXT/checkpoints/2025-11-22T08-28-09Z-Submodule-configuration-cross-check-and-symlink-verification-complete.md)
 
 - **[2025-11-22T06-53-19Z]** [Automated export and deduplication](MEMORY-CONTEXT/checkpoints/2025-11-22T06-53-19Z-Automated-export-and-deduplication.md)
