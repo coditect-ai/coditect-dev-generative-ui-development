@@ -10,7 +10,11 @@ let timelineState = {
     currentTopic: '',
     currentProject: '',
     showSessions: true,
-    showCommits: true
+    showCommits: true,
+    customRangeMode: false, // When true, use custom start/end dates
+    isPanning: false, // For CMD+Click drag navigation
+    panStartX: 0,
+    panStartDate: null
 };
 
 // Constrain element position to viewport bounds
@@ -82,7 +86,201 @@ function makeDraggable(element) {
     });
 }
 
+// Show date range selection modal
+function showDateRangeModal(nav) {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('timeline-date-range-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'timeline-date-range-modal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+
+        // Get earliest and latest dates from all data
+        const allDates = [...timelineState.allData.map(d => d.date), ...timelineState.allCommits.map(d => d.date)];
+        const minDate = d3.min(allDates);
+        const maxDate = d3.max(allDates);
+
+        // Format dates for input fields (YYYY-MM-DD)
+        const formatDate = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        // Default to last 30 days
+        const defaultEnd = new Date();
+        const defaultStart = new Date();
+        defaultStart.setDate(defaultStart.getDate() - 30);
+
+        modal.innerHTML = `
+            <div style="background: var(--bg-primary); border-radius: var(--radius-lg); padding: var(--space-6); max-width: 500px; width: 90%; box-shadow: var(--shadow-2xl); border: 2px solid var(--primary-500);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+                    <h3 style="margin: 0; color: var(--text-primary); font-size: 20px; font-weight: 600;">📅 Select Date Range</h3>
+                    <button onclick="document.getElementById('timeline-date-range-modal').style.display='none'" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary); padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.background='var(--bg-tertiary)'" onmouseout="this.style.background='none'">×</button>
+                </div>
+
+                <div style="margin-bottom: var(--space-6);">
+                    <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: var(--space-4);">
+                        Available data range: <strong>${minDate.toLocaleDateString()}</strong> to <strong>${maxDate.toLocaleDateString()}</strong>
+                    </p>
+
+                    <div style="display: grid; gap: var(--space-4);">
+                        <div>
+                            <label for="timeline-start-date" style="display: block; font-weight: 600; margin-bottom: var(--space-2); color: var(--text-primary);">Start Date:</label>
+                            <input type="date" id="timeline-start-date" class="form-control"
+                                   min="${formatDate(minDate)}"
+                                   max="${formatDate(maxDate)}"
+                                   value="${formatDate(defaultStart)}"
+                                   style="width: 100%; padding: var(--space-2); border: 2px solid var(--border-primary); border-radius: var(--radius-sm); font-size: 14px;">
+                        </div>
+
+                        <div>
+                            <label for="timeline-end-date" style="display: block; font-weight: 600; margin-bottom: var(--space-2); color: var(--text-primary);">End Date:</label>
+                            <input type="date" id="timeline-end-date" class="form-control"
+                                   min="${formatDate(minDate)}"
+                                   max="${formatDate(maxDate)}"
+                                   value="${formatDate(defaultEnd)}"
+                                   style="width: 100%; padding: var(--space-2); border: 2px solid var(--border-primary); border-radius: var(--radius-sm); font-size: 14px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: var(--space-6);">
+                    <h4 style="margin-bottom: var(--space-3); color: var(--text-primary); font-size: 14px; font-weight: 600;">Quick Presets:</h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-2);">
+                        <button class="btn btn-secondary" onclick="window.setDateRangePreset('today')" style="font-size: 13px; padding: var(--space-2);">📍 Today</button>
+                        <button class="btn btn-secondary" onclick="window.setDateRangePreset('week')" style="font-size: 13px; padding: var(--space-2);">📅 This Week</button>
+                        <button class="btn btn-secondary" onclick="window.setDateRangePreset('month')" style="font-size: 13px; padding: var(--space-2);">🗓️ This Month</button>
+                        <button class="btn btn-secondary" onclick="window.setDateRangePreset('all')" style="font-size: 13px; padding: var(--space-2);">🌐 All Data</button>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: var(--space-3); justify-content: flex-end;">
+                    <button onclick="document.getElementById('timeline-date-range-modal').style.display='none'" class="btn btn-secondary" style="padding: var(--space-3) var(--space-4);">
+                        Cancel
+                    </button>
+                    <button onclick="window.applyDateRange()" class="btn btn-primary" style="padding: var(--space-3) var(--space-4);">
+                        ✓ Apply Range
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.style.display !== 'none') {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Close modal on background click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    modal.style.display = 'flex';
+}
+
+// Set date range presets
+window.setDateRangePreset = function(preset) {
+    const allDates = [...timelineState.allData.map(d => d.date), ...timelineState.allCommits.map(d => d.date)];
+    const minDate = d3.min(allDates);
+    const maxDate = d3.max(allDates);
+
+    const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    let startDate, endDate;
+    const now = new Date();
+
+    switch (preset) {
+        case 'today':
+            startDate = new Date(now);
+            startDate.setHours(0, 0, 0, 0);
+            endDate = new Date(now);
+            endDate.setHours(23, 59, 59, 999);
+            break;
+        case 'week':
+            endDate = new Date(now);
+            startDate = new Date(now);
+            startDate.setDate(startDate.getDate() - 7);
+            break;
+        case 'month':
+            endDate = new Date(now);
+            startDate = new Date(now);
+            startDate.setMonth(startDate.getMonth() - 1);
+            break;
+        case 'all':
+            startDate = minDate;
+            endDate = maxDate;
+            break;
+    }
+
+    document.getElementById('timeline-start-date').value = formatDate(startDate);
+    document.getElementById('timeline-end-date').value = formatDate(endDate);
+};
+
+// Apply custom date range
+window.applyDateRange = function() {
+    const startInput = document.getElementById('timeline-start-date').value;
+    const endInput = document.getElementById('timeline-end-date').value;
+
+    if (!startInput || !endInput) {
+        alert('Please select both start and end dates');
+        return;
+    }
+
+    const startDate = new Date(startInput);
+    const endDate = new Date(endInput);
+
+    // Set time to beginning/end of day
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+
+    if (startDate > endDate) {
+        alert('Start date must be before end date');
+        return;
+    }
+
+    // Update timeline state
+    timelineState.customRangeMode = true;
+    timelineState.currentPeriodStart = startDate;
+    timelineState.currentPeriodEnd = endDate;
+
+    // Hide modal and refresh timeline
+    document.getElementById('timeline-date-range-modal').style.display = 'none';
+
+    // Get nav object from window
+    if (window.currentNav) {
+        initD3TimelineEnhanced(timelineState.allData, window.currentNav);
+    }
+};
+
 async function initD3TimelineEnhanced(data, nav) {
+    // Store nav reference globally for modal callbacks
+    window.currentNav = nav;
     timelineState.allData = data;
 
     // Load git commits
@@ -131,11 +329,31 @@ async function initD3TimelineEnhanced(data, nav) {
     d3.select('#timeline-chart').selectAll('*').remove();
     d3.selectAll('.timeline-tooltip').remove();
 
-    // Create SVG
-    const svg = d3.select('#timeline-chart')
+    // Create SVG with CMD+Click drag panning
+    const svgContainer = d3.select('#timeline-chart')
         .append('svg')
         .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom);
+
+    // Add panning rectangle for CMD+Click drag
+    svgContainer.append('rect')
+        .attr('class', 'pan-background')
+        .attr('width', width + margin.left + margin.right)
         .attr('height', height + margin.top + margin.bottom)
+        .style('fill', 'transparent')
+        .style('cursor', 'default')
+        .on('mousedown', function(event) {
+            // Check for CMD (Mac) or Ctrl (Windows/Linux) key
+            if (event.metaKey || event.ctrlKey) {
+                event.preventDefault();
+                timelineState.isPanning = true;
+                timelineState.panStartX = event.clientX;
+                timelineState.panStartDate = new Date(timelineState.currentPeriodEnd);
+                d3.select(this).style('cursor', 'grabbing');
+            }
+        });
+
+    const svg = svgContainer
         .append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
@@ -474,6 +692,78 @@ async function initD3TimelineEnhanced(data, nav) {
         timelineState.showCommits = e.target.checked;
         initD3TimelineEnhanced(data, nav);
     };
+
+    // Setup CMD+Click drag panning handlers (document-level for smooth panning)
+    document.addEventListener('mousemove', (event) => {
+        if (timelineState.isPanning) {
+            const panRect = d3.select('.pan-background').node();
+            if (panRect) {
+                panRect.style.cursor = 'grabbing';
+            }
+
+            // Calculate drag distance
+            const dragDistance = event.clientX - timelineState.panStartX;
+
+            // Convert drag distance to time shift (pixels to milliseconds)
+            // More sensitive panning: 1 pixel = portion of visible range
+            const visibleRange = timelineState.currentPeriodEnd - timelineState.currentPeriodStart;
+            const chartWidth = width; // Use actual chart width
+            const timePerPixel = visibleRange / chartWidth;
+            const timeShift = -dragDistance * timePerPixel; // Negative for natural drag direction
+
+            // Calculate new period dates
+            const newEnd = new Date(timelineState.panStartDate.getTime() + timeShift);
+            const newStart = new Date(newEnd.getTime() - visibleRange);
+
+            // Update timeline state
+            timelineState.currentPeriodEnd = newEnd;
+            timelineState.currentPeriodStart = newStart;
+            timelineState.customRangeMode = true; // Enable custom mode when panning
+
+            // Refresh timeline (debounce for performance)
+            if (!timelineState.panDebounceTimer) {
+                timelineState.panDebounceTimer = setTimeout(() => {
+                    initD3TimelineEnhanced(data, nav);
+                    timelineState.panDebounceTimer = null;
+                }, 50); // 50ms debounce
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (timelineState.isPanning) {
+            timelineState.isPanning = false;
+            const panRect = d3.select('.pan-background').node();
+            if (panRect) {
+                panRect.style.cursor = 'default';
+            }
+            // Final refresh after panning completes
+            if (timelineState.panDebounceTimer) {
+                clearTimeout(timelineState.panDebounceTimer);
+                timelineState.panDebounceTimer = null;
+            }
+            initD3TimelineEnhanced(data, nav);
+        }
+    });
+
+    // Update cursor when CMD/Ctrl key is held over chart
+    document.addEventListener('keydown', (event) => {
+        if ((event.metaKey || event.ctrlKey) && !timelineState.isPanning) {
+            const panRect = d3.select('.pan-background').node();
+            if (panRect) {
+                panRect.style.cursor = 'grab';
+            }
+        }
+    });
+
+    document.addEventListener('keyup', (event) => {
+        if (!event.metaKey && !event.ctrlKey && !timelineState.isPanning) {
+            const panRect = d3.select('.pan-background').node();
+            if (panRect) {
+                panRect.style.cursor = 'default';
+            }
+        }
+    });
 }
 
 function calculatePeriodStart(endDate, zoomLevel) {
@@ -567,10 +857,15 @@ function setupNavigationHandlers(nav) {
     const leftBtn = document.getElementById('timeline-nav-left');
     const rightBtn = document.getElementById('timeline-nav-right');
     const todayBtn = document.getElementById('timeline-nav-today');
+    const customRangeBtn = document.getElementById('timeline-custom-range-btn');
 
     leftBtn.onclick = () => navigatePeriod(-1, nav);
     rightBtn.onclick = () => navigatePeriod(1, nav);
     todayBtn.onclick = () => navigateToToday(nav);
+
+    if (customRangeBtn) {
+        customRangeBtn.onclick = () => showDateRangeModal(nav);
+    }
 }
 
 function navigatePeriod(direction, nav) {
@@ -624,7 +919,7 @@ function showCommitDetailPanel(commit, nav) {
     `;
 
     content.innerHTML = `
-        <div class="grid grid-cols-2" style="gap: var(--space-4); margin-bottom: var(--space-6);">
+        <div class="grid grid-cols-2" style="gap: var(--space-4); margin-bottom: var(--space-4);">
             <div class="stat-card">
                 <h4>📅 Commit Date</h4>
                 <p class="stat-value">${commit.date.toLocaleDateString()}</p>
@@ -648,6 +943,17 @@ function showCommitDetailPanel(commit, nav) {
                 </p>
             </div>
         </div>
+
+        ${commit.github_url ? `
+            <div style="margin-bottom: var(--space-6); padding: var(--space-4); background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border-radius: var(--radius-md); box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2);">
+                <a href="${commit.github_url}" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; gap: var(--space-2); color: white; font-weight: 600; font-size: 16px; text-decoration: none;">
+                    <svg style="width: 24px; height: 24px; fill: white;" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    <span>View Full Commit on GitHub →</span>
+                </a>
+            </div>
+        ` : ''}
 
         <div style="margin-bottom: var(--space-4);">
             <h4 style="margin-bottom: var(--space-2); color: var(--text-primary);">📝 Commit Message</h4>
@@ -677,14 +983,9 @@ function showCommitDetailPanel(commit, nav) {
             </div>
         ` : ''}
 
-        <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border-primary); display: flex; gap: var(--space-3);">
-            ${commit.github_url ? `
-                <a href="${commit.github_url}" target="_blank" rel="noopener noreferrer" class="btn" style="flex: 1; background: #22c55e; color: white; font-weight: 600; border: 2px solid #16a34a; text-decoration: none;">
-                    🔗 View on GitHub →
-                </a>
-            ` : ''}
-            <button onclick="document.getElementById('timeline-detail-panel').style.display='none'" class="btn" style="flex: 1;">
-                Close
+        <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border-primary); text-align: center;">
+            <button onclick="document.getElementById('timeline-detail-panel').style.display='none'" class="btn btn-secondary" style="padding: var(--space-3) var(--space-6);">
+                ✕ Close Panel
             </button>
         </div>
     `;
@@ -804,4 +1105,5 @@ function showDetailPanel(checkpoint, nav) {
 // Export for use in navigation.js
 if (typeof window !== 'undefined') {
     window.initD3TimelineEnhanced = initD3TimelineEnhanced;
+    window.showDateRangeModal = showDateRangeModal;
 }

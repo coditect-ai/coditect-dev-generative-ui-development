@@ -431,6 +431,9 @@ class NavigationController {
                                 <button id="timeline-nav-right" class="btn btn-primary" style="padding: var(--space-2) var(--space-4);">
                                     Next ►
                                 </button>
+                                <button id="timeline-custom-range-btn" class="btn btn-secondary" style="padding: var(--space-2) var(--space-4); background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; border: none; font-weight: 600;">
+                                    📅 Custom Range
+                                </button>
                                 <div style="flex: 1;"></div>
                                 <div style="display: flex; gap: var(--space-4); align-items: flex-end;">
                                     <div>
@@ -459,7 +462,7 @@ class NavigationController {
                             </div>
                             <div id="timeline-period-info" style="padding: var(--space-2); background: var(--primary-100); border-radius: var(--radius-sm); font-size: var(--text-sm); margin-bottom: var(--space-4); font-weight: 600; color: var(--primary-900);"></div>
                             <div style="padding: var(--space-2); background: var(--bg-tertiary); border-radius: var(--radius-sm); font-size: var(--text-sm);">
-                                <strong>💡 Tips:</strong> Click sessions for full details • Use arrows to navigate periods • Change zoom level for more separation • Scroll to zoom • Drag to pan
+                                <strong>💡 Tips:</strong> Click sessions for full details • Use "📅 Custom Range" for specific dates • Hold CMD/Ctrl and drag to pan timeline • Use arrows to navigate periods
                             </div>
                         </div>
                     </div>
