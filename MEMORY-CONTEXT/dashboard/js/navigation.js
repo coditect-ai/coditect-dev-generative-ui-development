@@ -1474,15 +1474,32 @@ class NavigationController {
 
     async loadFileContentForModal(filePath) {
         try {
-            // Try multiple possible paths
+            // Clean up the path
+            let cleanPath = filePath;
+
+            // Remove leading slashes and fix malformed paths
+            cleanPath = cleanPath.replace(/^\/+/, '');
+
+            // Skip if path looks invalid
+            if (cleanPath.startsWith('-') || cleanPath.length === 0) {
+                console.warn(`Invalid file path: ${filePath}`);
+                return null;
+            }
+
+            // Try multiple possible paths relative to dashboard location
             const paths = [
-                `../../${filePath}`,
-                `../${filePath}`,
-                filePath
+                `../${cleanPath}`,              // Up from dashboard to MEMORY-CONTEXT/
+                `../../${cleanPath}`,           // Up to project root
+                `../../../${cleanPath}`,        // Up even further if needed
+                cleanPath                       // Try as-is
             ];
+
+            console.log(`Trying to load: ${filePath}`);
+            console.log(`Cleaned path: ${cleanPath}`);
 
             for (const path of paths) {
                 try {
+                    console.log(`  Trying: ${path}`);
                     const response = await fetch(path);
                     if (response.ok) {
                         const content = await response.text();
@@ -1494,7 +1511,7 @@ class NavigationController {
                 }
             }
 
-            console.warn(`Could not load file: ${filePath}`);
+            console.warn(`Could not load file after trying all paths: ${filePath}`);
             return null;
         } catch (error) {
             console.error('Error loading file:', error);
