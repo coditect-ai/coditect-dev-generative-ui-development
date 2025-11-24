@@ -17,8 +17,9 @@ let timelineState = {
     panStartDate: null
 };
 
-// Constrain element position to viewport bounds
-function constrainToViewport(x, y, element) {
+// Smart tooltip positioning that ALWAYS maintains complete separation from mouse cursor
+// Intelligently selects quadrant with most space and ensures 250px+ separation
+function positionTooltipAwayFromCursor(mouseX, mouseY, element) {
     // Force layout to get accurate dimensions
     element.offsetWidth; // Trigger reflow
 
@@ -37,14 +38,58 @@ function constrainToViewport(x, y, element) {
         height = parseInt(computed.height) || 300;
     }
 
-    // Add padding for safe margins - 30px minimum on all sides
     const padding = 30;
+    const minSeparation = 250; // Minimum 250px separation from cursor
 
-    // Ensure element stays within viewport with padding
-    const constrainedX = Math.max(padding, Math.min(x, viewportWidth - width - padding));
-    const constrainedY = Math.max(padding, Math.min(y, viewportHeight - height - padding));
+    // Calculate available space in each quadrant
+    const spaceLeft = mouseX - padding;
+    const spaceRight = viewportWidth - mouseX - padding;
+    const spaceTop = mouseY - padding;
+    const spaceBottom = viewportHeight - mouseY - padding;
 
-    return { x: constrainedX, y: constrainedY };
+    let x, y;
+
+    // Priority: Try to place in quadrant with most horizontal space
+    // 1. Try LEFT and UP (best for keeping cursor visible)
+    if (spaceLeft >= width + minSeparation && spaceTop >= height) {
+        x = mouseX - minSeparation - width;
+        y = Math.max(padding, mouseY - height - 50);
+    }
+    // 2. Try LEFT and DOWN
+    else if (spaceLeft >= width + minSeparation && spaceBottom >= height) {
+        x = mouseX - minSeparation - width;
+        y = Math.min(viewportHeight - height - padding, mouseY + 50);
+    }
+    // 3. Try RIGHT and UP
+    else if (spaceRight >= width + minSeparation && spaceTop >= height) {
+        x = mouseX + minSeparation;
+        y = Math.max(padding, mouseY - height - 50);
+    }
+    // 4. Try RIGHT and DOWN
+    else if (spaceRight >= width + minSeparation && spaceBottom >= height) {
+        x = mouseX + minSeparation;
+        y = Math.min(viewportHeight - height - padding, mouseY + 50);
+    }
+    // 5. Emergency fallback - place in largest quadrant, maximize separation
+    else {
+        if (spaceLeft > spaceRight) {
+            x = Math.max(padding, mouseX - width - 100);
+        } else {
+            x = Math.min(viewportWidth - width - padding, mouseX + 100);
+        }
+
+        if (spaceTop > spaceBottom) {
+            y = Math.max(padding, mouseY - height - 100);
+        } else {
+            y = Math.min(viewportHeight - height - padding, mouseY + 100);
+        }
+    }
+
+    // Final safety constraint - ensure within viewport
+    x = Math.max(padding, Math.min(x, viewportWidth - width - padding));
+    y = Math.max(padding, Math.min(y, viewportHeight - height - padding));
+
+    return { x, y };
 }
 
 // Make element draggable
@@ -557,15 +602,13 @@ async function initD3TimelineEnhanced(data, nav) {
                     </div>
                 `);
 
-            // Set initial position constrained to viewport BEFORE making visible
-            // Large offset to prevent tooltip from appearing under cursor or interfering with mouse events
+            // Set initial position using smart positioning to ALWAYS maintain complete separation from cursor
+            // Intelligently selects best quadrant and ensures 250px+ separation in all directions
             const tooltipNode = tooltip.node();
-            const x = event.clientX + 50;
-            const y = event.clientY + 50;
-            const constrained = constrainToViewport(x, y, tooltipNode);
+            const position = positionTooltipAwayFromCursor(event.clientX, event.clientY, tooltipNode);
             tooltip
-                .style('left', constrained.x + 'px')
-                .style('top', constrained.y + 'px')
+                .style('left', position.x + 'px')
+                .style('top', position.y + 'px')
                 .style('visibility', 'visible');
 
             // Enable pointer events after a short delay to allow dragging
@@ -655,14 +698,13 @@ async function initD3TimelineEnhanced(data, nav) {
                     </div>
                 `);
 
-            // Large offset to prevent tooltip from appearing under cursor or interfering with mouse events
+            // Use smart positioning to ALWAYS maintain complete separation from cursor
+            // Intelligently selects best quadrant and ensures 250px+ separation in all directions
             const tooltipNode = tooltip.node();
-            const x = event.clientX + 50;
-            const y = event.clientY + 50;
-            const constrained = constrainToViewport(x, y, tooltipNode);
+            const position = positionTooltipAwayFromCursor(event.clientX, event.clientY, tooltipNode);
             tooltip
-                .style('left', constrained.x + 'px')
-                .style('top', constrained.y + 'px')
+                .style('left', position.x + 'px')
+                .style('top', position.y + 'px')
                 .style('visibility', 'visible');
 
             // Enable pointer events after a short delay to allow dragging
@@ -970,12 +1012,21 @@ function showCommitDetailPanel(commit, nav) {
         </div>
 
         ${commit.github_url ? `
-            <div style="margin-bottom: var(--space-4); padding: var(--space-2); background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border-radius: var(--radius-sm); box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);">
-                <a href="${commit.github_url}" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; gap: var(--space-1); color: white; font-weight: 600; font-size: 13px; text-decoration: none;">
-                    <svg style="width: 16px; height: 16px; fill: white;" viewBox="0 0 24 24">
+            <div style="margin-bottom: var(--space-4);">
+                <a href="${commit.github_url}" target="_blank" rel="noopener noreferrer"
+                   style="display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+                          background: #0969da; color: #ffffff; font-weight: 600; font-size: 14px;
+                          padding: 10px 16px; border-radius: 6px; text-decoration: none;
+                          border: 2px solid #0969da; min-height: 44px; min-width: 44px;
+                          transition: all 0.2s ease;"
+                   onmouseover="this.style.background='#0550ae'; this.style.borderColor='#0550ae';"
+                   onmouseout="this.style.background='#0969da'; this.style.borderColor='#0969da';"
+                   onfocus="this.style.outline='3px solid #0969da'; this.style.outlineOffset='2px';"
+                   onblur="this.style.outline='none';">
+                    <svg style="width: 20px; height: 20px; fill: #ffffff;" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                     </svg>
-                    <span>View on GitHub →</span>
+                    <span>View on GitHub</span>
                 </a>
             </div>
         ` : ''}
@@ -1008,9 +1059,17 @@ function showCommitDetailPanel(commit, nav) {
             </div>
         ` : ''}
 
-        <div style="margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--border-primary); text-align: center;">
-            <button onclick="document.getElementById('timeline-detail-panel').style.display='none'" class="btn btn-secondary" style="padding: var(--space-2) var(--space-4); font-size: 13px;">
-                ✕ Close
+        <div style="margin-top: var(--space-4); padding-top: var(--space-3); border-top: 2px solid var(--border-primary); text-align: center;">
+            <button onclick="document.getElementById('timeline-detail-panel').style.display='none'"
+                    style="background: #ffffff; color: #24292f; font-weight: 600; font-size: 14px;
+                           padding: 10px 20px; border-radius: 6px; border: 2px solid #d0d7de;
+                           min-height: 44px; min-width: 44px; cursor: pointer;
+                           transition: all 0.2s ease;"
+                    onmouseover="this.style.background='#f6f8fa'; this.style.borderColor='#d0d7de';"
+                    onmouseout="this.style.background='#ffffff'; this.style.borderColor='#d0d7de';"
+                    onfocus="this.style.outline='3px solid #0969da'; this.style.outlineOffset='2px';"
+                    onblur="this.style.outline='none';">
+                Close
             </button>
         </div>
     `;
