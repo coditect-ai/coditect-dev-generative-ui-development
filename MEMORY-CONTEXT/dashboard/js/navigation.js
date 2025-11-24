@@ -63,12 +63,33 @@ class NavigationController {
             });
         }
 
+        // Modal setup
+        this.setupModal();
+
         // Escape key to close modals/filters
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 this.closeModals();
             }
         });
+    }
+
+    setupModal() {
+        const modal = document.getElementById('file-modal');
+        if (!modal) return;
+
+        const closeBtn = document.getElementById('modal-close');
+        const overlay = modal.querySelector('.modal-overlay');
+
+        // Close on X button
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.closeModal());
+        }
+
+        // Close on overlay click
+        if (overlay) {
+            overlay.addEventListener('click', () => this.closeModal());
+        }
     }
 
     handleNavClick(e) {
@@ -987,15 +1008,38 @@ class NavigationController {
                                 </div>
 
                                 ${checkpoint.files_modified && checkpoint.files_modified.length > 0 ? `
-                                    <h3 style="margin-top: var(--space-6);">Files Modified</h3>
+                                    <h3 style="margin-top: var(--space-6);">Files Modified (click to view)</h3>
                                     <div class="grid grid-cols-1" style="gap: var(--space-2);">
-                                        ${checkpoint.files_modified.slice(0, 10).map(file => `
-                                            <div style="padding: var(--space-2); background: var(--bg-tertiary); border-radius: var(--radius-md); font-family: monospace; font-size: var(--text-sm);">
-                                                ${this.escapeHtml(file)}
-                                            </div>
+                                        ${checkpoint.files_modified.slice(0, 20).map(file => `
+                                            <button
+                                                onclick="window.dashboardNav.openFileModal('${this.escapeHtml(file).replace(/'/g, "\\'")}')"
+                                                class="file-reference-btn"
+                                                style="
+                                                    padding: var(--space-3);
+                                                    background: var(--bg-tertiary);
+                                                    border: 1px solid var(--border-primary);
+                                                    border-radius: var(--radius-md);
+                                                    font-family: monospace;
+                                                    font-size: var(--text-sm);
+                                                    cursor: pointer;
+                                                    transition: all var(--transition-fast);
+                                                    text-align: left;
+                                                    width: 100%;
+                                                    display: flex;
+                                                    align-items: center;
+                                                    gap: var(--space-2);
+                                                    color: var(--text-primary);
+                                                "
+                                                onmouseover="this.style.background='var(--bg-elevated)'; this.style.borderColor='var(--primary-500)'; this.style.transform='translateX(4px)';"
+                                                onmouseout="this.style.background='var(--bg-tertiary)'; this.style.borderColor='var(--border-primary)'; this.style.transform='translateX(0)';"
+                                            >
+                                                <span style="color: var(--primary-500);">📄</span>
+                                                <span style="flex: 1; word-break: break-all;">${this.escapeHtml(file)}</span>
+                                                <span style="color: var(--text-tertiary); font-size: 0.9em;">→</span>
+                                            </button>
                                         `).join('')}
-                                        ${checkpoint.files_modified.length > 10 ? `
-                                            <p class="text-sm text-tertiary">... and ${checkpoint.files_modified.length - 10} more files</p>
+                                        ${checkpoint.files_modified.length > 20 ? `
+                                            <p class="text-sm text-tertiary">... and ${checkpoint.files_modified.length - 20} more files</p>
                                         ` : ''}
                                     </div>
                                 ` : ''}
@@ -1381,7 +1425,130 @@ class NavigationController {
     }
 
     closeModals() {
-        // Modal close logic for Task 1.5
+        // Close file modal
+        this.closeModal();
+    }
+
+    openFileModal(filePath) {
+        const modal = document.getElementById('file-modal');
+        const titleEl = document.getElementById('modal-file-title');
+        const contentEl = document.getElementById('modal-file-content');
+
+        console.log('📄 Opening file modal:', filePath);
+
+        // Show modal
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent background scroll
+
+        // Set title
+        titleEl.textContent = this.getFileName(filePath);
+
+        // Load file content
+        contentEl.innerHTML = '<div class="loading">Loading file...</div>';
+
+        this.loadFileContentForModal(filePath).then(content => {
+            if (content) {
+                // Convert markdown to HTML (basic conversion)
+                const html = this.markdownToHtml(content);
+                contentEl.innerHTML = html;
+            } else {
+                contentEl.innerHTML = `
+                    <div style="text-align: center; padding: var(--space-8); color: var(--text-tertiary);">
+                        <p>Could not load file content.</p>
+                        <p class="text-sm" style="margin-top: var(--space-4);">
+                            File path: <code>${this.escapeHtml(filePath)}</code>
+                        </p>
+                    </div>
+                `;
+            }
+        });
+    }
+
+    closeModal() {
+        const modal = document.getElementById('file-modal');
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = ''; // Restore scroll
+        }
+    }
+
+    async loadFileContentForModal(filePath) {
+        try {
+            // Try multiple possible paths
+            const paths = [
+                `../../${filePath}`,
+                `../${filePath}`,
+                filePath
+            ];
+
+            for (const path of paths) {
+                try {
+                    const response = await fetch(path);
+                    if (response.ok) {
+                        const content = await response.text();
+                        console.log(`✓ Loaded file from: ${path}`);
+                        return content;
+                    }
+                } catch (e) {
+                    // Try next path
+                }
+            }
+
+            console.warn(`Could not load file: ${filePath}`);
+            return null;
+        } catch (error) {
+            console.error('Error loading file:', error);
+            return null;
+        }
+    }
+
+    markdownToHtml(markdown) {
+        // Basic markdown to HTML conversion
+        let html = this.escapeHtml(markdown);
+
+        // Headers
+        html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+        html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+        html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+        // Bold
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+
+        // Italic
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        html = html.replace(/_(.*?)_/g, '<em>$1</em>');
+
+        // Code blocks
+        html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+            return `<pre><code class="language-${lang || 'text'}">${code.trim()}</code></pre>`;
+        });
+
+        // Inline code
+        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+        // Links
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+        // Lists
+        html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
+        html = html.replace(/^\- (.*$)/gim, '<li>$1</li>');
+        html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+        // Line breaks
+        html = html.replace(/\n\n/g, '</p><p>');
+        html = '<p>' + html + '</p>';
+
+        // Clean up empty paragraphs
+        html = html.replace(/<p>\s*<\/p>/g, '');
+        html = html.replace(/<p>\s*(<h[1-6])/g, '$1');
+        html = html.replace(/(<\/h[1-6]>)\s*<\/p>/g, '$1');
+        html = html.replace(/<p>\s*(<pre>)/g, '$1');
+        html = html.replace(/(<\/pre>)\s*<\/p>/g, '$1');
+        html = html.replace(/<p>\s*(<ul>)/g, '$1');
+        html = html.replace(/(<\/ul>)\s*<\/p>/g, '$1');
+
+        return html;
     }
 
     renderAbout() {
