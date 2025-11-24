@@ -420,14 +420,43 @@ class NavigationController {
                                     <button id="timeline-reset-btn" class="btn btn-secondary">Reset Filters</button>
                                 </div>
                             </div>
+                            <div class="flex gap-2" style="margin-bottom: var(--space-4);">
+                                <button id="timeline-nav-left" class="btn btn-primary" style="padding: var(--space-2) var(--space-4);">
+                                    ◄ Previous
+                                </button>
+                                <button id="timeline-nav-today" class="btn btn-secondary" style="padding: var(--space-2) var(--space-4);">
+                                    Today
+                                </button>
+                                <button id="timeline-nav-right" class="btn btn-primary" style="padding: var(--space-2) var(--space-4);">
+                                    Next ►
+                                </button>
+                                <div style="flex: 1;"></div>
+                                <div>
+                                    <label for="timeline-zoom-level" style="display: block; font-weight: 600; margin-bottom: var(--space-2); color: var(--text-primary);">Zoom Level:</label>
+                                    <select id="timeline-zoom-level" class="form-control" style="min-width: 150px;">
+                                        <option value="month">Monthly View</option>
+                                        <option value="week">Weekly View</option>
+                                        <option value="day">Daily View</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="timeline-period-info" style="padding: var(--space-2); background: var(--primary-100); border-radius: var(--radius-sm); font-size: var(--text-sm); margin-bottom: var(--space-4); font-weight: 600; color: var(--primary-900);"></div>
                             <div style="padding: var(--space-2); background: var(--bg-tertiary); border-radius: var(--radius-sm); font-size: var(--text-sm);">
-                                <strong>💡 Tip:</strong> Scroll to zoom, drag to pan, click sessions to view details
+                                <strong>💡 Tips:</strong> Click sessions for full details • Use arrows to navigate periods • Change zoom level for more separation • Scroll to zoom • Drag to pan
                             </div>
                         </div>
                     </div>
 
                     <div class="card">
                         <div id="timeline-chart"></div>
+                    </div>
+
+                    <div id="timeline-detail-panel" class="card" style="margin-top: var(--space-4); display: none;" onclick="event.target === this && (this.style.display='none')">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 class="card-title" id="timeline-detail-title">Session Details</h3>
+                            <button onclick="document.getElementById('timeline-detail-panel').style.display='none'" class="btn btn-sm btn-secondary">✕ Close</button>
+                        </div>
+                        <div class="card-content" id="timeline-detail-content"></div>
                     </div>
 
                     <div id="timeline-legend" class="card" style="margin-top: var(--space-4);">
@@ -458,8 +487,8 @@ class NavigationController {
                 </div>
             `;
 
-            // Initialize D3 timeline
-            this.initD3Timeline(timelineData);
+            // Initialize enhanced D3 timeline
+            window.initD3TimelineEnhanced(timelineData, this);
 
         } catch (error) {
             console.error('Failed to load timeline:', error);

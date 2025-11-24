@@ -1,0 +1,515 @@
+# Build Error Chunk Metadata
+# ==========================
+# Source File: Google-Cloud-BUILD-ERRORS.2025-09-22.txt
+# Total Lines in Source: 4550
+# Chunk Number: 1
+# Lines in This Chunk: 500
+# Start Line: 1
+# End Line: 500
+# Overlap: 25 lines (5%)
+# Generated: 2025-09-22 15:38:35 UTC
+# Purpose: Rust compilation errors from Google Cloud Build
+# Error Count: 346 total compilation errors
+#
+# ==========================
+
+
+ERROR: build step 4 "gcr.io/cloud-builders/docker" failed: step exited with non-zero status: 101
+ERROR
+Finished Step #4 - "build-docker"
+The command '/bin/sh -c cargo build --release --bin minimal' returned a non-zero code: 101
+error: could not compile `coditect-minimal-api` (lib) due to 346 previous errors; 28 warnings emitted
+warning: `coditect-minimal-api` (lib) generated 28 warnings
+For more information about an error, try `rustc --explain E0038`.
+Some errors have detailed explanations: E0038, E0061, E0271, E0277, E0282, E0308, E0408, E0412, E0422...
+
+   = help: if you wanted to use a crate named `lru`, use `cargo add lru` to add it to your `Cargo.toml`
+   |
+   |                                       ^^^ use of unresolved module or unlinked crate `lru`
+13 |     redaction_cache: std::sync::Mutex<lru::LruCache<String, String>>,
+   |
+  --> src/memory/privacy.rs:13:39
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `lru`
+
+    = help: if you wanted to use a crate named `urlencoding`, use `cargo add urlencoding` to add it to your `Cargo.toml`
+    |
+    |             ^^^^^^^^^^^ use of unresolved module or unlinked crate `urlencoding`
+130 |             urlencoding::encode(state)
+    |
+   --> src/auth/oauth2_service.rs:130:13
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `urlencoding`
+
+    = help: if you wanted to use a crate named `urlencoding`, use `cargo add urlencoding` to add it to your `Cargo.toml`
+    |
+    |             ^^^^^^^^^^^ use of unresolved module or unlinked crate `urlencoding`
+129 |             urlencoding::encode(&self.config.redirect_uri),
+    |
+   --> src/auth/oauth2_service.rs:129:13
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `urlencoding`
+
+    = help: if you wanted to use a crate named `urlencoding`, use `cargo add urlencoding` to add it to your `Cargo.toml`
+    |
+    |             ^^^^^^^^^^^ use of unresolved module or unlinked crate `urlencoding`
+128 |             urlencoding::encode(&self.config.client_id),
+    |
+   --> src/auth/oauth2_service.rs:128:13
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `urlencoding`
+
+    = note: `ai::AIProvider` may be implemented in other crates; if you want to support your users passing their own types here, you can't refer to a specific type
+            implementing `ai::AIProvider` for this new enum and using it instead
+            consider defining an enum where each variant holds one of these types,
+              ai::providers::openai::OpenAIProvider
+              ai::providers::ollama::OllamaProvider
+              ai::providers::huggingface::HuggingFaceProvider
+              ai::providers::gemini::GeminiProvider
+              ai::providers::claude::ClaudeProvider
+    = help: the following types implement `ai::AIProvider`:
+    = help: consider moving `list_models` to another trait
+    = help: consider moving `check_availability` to another trait
+    = help: consider moving `execute_with_model` to another trait
+    = help: consider moving `execute` to another trait
+    |              ^^^^^^^^^^^ ...because method `list_models` is `async`
+236 |     async fn list_models(&self) -> Result<Vec<ModelInfo>>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `check_availability` is `async`
+233 |     async fn check_availability(&self) -> Result<ProviderStatus>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `execute_with_model` is `async`
+226 |     async fn execute_with_model(
+...
+    |              ^^^^^^^ ...because method `execute` is `async`
+223 |     async fn execute(&self, request: &AIRequest) -> Result<AIResponse>;
+...
+    |           ---------- this trait is not dyn compatible...
+209 | pub trait AIProvider: Send + Sync {
+    |
+   --> src/ai/mod.rs:223:14
+      for more information, visit <https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility>
+note: for a trait to be dyn compatible it needs to allow building a vtable
+    |
+    |                                                 ^^^^^^^^^^^^^^ `ai::AIProvider` is not dyn compatible
+ 25 |     providers: Arc<RwLock<HashMap<Provider, Arc<dyn AIProvider>>>>,
+    |
+   --> src/ai/router/mod.rs:25:49
+error[E0038]: the trait `ai::AIProvider` is not dyn compatible
+
+    |                                        ^^^^^^ help: if this is intentional, prefix it with an underscore: `_offset`
+159 |     async fn write(&self, path: &Path, offset: u64, data: &[u8]) -> Result<u32> {
+    |
+   --> src/storage/gcs_fuse.rs:159:40
+warning: unused variable: `offset`
+
+    |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_gcs_path`
+145 |         let gcs_path = self.to_gcs_path(path);
+    |
+   --> src/storage/gcs_fuse.rs:145:13
+warning: unused variable: `gcs_path`
+
+    = note: available fields are: `timestamp`, `metrics`, `health`
+    |
+    |                                                    ^^^^^^^^^ unknown field
+101 |                         serde_json::json!(snapshot.anomalies.len()),
+    |
+   --> src/services/system_monitor/metrics.rs:101:52
+error[E0609]: no field `anomalies` on type `system_monitor::types::SystemSnapshot`
+
+   = note: available fields are: `timestamp`, `metrics`, `health`
+   |
+   |                                                    ^^^^^^^^^^^^^ unknown field
+97 |                         serde_json::json!(snapshot.active_alerts.len()),
+   |
+  --> src/services/system_monitor/metrics.rs:97:52
+error[E0609]: no field `active_alerts` on type `system_monitor::types::SystemSnapshot`
+
+   = note: available fields are: `timestamp`, `metrics`, `health`
+   |
+   |                                                    ^^^^^^^^^^^^^^ unknown field
+93 |                         serde_json::json!(snapshot.top_operations.len()),
+   |
+  --> src/services/system_monitor/metrics.rs:93:52
+error[E0609]: no field `top_operations` on type `system_monitor::types::SystemSnapshot`
+
+   = note: available fields are: `health`
+   |
+   |                 ^^^^^^^^^^^^ `system_monitor::types::SystemSnapshot` does not have this field
+83 |                 audit_events: vec![],
+   |
+  --> src/services/system_monitor/metrics.rs:83:17
+error[E0560]: struct `system_monitor::types::SystemSnapshot` has no field named `audit_events`
+
+   = note: available fields are: `health`
+   |
+   |                 ^^^^^^^^^ `system_monitor::types::SystemSnapshot` does not have this field
+82 |                 anomalies: detect_anomalies(&event_buffer),
+   |
+  --> src/services/system_monitor/metrics.rs:82:17
+error[E0560]: struct `system_monitor::types::SystemSnapshot` has no field named `anomalies`
+
+   = note: available fields are: `health`
+   |
+   |                 ^^^^^^^^^^^^^^ `system_monitor::types::SystemSnapshot` does not have this field
+81 |                 top_operations: calculate_top_operations(&event_buffer),
+   |
+  --> src/services/system_monitor/metrics.rs:81:17
+error[E0560]: struct `system_monitor::types::SystemSnapshot` has no field named `top_operations`
+
+   = note: available fields are: `health`
+   |
+   |                 ^^^^^^^^^^^^^ `system_monitor::types::SystemSnapshot` does not have this field
+80 |                 active_alerts: vec![],
+   |
+  --> src/services/system_monitor/metrics.rs:80:17
+error[E0560]: struct `system_monitor::types::SystemSnapshot` has no field named `active_alerts`
+
+   = note: available fields are: `health`
+   |
+   |                 ^^^^^^^^^ `system_monitor::types::SystemSnapshot` does not have this field
+78 |                 tenant_id,
+   |
+  --> src/services/system_monitor/metrics.rs:78:17
+error[E0560]: struct `system_monitor::types::SystemSnapshot` has no field named `tenant_id`
+
+   |                                               ++++++
+30 |     m.memory_usage_mb = get_memory_usage_mb() as f32;
+   |
+help: you can cast a `u64` to an `f32`, producing the floating point representation of the integer, rounded if necessary
+   |
+   |     expected due to the type of this binding
+   |     |
+   |     -----------------   ^^^^^^^^^^^^^^^^^^^^^ expected `f32`, found `u64`
+30 |     m.memory_usage_mb = get_memory_usage_mb();
+   |
+  --> src/services/system_monitor/metrics.rs:30:25
+error[E0308]: mismatched types
+
+    = note: available fields are: `message`, `resolved`
+    |
+    |                     ^^^^ `system_monitor::types::Alert` does not have this field
+122 |                     data: serde_json::json!({
+    |
+   --> src/services/system_monitor/alerts.rs:122:21
+error[E0560]: struct `system_monitor::types::Alert` has no field named `data`
+
+    = note: available fields are: `message`, `resolved`
+    |
+    |                     ^^^^^^^^^^^ `system_monitor::types::Alert` does not have this field
+121 |                     description: sec_event.threat_indicators.join(", "),
+    |
+   --> src/services/system_monitor/alerts.rs:121:21
+error[E0560]: struct `system_monitor::types::Alert` has no field named `description`
+
+    = note: available fields are: `message`, `resolved`
+    |
+    |                     ^^^^^ `system_monitor::types::Alert` does not have this field
+120 |                     title: format!("{:?}", sec_event.event_type),
+    |
+   --> src/services/system_monitor/alerts.rs:120:21
+error[E0560]: struct `system_monitor::types::Alert` has no field named `title`
+
+   |
+81 +                     for action in &rule.action {
+81 -                     for action in &rule.actions {
+   |
+help: a field with a similar name exists
+   |
+   |                                         ^^^^^^^ unknown field
+81 |                     for action in &rule.actions {
+   |
+  --> src/services/system_monitor/alerts.rs:81:41
+error[E0609]: no field `actions` on type `system_monitor::types::AlertRule`
+
+    = note: available fields are: `current_health`, `metrics_history`, `active_alerts`, `uptime_percent`
+    |
+    |             ^^^^^^^^^^^^^ `system_monitor::types::DashboardData` does not have this field
+116 |             system_health,
+    |
+   --> src/services/system_monitor/core.rs:116:13
+error[E0560]: struct `system_monitor::types::DashboardData` has no field named `system_health`
+
+    = note: available fields are: `current_health`, `metrics_history`, `active_alerts`, `uptime_percent`
+    |
+    |             ^^^^^^^^^^^^^^^^^^^^^^ `system_monitor::types::DashboardData` does not have this field
+115 |             recent_file_operations: recent_files,
+    |
+   --> src/services/system_monitor/core.rs:115:13
+error[E0560]: struct `system_monitor::types::DashboardData` has no field named `recent_file_operations`
+
+    = note: available fields are: `current_health`, `metrics_history`, `active_alerts`, `uptime_percent`
+    |
+    |             ^^^^^^^^^^^^^ `system_monitor::types::DashboardData` does not have this field
+114 |             recent_alerts,
+    |
+   --> src/services/system_monitor/core.rs:114:13
+error[E0560]: struct `system_monitor::types::DashboardData` has no field named `recent_alerts`
+
+    = note: available fields are: `current_health`, `metrics_history`, `active_alerts`, `uptime_percent`
+    |
+    |             ^^^^^^^ `system_monitor::types::DashboardData` does not have this field
+113 |             metrics,
+    |
+   --> src/services/system_monitor/core.rs:113:13
+error[E0560]: struct `system_monitor::types::DashboardData` has no field named `metrics`
+
+    | ------------------------ associated item `Create` not found for this struct
+  7 | pub struct FileOperation {
+    |
+   ::: src/services/file_monitor/types.rs:7:1
+    |
+    |                                       ^^^^^^ associated item not found in `file_monitor::types::FileOperation`
+177 |             operation: FileOperation::Create,
+    |
+   --> src/services/file_monitor/operations.rs:177:39
+error[E0599]: no associated item named `Create` found for struct `file_monitor::types::FileOperation` in the current scope
+
+    | ------------------------ associated item `Update` not found for this struct
+  7 | pub struct FileOperation {
+    |
+   ::: src/services/file_monitor/types.rs:7:1
+    |
+    |                                           ^^^^^^ associated item not found in `file_monitor::types::FileOperation`
+148 |                 operation: FileOperation::Update,
+    |
+   --> src/services/file_monitor/operations.rs:148:43
+error[E0599]: no associated item named `Update` found for struct `file_monitor::types::FileOperation` in the current scope
+
+    | ------------------------ associated item `Delete` not found for this struct
+  7 | pub struct FileOperation {
+    |
+   ::: src/services/file_monitor/types.rs:7:1
+    |
+    |                                           ^^^^^^ associated item not found in `file_monitor::types::FileOperation`
+105 |                 operation: FileOperation::Delete,
+    |
+   --> src/services/file_monitor/operations.rs:105:43
+error[E0599]: no associated item named `Delete` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Update` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                                               ^^^^^^ associated item not found in `file_monitor::types::FileOperation`
+70 |                     operation: FileOperation::Update,
+   |
+  --> src/services/file_monitor/detection.rs:70:47
+error[E0599]: no associated item named `Update` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Chown` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                                                                                             ^^^^^ associated item not found in `file_monitor::types::FileOperation`
+73 |         FileOperation::Update | FileOperation::Move | FileOperation::Chmod | FileOperation::Chown
+   |
+  --> src/services/file_monitor/audit.rs:73:93
+error[E0599]: no associated item named `Chown` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Chmod` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                                                                      ^^^^^ associated item not found in `file_monitor::types::FileOperation`
+73 |         FileOperation::Update | FileOperation::Move | FileOperation::Chmod | FileOperation::Chown
+   |
+  --> src/services/file_monitor/audit.rs:73:70
+error[E0599]: no associated item named `Chmod` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Move` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                                                ^^^^ associated item not found in `file_monitor::types::FileOperation`
+73 |         FileOperation::Update | FileOperation::Move | FileOperation::Chmod | FileOperation::Chown
+   |
+  --> src/services/file_monitor/audit.rs:73:48
+error[E0599]: no associated item named `Move` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Update` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                        ^^^^^^ associated item not found in `file_monitor::types::FileOperation`
+73 |         FileOperation::Update | FileOperation::Move | FileOperation::Chmod | FileOperation::Chown
+   |
+  --> src/services/file_monitor/audit.rs:73:24
+error[E0599]: no associated item named `Update` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Unlink` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                                              ^^^^^^ associated item not found in `file_monitor::types::FileOperation`
+67 |         FileOperation::Link | FileOperation::Unlink => DataOperation::Update,
+   |
+  --> src/services/file_monitor/audit.rs:67:46
+error[E0599]: no associated item named `Unlink` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Link` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                        ^^^^ associated item not found in `file_monitor::types::FileOperation`
+67 |         FileOperation::Link | FileOperation::Unlink => DataOperation::Update,
+   |
+  --> src/services/file_monitor/audit.rs:67:24
+error[E0599]: no associated item named `Link` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Chown` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                                               ^^^^^ associated item not found in `file_monitor::types::FileOperation`
+66 |         FileOperation::Chmod | FileOperation::Chown => DataOperation::Update,
+   |
+  --> src/services/file_monitor/audit.rs:66:47
+error[E0599]: no associated item named `Chown` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Chmod` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                        ^^^^^ associated item not found in `file_monitor::types::FileOperation`
+66 |         FileOperation::Chmod | FileOperation::Chown => DataOperation::Update,
+   |
+  --> src/services/file_monitor/audit.rs:66:24
+error[E0599]: no associated item named `Chmod` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Copy` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                        ^^^^ associated item not found in `file_monitor::types::FileOperation`
+65 |         FileOperation::Copy => DataOperation::Create,
+   |
+  --> src/services/file_monitor/audit.rs:65:24
+error[E0599]: no associated item named `Copy` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Move` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                        ^^^^ associated item not found in `file_monitor::types::FileOperation`
+64 |         FileOperation::Move => DataOperation::Update,
+   |
+  --> src/services/file_monitor/audit.rs:64:24
+error[E0599]: no associated item named `Move` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Delete` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                        ^^^^^^ associated item not found in `file_monitor::types::FileOperation`
+63 |         FileOperation::Delete => DataOperation::Delete,
+   |
+  --> src/services/file_monitor/audit.rs:63:24
+error[E0599]: no associated item named `Delete` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Update` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                        ^^^^^^ associated item not found in `file_monitor::types::FileOperation`
+62 |         FileOperation::Update => DataOperation::Update,
+   |
+  --> src/services/file_monitor/audit.rs:62:24
+error[E0599]: no associated item named `Update` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Read` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                        ^^^^ associated item not found in `file_monitor::types::FileOperation`
+61 |         FileOperation::Read => DataOperation::Read,
+   |
+  --> src/services/file_monitor/audit.rs:61:24
+error[E0599]: no associated item named `Read` found for struct `file_monitor::types::FileOperation` in the current scope
+
+   | ------------------------ associated item `Create` not found for this struct
+ 7 | pub struct FileOperation {
+   |
+  ::: src/services/file_monitor/types.rs:7:1
+   |
+   |                        ^^^^^^ associated item not found in `file_monitor::types::FileOperation`
+60 |         FileOperation::Create => DataOperation::Create,
+   |
+  --> src/services/file_monitor/audit.rs:60:24
+error[E0599]: no associated item named `Create` found for struct `file_monitor::types::FileOperation` in the current scope
+
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: the full name for the type has been written to '/app/target/release/deps/coditect_minimal_api-6c7908efab1fbd6e.long-type-5280872466539215313.txt'
+                      found enum `std::result::Result<_, _>`
+    = note: expected opaque type `impl futures::Future<Output = std::result::Result<R, anyhow::Error>>`
+    |
+    |                     ^^^^^^ expected future, found `Result<_, _>`
+105 |               Ok(Ok(Err(e))) => Err(e),
+104 |               Ok(Ok(Ok(result))) => Ok(result),
+    | |_______________- this expression has type `Result<Result<impl Future<Output = Result<R, Error>>, JoinError>, ...>`
+103 | |         ).await {
+102 | |             handle
+101 | |             tokio::time::Duration::from_secs(30),
+    |  _______________-
+100 |           match tokio::time::timeout(
+    |
+   --> src/security/tenant_isolation.rs:105:19
+error[E0308]: mismatched types
+
+    = note: consider using `--verbose` to print the full type name to the console
+    = note: the full name for the type has been written to '/app/target/release/deps/coditect_minimal_api-6c7908efab1fbd6e.long-type-5280872466539215313.txt'
+                      found enum `std::result::Result<_, _>`
+    = note: expected opaque type `impl futures::Future<Output = std::result::Result<R, anyhow::Error>>`
+    |
+    |                     ^^^^^^^^^^ expected future, found `Result<_, _>`
+104 |               Ok(Ok(Ok(result))) => Ok(result),
+    | |_______________- this expression has type `Result<Result<impl Future<Output = Result<R, Error>>, JoinError>, ...>`
+103 | |         ).await {
+102 | |             handle
+101 | |             tokio::time::Duration::from_secs(30),
+    |  _______________-
+100 |           match tokio::time::timeout(
+    |
+   --> src/security/tenant_isolation.rs:104:19
+error[E0308]: mismatched types
+
+    |                                                        ^^^^
+297 |             if now.date() != usage.last_ai_token_reset.date() {
+    |
+   --> src/security/resource_quotas.rs:297:56
+warning: use of deprecated method `chrono::DateTime::<Tz>::date`: Use `date_naive()` instead
+
+    |                    ^^^^
+297 |             if now.date() != usage.last_ai_token_reset.date() {
+    |
+   --> src/security/resource_quotas.rs:297:20
+warning: use of deprecated method `chrono::DateTime::<Tz>::date`: Use `date_naive()` instead
+
+    |                                                   ^^^^
+290 |             if now.date() != usage.last_api_reset.date() {
+    |
+   --> src/security/resource_quotas.rs:290:51
+warning: use of deprecated method `chrono::DateTime::<Tz>::date`: Use `date_naive()` instead
+
+    |                    ^^^^
+290 |             if now.date() != usage.last_api_reset.date() {
+    |
+   --> src/security/resource_quotas.rs:290:20
+warning: use of deprecated method `chrono::DateTime::<Tz>::date`: Use `date_naive()` instead
+
+    |                                                    ^^^^
+243 |         if now.date() != usage.last_ai_token_reset.date() {
+    |
+   --> src/security/resource_quotas.rs:243:52
+warning: use of deprecated method `chrono::DateTime::<Tz>::date`: Use `date_naive()` instead
+

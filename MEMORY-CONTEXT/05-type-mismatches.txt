@@ -1,0 +1,515 @@
+# Build Error Chunk Metadata
+# ==========================
+# Source File: Google-Cloud-BUILD-ERRORS.2025-09-22.txt
+# Total Lines in Source: 4550
+# Chunk Number: 5
+# Lines in This Chunk: 500
+# Start Line: 1901
+# End Line: 2400
+# Overlap: 25 lines (5%)
+# Generated: 2025-09-22 15:38:35 UTC
+# Purpose: Rust compilation errors from Google Cloud Build
+# Error Count: 346 total compilation errors
+#
+# ==========================
+
+    |
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^------------ argument #2 of type `uuid::Uuid` is missing
+193 |     let audit_repo = AuditLogRepository::new(db.clone());
+    |
+   --> src/api/handlers/audit/basic.rs:193:22
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+
+    |                      ^^^^ method not found in `std::sync::Arc<Database>`
+192 |     let db = data.db.lock().await;
+    |
+   --> src/api/handlers/audit/basic.rs:192:22
+error[E0599]: no method named `lock` found for struct `std::sync::Arc<Database>` in the current scope
+
+    |   ----------------------------- method `list_events` not found for this struct
+ 13 |   pub struct AuditLogRepository {
+    |
+   ::: src/db/repositories/audit_log_repository.rs:13:1
+    |
+    |
+    | |_________|
+    | |         -^^^^^^^^^^^ method not found in `AuditLogRepository`
+150 | |         .list_events(
+    |  __________________-
+149 |       let events = audit_repo
+    |
+   --> src/api/handlers/audit/basic.rs:150:10
+error[E0599]: no method named `list_events` found for struct `AuditLogRepository` in the current scope
+
+    |                                                        ++++++++++++++++++
+127 |     let audit_repo = AuditLogRepository::new(db.clone(), /* uuid::Uuid */);
+    |
+help: provide the argument
+    |            ^^^                    ---------------
+ 19 |     pub fn new(db: Arc<Database>, tenant_id: Uuid) -> Self {
+    |
+   --> src/db/repositories/audit_log_repository.rs:19:12
+note: associated function defined here
+    |
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^------------ argument #2 of type `uuid::Uuid` is missing
+127 |     let audit_repo = AuditLogRepository::new(db.clone());
+    |
+   --> src/api/handlers/audit/basic.rs:127:22
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+
+    |                      ^^^^ method not found in `std::sync::Arc<Database>`
+126 |     let db = data.db.lock().await;
+    |
+   --> src/api/handlers/audit/basic.rs:126:22
+error[E0599]: no method named `lock` found for struct `std::sync::Arc<Database>` in the current scope
+
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+241 | pub trait ProjectExtension: Send + Sync {
+    |
+   --> src/models/project/core.rs:241:1
+note: `ProjectExtension` defines an item `validate`, perhaps you need to implement it
+    = help: items from traits can only be used if the trait is implemented and in scope
+    |
+    |          ^^^^^^^^ method not found in `actix_web::web::Json<agent_models::CreateTeamRequest>`
+277 |     body.validate().map_err(|e| ApiError::ValidationError {
+    |
+   --> src/api/handlers/agent_handlers.rs:277:10
+error[E0599]: no method named `validate` found for struct `actix_web::web::Json<agent_models::CreateTeamRequest>` in the current scope
+
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+241 | pub trait ProjectExtension: Send + Sync {
+    |
+   --> src/models/project/core.rs:241:1
+note: `ProjectExtension` defines an item `validate`, perhaps you need to implement it
+    = help: items from traits can only be used if the trait is implemented and in scope
+    |
+    |          ^^^^^^^^ method not found in `actix_web::web::Json<agent_models::UpdateAgentRequest>`
+111 |     body.validate().map_err(|e| ApiError::ValidationError {
+    |
+   --> src/api/handlers/agent_handlers.rs:111:10
+error[E0599]: no method named `validate` found for struct `actix_web::web::Json<agent_models::UpdateAgentRequest>` in the current scope
+
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+241 | pub trait ProjectExtension: Send + Sync {
+    |
+   --> src/models/project/core.rs:241:1
+note: `ProjectExtension` defines an item `validate`, perhaps you need to implement it
+    = help: items from traits can only be used if the trait is implemented and in scope
+    |
+    |          ^^^^^^^^ method not found in `actix_web::web::Json<agent_models::CreateAgentRequest>`
+ 17 |     body.validate().map_err(|e| ApiError::ValidationError {
+    |
+   --> src/api/handlers/agent_handlers.rs:17:10
+error[E0599]: no method named `validate` found for struct `actix_web::web::Json<agent_models::CreateAgentRequest>` in the current scope
+
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+241 | pub trait ProjectExtension: Send + Sync {
+    |
+   --> src/models/project/core.rs:241:1
+note: `ProjectExtension` defines an item `validate`, perhaps you need to implement it
+    = help: items from traits can only be used if the trait is implemented and in scope
+    |
+    |                          ^^^^^^^^ method not found in `actix_web::web::Json<auth_types::UpdateProfileRequest>`
+ 72 |     if let Err(e) = body.validate() {
+    |
+   --> src/api/auth/handlers/profile.rs:72:26
+error[E0599]: no method named `validate` found for struct `actix_web::web::Json<auth_types::UpdateProfileRequest>` in the current scope
+
+    |                                  ^^^^^^^^^^ unknown field
+149 |         expires_in: access_token.expires_in,
+    |
+   --> src/api/auth/handlers/login.rs:149:34
+error[E0609]: no field `expires_in` on type `std::string::String`
+
+    |                                    ^^^^^ unknown field
+147 |         access_token: access_token.token,
+    |
+   --> src/api/auth/handlers/login.rs:147:36
+error[E0609]: no field `token` on type `std::string::String`
+
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+241 | pub trait ProjectExtension: Send + Sync {
+    |
+   --> src/models/project/core.rs:241:1
+note: `ProjectExtension` defines an item `validate`, perhaps you need to implement it
+    = help: items from traits can only be used if the trait is implemented and in scope
+    |
+    |                          ^^^^^^^^ method not found in `actix_web::web::Json<auth_types::LoginRequest>`
+ 19 |     if let Err(e) = body.validate() {
+    |
+   --> src/api/auth/handlers/login.rs:19:26
+error[E0599]: no method named `validate` found for struct `actix_web::web::Json<auth_types::LoginRequest>` in the current scope
+
+    |                                  ^^^^^^^^^^ unknown field
+139 |         expires_in: access_token.expires_in,
+    |
+   --> src/api/auth/handlers/register.rs:139:34
+error[E0609]: no field `expires_in` on type `std::string::String`
+
+    |                                    ^^^^^ unknown field
+137 |         access_token: access_token.token,
+    |
+   --> src/api/auth/handlers/register.rs:137:36
+error[E0609]: no field `token` on type `std::string::String`
+
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+241 | pub trait ProjectExtension: Send + Sync {
+    |
+   --> src/models/project/core.rs:241:1
+note: `ProjectExtension` defines an item `validate`, perhaps you need to implement it
+    = help: items from traits can only be used if the trait is implemented and in scope
+    |
+    |                          ^^^^^^^^ method not found in `actix_web::web::Json<auth_types::RegisterRequest>`
+ 21 |     if let Err(e) = body.validate() {
+    |
+   --> src/api/auth/handlers/register.rs:21:26
+error[E0599]: no method named `validate` found for struct `actix_web::web::Json<auth_types::RegisterRequest>` in the current scope
+
+    = note: `ai::AIProvider` may be implemented in other crates; if you want to support your users passing their own types here, you can't refer to a specific type
+            implementing `ai::AIProvider` for this new enum and using it instead
+            consider defining an enum where each variant holds one of these types,
+              ai::providers::openai::OpenAIProvider
+              ai::providers::ollama::OllamaProvider
+              ai::providers::huggingface::HuggingFaceProvider
+              ai::providers::gemini::GeminiProvider
+              ai::providers::claude::ClaudeProvider
+    = help: the following types implement `ai::AIProvider`:
+    = help: consider moving `list_models` to another trait
+    = help: consider moving `check_availability` to another trait
+    = help: consider moving `execute_with_model` to another trait
+    = help: consider moving `execute` to another trait
+    |              ^^^^^^^^^^^ ...because method `list_models` is `async`
+236 |     async fn list_models(&self) -> Result<Vec<ModelInfo>>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `check_availability` is `async`
+233 |     async fn check_availability(&self) -> Result<ProviderStatus>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `execute_with_model` is `async`
+226 |     async fn execute_with_model(
+...
+    |              ^^^^^^^ ...because method `execute` is `async`
+223 |     async fn execute(&self, request: &AIRequest) -> Result<AIResponse>;
+...
+    |           ---------- this trait is not dyn compatible...
+209 | pub trait AIProvider: Send + Sync {
+    |
+   --> src/ai/mod.rs:223:14
+      for more information, visit <https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility>
+note: for a trait to be dyn compatible it needs to allow building a vtable
+    |
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `ai::AIProvider` is not dyn compatible
+119 |     pub async fn get_provider(&self, provider_type: Provider) -> Option<Arc<dyn AIProvider>> {
+    |
+   --> src/ai/router/mod.rs:119:5
+error[E0038]: the trait `ai::AIProvider` is not dyn compatible
+
+    = note: `ai::AIProvider` may be implemented in other crates; if you want to support your users passing their own types here, you can't refer to a specific type
+            implementing `ai::AIProvider` for this new enum and using it instead
+            consider defining an enum where each variant holds one of these types,
+              ai::providers::openai::OpenAIProvider
+              ai::providers::ollama::OllamaProvider
+              ai::providers::huggingface::HuggingFaceProvider
+              ai::providers::gemini::GeminiProvider
+              ai::providers::claude::ClaudeProvider
+    = help: the following types implement `ai::AIProvider`:
+    = help: consider moving `list_models` to another trait
+    = help: consider moving `check_availability` to another trait
+    = help: consider moving `execute_with_model` to another trait
+    = help: consider moving `execute` to another trait
+    |              ^^^^^^^^^^^ ...because method `list_models` is `async`
+236 |     async fn list_models(&self) -> Result<Vec<ModelInfo>>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `check_availability` is `async`
+233 |     async fn check_availability(&self) -> Result<ProviderStatus>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `execute_with_model` is `async`
+226 |     async fn execute_with_model(
+...
+    |              ^^^^^^^ ...because method `execute` is `async`
+223 |     async fn execute(&self, request: &AIRequest) -> Result<AIResponse>;
+...
+    |           ---------- this trait is not dyn compatible...
+209 | pub trait AIProvider: Send + Sync {
+    |
+   --> src/ai/mod.rs:223:14
+      for more information, visit <https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility>
+note: for a trait to be dyn compatible it needs to allow building a vtable
+    |
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `ai::AIProvider` is not dyn compatible
+121 |         providers.get(&provider_type).cloned()
+    |
+   --> src/ai/router/mod.rs:121:9
+error[E0038]: the trait `ai::AIProvider` is not dyn compatible
+
+    = note: `ai::AIProvider` may be implemented in other crates; if you want to support your users passing their own types here, you can't refer to a specific type
+            implementing `ai::AIProvider` for this new enum and using it instead
+            consider defining an enum where each variant holds one of these types,
+              ai::providers::openai::OpenAIProvider
+              ai::providers::ollama::OllamaProvider
+              ai::providers::huggingface::HuggingFaceProvider
+              ai::providers::gemini::GeminiProvider
+              ai::providers::claude::ClaudeProvider
+    = help: the following types implement `ai::AIProvider`:
+    = help: consider moving `list_models` to another trait
+    = help: consider moving `check_availability` to another trait
+    = help: consider moving `execute_with_model` to another trait
+    = help: consider moving `execute` to another trait
+    |              ^^^^^^^^^^^ ...because method `list_models` is `async`
+236 |     async fn list_models(&self) -> Result<Vec<ModelInfo>>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `check_availability` is `async`
+233 |     async fn check_availability(&self) -> Result<ProviderStatus>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `execute_with_model` is `async`
+226 |     async fn execute_with_model(
+...
+    |              ^^^^^^^ ...because method `execute` is `async`
+223 |     async fn execute(&self, request: &AIRequest) -> Result<AIResponse>;
+...
+    |           ---------- this trait is not dyn compatible...
+209 | pub trait AIProvider: Send + Sync {
+    |
+   --> src/ai/mod.rs:223:14
+      for more information, visit <https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility>
+note: for a trait to be dyn compatible it needs to allow building a vtable
+    |
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `ai::AIProvider` is not dyn compatible
+121 |         providers.get(&provider_type).cloned()
+    |
+   --> src/ai/router/mod.rs:121:9
+error[E0038]: the trait `ai::AIProvider` is not dyn compatible
+
+    = note: `ai::AIProvider` may be implemented in other crates; if you want to support your users passing their own types here, you can't refer to a specific type
+            implementing `ai::AIProvider` for this new enum and using it instead
+            consider defining an enum where each variant holds one of these types,
+              ai::providers::openai::OpenAIProvider
+              ai::providers::ollama::OllamaProvider
+              ai::providers::huggingface::HuggingFaceProvider
+              ai::providers::gemini::GeminiProvider
+              ai::providers::claude::ClaudeProvider
+    = help: the following types implement `ai::AIProvider`:
+    = help: consider moving `list_models` to another trait
+    = help: consider moving `check_availability` to another trait
+    = help: consider moving `execute_with_model` to another trait
+    = help: consider moving `execute` to another trait
+    |              ^^^^^^^^^^^ ...because method `list_models` is `async`
+236 |     async fn list_models(&self) -> Result<Vec<ModelInfo>>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `check_availability` is `async`
+233 |     async fn check_availability(&self) -> Result<ProviderStatus>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `execute_with_model` is `async`
+226 |     async fn execute_with_model(
+...
+    |              ^^^^^^^ ...because method `execute` is `async`
+223 |     async fn execute(&self, request: &AIRequest) -> Result<AIResponse>;
+...
+    |           ---------- this trait is not dyn compatible...
+209 | pub trait AIProvider: Send + Sync {
+    |
+   --> src/ai/mod.rs:223:14
+      for more information, visit <https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility>
+note: for a trait to be dyn compatible it needs to allow building a vtable
+    |
+    |                                               ^^^^^ `ai::AIProvider` is not dyn compatible
+120 |         let providers = self.providers.read().await;
+    |
+   --> src/ai/router/mod.rs:120:47
+error[E0038]: the trait `ai::AIProvider` is not dyn compatible
+
+    = note: `ai::AIProvider` may be implemented in other crates; if you want to support your users passing their own types here, you can't refer to a specific type
+            implementing `ai::AIProvider` for this new enum and using it instead
+            consider defining an enum where each variant holds one of these types,
+              ai::providers::openai::OpenAIProvider
+              ai::providers::ollama::OllamaProvider
+              ai::providers::huggingface::HuggingFaceProvider
+              ai::providers::gemini::GeminiProvider
+              ai::providers::claude::ClaudeProvider
+    = help: the following types implement `ai::AIProvider`:
+    = help: consider moving `list_models` to another trait
+    = help: consider moving `check_availability` to another trait
+    = help: consider moving `execute_with_model` to another trait
+    = help: consider moving `execute` to another trait
+    |              ^^^^^^^^^^^ ...because method `list_models` is `async`
+236 |     async fn list_models(&self) -> Result<Vec<ModelInfo>>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `check_availability` is `async`
+233 |     async fn check_availability(&self) -> Result<ProviderStatus>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `execute_with_model` is `async`
+226 |     async fn execute_with_model(
+...
+    |              ^^^^^^^ ...because method `execute` is `async`
+223 |     async fn execute(&self, request: &AIRequest) -> Result<AIResponse>;
+...
+    |           ---------- this trait is not dyn compatible...
+209 | pub trait AIProvider: Send + Sync {
+    |
+   --> src/ai/mod.rs:223:14
+      for more information, visit <https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility>
+note: for a trait to be dyn compatible it needs to allow building a vtable
+    |
+    |                         ^^^^^^^^^^^^^^^^^^^^^ `ai::AIProvider` is not dyn compatible
+120 |         let providers = self.providers.read().await;
+    |
+   --> src/ai/router/mod.rs:120:25
+error[E0038]: the trait `ai::AIProvider` is not dyn compatible
+
+    |                                                       ++++++++++++
+111 |                 status.map(|s| s.available).map_err(|e: /* Type */| anyhow!(e)),
+    |
+help: consider giving this closure parameter an explicit type
+    |
+    |                                                      ^  ---------- type must be known at this point
+111 |                 status.map(|s| s.available).map_err(|e| anyhow!(e)),
+    |
+   --> src/ai/router/mod.rs:111:54
+error[E0282]: type annotations needed
+
+    = note: `ai::AIProvider` may be implemented in other crates; if you want to support your users passing their own types here, you can't refer to a specific type
+            implementing `ai::AIProvider` for this new enum and using it instead
+            consider defining an enum where each variant holds one of these types,
+              ai::providers::openai::OpenAIProvider
+              ai::providers::ollama::OllamaProvider
+              ai::providers::huggingface::HuggingFaceProvider
+              ai::providers::gemini::GeminiProvider
+              ai::providers::claude::ClaudeProvider
+    = help: the following types implement `ai::AIProvider`:
+    = help: consider moving `list_models` to another trait
+    = help: consider moving `check_availability` to another trait
+    = help: consider moving `execute_with_model` to another trait
+    = help: consider moving `execute` to another trait
+    |              ^^^^^^^^^^^ ...because method `list_models` is `async`
+236 |     async fn list_models(&self) -> Result<Vec<ModelInfo>>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `check_availability` is `async`
+233 |     async fn check_availability(&self) -> Result<ProviderStatus>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `execute_with_model` is `async`
+226 |     async fn execute_with_model(
+...
+    |              ^^^^^^^ ...because method `execute` is `async`
+223 |     async fn execute(&self, request: &AIRequest) -> Result<AIResponse>;
+...
+    |           ---------- this trait is not dyn compatible...
+209 | pub trait AIProvider: Send + Sync {
+    |
+   --> src/ai/mod.rs:223:14
+      for more information, visit <https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility>
+note: for a trait to be dyn compatible it needs to allow building a vtable
+    |
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `ai::AIProvider` is not dyn compatible
+108 |             let status = provider.check_availability().await;
+    |
+   --> src/ai/router/mod.rs:108:26
+error[E0038]: the trait `ai::AIProvider` is not dyn compatible
+
+    = note: `ai::AIProvider` may be implemented in other crates; if you want to support your users passing their own types here, you can't refer to a specific type
+            implementing `ai::AIProvider` for this new enum and using it instead
+            consider defining an enum where each variant holds one of these types,
+              ai::providers::openai::OpenAIProvider
+              ai::providers::ollama::OllamaProvider
+              ai::providers::huggingface::HuggingFaceProvider
+              ai::providers::gemini::GeminiProvider
+              ai::providers::claude::ClaudeProvider
+    = help: the following types implement `ai::AIProvider`:
+    = help: consider moving `list_models` to another trait
+    = help: consider moving `check_availability` to another trait
+    = help: consider moving `execute_with_model` to another trait
+    = help: consider moving `execute` to another trait
+    |              ^^^^^^^^^^^ ...because method `list_models` is `async`
+236 |     async fn list_models(&self) -> Result<Vec<ModelInfo>>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `check_availability` is `async`
+233 |     async fn check_availability(&self) -> Result<ProviderStatus>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `execute_with_model` is `async`
+226 |     async fn execute_with_model(
+...
+    |              ^^^^^^^ ...because method `execute` is `async`
+223 |     async fn execute(&self, request: &AIRequest) -> Result<AIResponse>;
+...
+    |           ---------- this trait is not dyn compatible...
+209 | pub trait AIProvider: Send + Sync {
+    |
+   --> src/ai/mod.rs:223:14
+      for more information, visit <https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility>
+note: for a trait to be dyn compatible it needs to allow building a vtable
+    |
+    |                                          ^^^^^^^^^^^^^^^^ `ai::AIProvider` is not dyn compatible
+107 |         for (provider_type, provider) in providers.iter() {
+    |
+   --> src/ai/router/mod.rs:107:42
+error[E0038]: the trait `ai::AIProvider` is not dyn compatible
+
+    = note: `ai::AIProvider` may be implemented in other crates; if you want to support your users passing their own types here, you can't refer to a specific type
+            implementing `ai::AIProvider` for this new enum and using it instead
+            consider defining an enum where each variant holds one of these types,
+              ai::providers::openai::OpenAIProvider
+              ai::providers::ollama::OllamaProvider
+              ai::providers::huggingface::HuggingFaceProvider
+              ai::providers::gemini::GeminiProvider
+              ai::providers::claude::ClaudeProvider
+    = help: the following types implement `ai::AIProvider`:
+    = help: consider moving `list_models` to another trait
+    = help: consider moving `check_availability` to another trait
+    = help: consider moving `execute_with_model` to another trait
+    = help: consider moving `execute` to another trait
+    |              ^^^^^^^^^^^ ...because method `list_models` is `async`
+236 |     async fn list_models(&self) -> Result<Vec<ModelInfo>>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `check_availability` is `async`
+233 |     async fn check_availability(&self) -> Result<ProviderStatus>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `execute_with_model` is `async`
+226 |     async fn execute_with_model(
+...
+    |              ^^^^^^^ ...because method `execute` is `async`
+223 |     async fn execute(&self, request: &AIRequest) -> Result<AIResponse>;
+...
+    |           ---------- this trait is not dyn compatible...
+209 | pub trait AIProvider: Send + Sync {
+    |
+   --> src/ai/mod.rs:223:14
+      for more information, visit <https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility>
+note: for a trait to be dyn compatible it needs to allow building a vtable
+    |
+    |                                               ^^^^^ `ai::AIProvider` is not dyn compatible
+105 |         let providers = self.providers.read().await;
+    |
+   --> src/ai/router/mod.rs:105:47
+error[E0038]: the trait `ai::AIProvider` is not dyn compatible
+
+    = note: `ai::AIProvider` may be implemented in other crates; if you want to support your users passing their own types here, you can't refer to a specific type
+            implementing `ai::AIProvider` for this new enum and using it instead
+            consider defining an enum where each variant holds one of these types,
+              ai::providers::openai::OpenAIProvider
+              ai::providers::ollama::OllamaProvider
+              ai::providers::huggingface::HuggingFaceProvider
+              ai::providers::gemini::GeminiProvider
+              ai::providers::claude::ClaudeProvider
+    = help: the following types implement `ai::AIProvider`:
+    = help: consider moving `list_models` to another trait
+    = help: consider moving `check_availability` to another trait
+    = help: consider moving `execute_with_model` to another trait
+    = help: consider moving `execute` to another trait
+    |              ^^^^^^^^^^^ ...because method `list_models` is `async`
+236 |     async fn list_models(&self) -> Result<Vec<ModelInfo>>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `check_availability` is `async`
+233 |     async fn check_availability(&self) -> Result<ProviderStatus>;
+...
+    |              ^^^^^^^^^^^^^^^^^^ ...because method `execute_with_model` is `async`
+226 |     async fn execute_with_model(
+...
+    |              ^^^^^^^ ...because method `execute` is `async`
+223 |     async fn execute(&self, request: &AIRequest) -> Result<AIResponse>;
+...
+    |           ---------- this trait is not dyn compatible...
+209 | pub trait AIProvider: Send + Sync {
+    |
+   --> src/ai/mod.rs:223:14
+      for more information, visit <https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility>
+note: for a trait to be dyn compatible it needs to allow building a vtable
+    |
+    |                         ^^^^^^^^^^^^^^^^^^^^^ `ai::AIProvider` is not dyn compatible

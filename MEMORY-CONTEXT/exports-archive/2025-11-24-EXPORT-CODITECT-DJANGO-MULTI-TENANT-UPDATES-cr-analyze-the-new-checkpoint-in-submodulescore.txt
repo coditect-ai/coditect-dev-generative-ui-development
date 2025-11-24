@@ -1,0 +1,646 @@
+
+▗ ▗   ▖ ▖  Claude Code v2.0.50
+           Sonnet 4.5 · Claude Max
+  ▘▘ ▝▝    ~/…/coditect-rollout-master/submodules/cloud/coditect-cloud-infra
+══════════════════ Conversation compacted · ctrl+o for history ═════════════════
+  ⎿  Referenced file 
+     docs/project-management/2025-11-24-django-backend-implementation-plan.md
+  ⎿  Referenced file 
+     docs/project-management/2025-11-24-post-security-review-critical-path.md
+  ⎿  Referenced file CLAUDE.md
+  ⎿  Read ../coditect-cloud-backend/CLAUDE.md (495 lines)
+  ⎿  Referenced file ../../../docs/project-management/PROJECT-PLAN.md
+  ⎿  Todo list read (10 items)
+
+⏺ I'll continue with the interrupted task: updating
+  TASKLIST-WITH-CHECKBOXES.md with Django implementation tasks.
+
+⏺ Read(docs/project-management/TASKLIST-WITH-CHECKBOXES.md)
+  ⎿  Read 200 lines
+  ⎿  CLAUDE.md
+
+⏺ Read(docs/project-management/2025-11-24-django-backend-implementation-plan.md)
+  ⎿  Read 100 lines
+
+⏺ Now I'll update TASKLIST-WITH-CHECKBOXES.md by replacing Phase 1 with
+  Django implementation tasks. Let me read the current Phase 1 section:
+
+⏺ Read(docs/project-management/TASKLIST-WITH-CHECKBOXES.md)
+  ⎿  Read 100 lines
+
+⏺ Let me continue reading to find Phase 1:
+
+⏺ Read(docs/project-management/TASKLIST-WITH-CHECKBOXES.md)
+  ⎿  Read 150 lines
+
+⏺ Perfect! I found Phase 1. Now I need to replace the entire Phase 1 section
+   (lines 381-449+) with Django implementation tasks. Let me first update
+  the todo list, then make the edit:
+
+⏺ Now let me read more of Phase 1 to see where it ends:
+
+⏺ Read(docs/project-management/TASKLIST-WITH-CHECKBOXES.md)
+  ⎿  Read 100 lines
+
+⏺ Good! I can see Phase 1 ends at line 497 and Phase 2 starts at line 500.
+  Now I'll replace the entire Phase 1 section with Django implementation
+  tasks. Let me create the replacement content:
+
+⏺ Update(docs/project-management/TASKLIST-WITH-CHECKBOXES.md)
+  ⎿  Updated docs/project-management/TASKLIST-WITH-CHECKBOXES.md with 210 
+     additions and 75 removals
+       378    
+       379    ---
+       380    
+       381 -  ## Phase 1: Security Services (2-3 days) ⏸️ NEXT
+       381 +  ## Phase 1: Django Backend Foundation (7-10 days) ⏸️ NEXT
+       382    
+       383 -  **Goal:** Deploy Cloud KMS and Identity Platform for OAuth2
+           -  authentication
+       384 -  **Team:** DevOps Engineer, Security Specialist
+       383 +  **Goal:** Rewrite backend from FastAPI to Django 5.2.8 with
+           +  django-multitenant for automatic tenant isolation
+       384 +  **Team:** Backend Engineers (2x), Database Architect
+       385    **Status:** Not Started (0%)
+       386 +  **Rationale:** Matches 120+ security hardening tasks, 
+           + provides automatic row-level tenant isolation
+       387    
+       388 -  ### Day 1: Cloud KMS Setup
+       388 +  ### Days 1-3: Django Project Setup
+       389    
+       390 -  #### Task P1-T01: Create Cloud KMS OpenTofu Module ⏸️
+       391 -  **Time Estimate:** 2 hours
+       390 +  #### Task P1-T01: Django Project Initialization ⏸️
+       391 +  **Time Estimate:** 3 hours
+       392    **Dependencies:** None
+       393    
+       394 -  - [ ] Create opentofu/modules/kms/ directory
+       395 -  - [ ] Define RSA-4096 asymmetric key for license signing
+       396 -  - [ ] Configure key rotation policy (90 days)
+       397 -  - [ ] Setup IAM permissions for GKE service account
+       398 -  - [ ] Test module with tofu validate
+       394 +  - [ ] Navigate to coditect-cloud-backend repository
+       395 +  - [ ] Backup FastAPI code to src_fastapi_backup/
+       396 +  - [ ] Install Django 5.2.8 and django-multitenant 3.2.3
+       397 +  - [ ] Create Django project: `django-admin startproject 
+           + license_platform .`
+       398 +  - [ ] Create Django apps: licenses, tenants, users, api
+       399 +  - [ ] Setup split settings (base, development, production, 
+           + test)
+       400    
+       401    **Acceptance Criteria:**
+       402 -  - [ ] KMS module created and validated
+       403 -  - [ ] RSA-4096 key configuration correct
+       404 -  - [ ] IAM permissions documented
+       402 +  - [ ] Django project initialized successfully
+       403 +  - [ ] 4 Django apps created
+       404 +  - [ ] Settings split into environment-specific files
+       405 +  - [ ] FastAPI code safely backed up
+       406    
+       407 -  #### Task P1-T02: Deploy Cloud KMS ⏸️
+       408 -  **Time Estimate:** 1 hour
+       407 +  #### Task P1-T02: Database Models with django-multitenant 
+           + ⏸️
+       408 +  **Time Estimate:** 4 hours
+       409    **Dependencies:** P1-T01
+       410    
+       411 -  - [ ] Deploy KMS key ring to us-central1
+       412 -  - [ ] Create signing key: coditect-license-signing-key
+       413 -  - [ ] Grant cloudkms.cryptoKeyEncrypterDecrypter role to 
+           - GKE SA
+       414 -  - [ ] Test signing with gcloud command
+       415 -  - [ ] Verify key creation and accessibility
+       411 +  - [ ] Create Organization model (Tenant) in 
+           + tenants/models.py
+       412 +    - UUID primary key, name, slug, subscription_tier, 
+           + max_concurrent_seats
+       413 +  - [ ] Create User model (TenantModel) in users/models.py
+       414 +    - Inherit from AbstractUser and TenantModel
+       415 +    - Set tenant_id = 'organization_id' for automatic 
+           + isolation
+       416 +    - UUID primary key, email, role, organization FK
+       417 +  - [ ] Create License model (TenantModel) in 
+           + licenses/models.py
+       418 +    - UUID primary key, organization FK, plan, max_seats, 
+           + is_active
+       419 +  - [ ] Create LicenseSession model (TenantModel) in 
+           + licenses/models.py
+       420 +    - UUID primary key, license FK, user FK, hardware_id, 
+           + heartbeat timestamp
+       421    
+       422    **Acceptance Criteria:**
+       423 -  - [ ] KMS key ring and signing key deployed
+       424 -  - [ ] GKE service account has signing permissions
+       425 -  - [ ] Test signature creation succeeds
+       423 +  - [ ] All models created with proper django-multitenant 
+           + integration
+       424 +  - [ ] TenantModel properly configured for automatic 
+           + isolation
+       425 +  - [ ] Relationships defined (Organization → User → License 
+           + → Session)
+       426 +  - [ ] All models use UUID primary keys
+       427    
+       428 -  ### Day 2: Identity Platform Setup
+       428 +  #### Task P1-T03: Django Database Migrations ⏸️
+       429 +  **Time Estimate:** 2 hours
+       430 +  **Dependencies:** P1-T02
+       431    
+       432 -  #### Task P1-T03: Create Identity Platform Module ⏸️
+       433 -  **Time Estimate:** 4 hours
+       434 -  **Dependencies:** None
+       432 +  - [ ] Configure DATABASE_URL in settings for PostgreSQL
+       433 +  - [ ] Create initial migrations: `python manage.py 
+           + makemigrations`
+       434 +  - [ ] Review migration files for correctness
+       435 +  - [ ] Apply migrations: `python manage.py migrate`
+       436 +  - [ ] Verify schema in Cloud SQL PostgreSQL
+       437    
+       438 -  - [ ] Create opentofu/modules/identity-platform/ directory
+       439 -  - [ ] Configure OAuth2 providers (Google, GitHub)
+       440 -  - [ ] Setup OAuth consent screen
+       441 -  - [ ] Configure redirect URIs (localhost, staging, 
+           - production)
+       442 -  - [ ] Test module with tofu validate
+       438 +  **Acceptance Criteria:**
+       439 +  - [ ] Initial migrations created
+       440 +  - [ ] Database schema applied to Cloud SQL
+       441 +  - [ ] All tables created with proper tenant_id columns
+       442 +  - [ ] No migration errors
+       443    
+       444 +  #### Task P1-T04: Tenant Middleware Implementation ⏸️
+       445 +  **Time Estimate:** 3 hours
+       446 +  **Dependencies:** P1-T02
+       447 +  
+       448 +  - [ ] Create TenantMiddleware in tenants/middleware.py
+       449 +  - [ ] Extract tenant from JWT token
+       450 +  - [ ] Call set_current_tenant() for request context
+       451 +  - [ ] Handle missing tenant gracefully (return 403)
+       452 +  - [ ] Add middleware to MIDDLEWARE settings
+       453 +  
+       454    **Acceptance Criteria:**
+       455 -  - [ ] Identity Platform module created
+       456 -  - [ ] OAuth2 providers configured
+       457 -  - [ ] Redirect URIs documented
+       455 +  - [ ] Middleware extracts tenant from JWT correctly
+       456 +  - [ ] set_current_tenant() called for all authenticated 
+           + requests
+       457 +  - [ ] Automatic tenant filtering works on all queries
+       458 +  - [ ] 403 Forbidden returned for invalid tenant
+       459    
+       460 -  #### Task P1-T04: Deploy Identity Platform ⏸️
+       461 -  **Time Estimate:** 2 hours
+       460 +  ### Days 4-6: Django REST Framework API
+       461 +  
+       462 +  #### Task P1-T05: Django REST Framework Setup ⏸️
+       463 +  **Time Estimate:** 3 hours
+       464    **Dependencies:** P1-T03
+       465    
+       466 -  - [ ] Enable Identity Platform API
+       467 -  - [ ] Create OAuth2 clients (web app, mobile app)
+       468 -  - [ ] Configure authorized domains
+       469 -  - [ ] Test OAuth flow with Google account
+       470 -  - [ ] Document client IDs and configuration
+       466 +  - [ ] Install djangorestframework 3.16.1
+       467 +  - [ ] Install djangorestframework-simplejwt for JWT auth
+       468 +  - [ ] Configure REST_FRAMEWORK settings (JWT 
+           + authentication)
+       469 +  - [ ] Create api/v1/ structure for versioned API
+       470 +  - [ ] Setup URL routing for /api/v1/
+       471    
+       472    **Acceptance Criteria:**
+       473 -  - [ ] Identity Platform deployed successfully
+       474 -  - [ ] OAuth2 clients created
+       475 -  - [ ] Test OAuth flow works end-to-end
+       473 +  - [ ] DRF installed and configured
+       474 +  - [ ] JWT authentication enabled
+       475 +  - [ ] API versioning structure created
+       476 +  - [ ] Swagger/OpenAPI documentation auto-generated
+       477    
+       478 -  ### Day 3: Testing & Documentation
+       478 +  #### Task P1-T06: License API Serializers ⏸️
+       479 +  **Time Estimate:** 3 hours
+       480 +  **Dependencies:** P1-T05
+       481    
+       482 -  #### Task P1-T05: End-to-End Auth Testing ⏸️
+       482 +  - [ ] Create LicenseSerializer in licenses/serializers.py
+       483 +  - [ ] Create LicenseSessionSerializer
+       484 +  - [ ] Create UserSerializer in users/serializers.py
+       485 +  - [ ] Add validation logic (seat availability, license 
+           + active)
+       486 +  - [ ] Add nested serializers for relationships
+       487 +  
+       488 +  **Acceptance Criteria:**
+       489 +  - [ ] All model serializers created
+       490 +  - [ ] Validation logic implemented
+       491 +  - [ ] Nested relationships work correctly
+       492 +  - [ ] Read-only fields properly configured
+       493 +  
+       494 +  #### Task P1-T07: License Acquisition Endpoint ⏸️
+       495    **Time Estimate:** 4 hours
+       496 +  **Dependencies:** P1-T06
+       497 +  
+       498 +  - [ ] Create LicenseAcquireView in licenses/views.py
+       499 +  - [ ] POST /api/v1/licenses/acquire
+       500 +  - [ ] Validate JWT token and extract user/tenant
+       501 +  - [ ] Check seat availability (Redis Lua script)
+       502 +  - [ ] Create LicenseSession record
+       503 +  - [ ] Return signed license token (Cloud KMS integration)
+       504 +  
+       505 +  **Acceptance Criteria:**
+       506 +  - [ ] Endpoint accepts hardware_id and returns license
+       507 +  - [ ] Atomic seat counting via Redis Lua script
+       508 +  - [ ] License token signed with Cloud KMS
+       509 +  - [ ] Proper error handling (no seats, inactive license)
+       510 +  
+       511 +  #### Task P1-T08: Heartbeat and Release Endpoints ⏸️
+       512 +  **Time Estimate:** 3 hours
+       513 +  **Dependencies:** P1-T07
+       514 +  
+       515 +  - [ ] Create HeartbeatView: PATCH 
+           + /api/v1/licenses/sessions/{id}/heartbeat
+       516 +  - [ ] Create ReleaseView: DELETE 
+           + /api/v1/licenses/sessions/{id}
+       517 +  - [ ] Update last_heartbeat timestamp
+       518 +  - [ ] Decrement seat count in Redis on release
+       519 +  - [ ] Handle TTL expiry (6-minute window)
+       520 +  
+       521 +  **Acceptance Criteria:**
+       522 +  - [ ] Heartbeat updates timestamp correctly
+       523 +  - [ ] Release properly frees seat in Redis
+       524 +  - [ ] TTL-based cleanup works automatically
+       525 +  - [ ] No zombie sessions after 6 minutes
+       526 +  
+       527 +  ### Day 7: Testing and Validation
+       528 +  
+       529 +  #### Task P1-T09: Unit Tests for Models ⏸️
+       530 +  **Time Estimate:** 3 hours
+       531    **Dependencies:** P1-T04
+       532    
+       533 -  - [ ] Test OAuth2 authorization code flow
+       534 -  - [ ] Verify JWT token generation
+       535 -  - [ ] Validate token claims (user_id, email, tenant_id)
+       536 -  - [ ] Test token refresh flow
+       537 -  - [ ] Document any issues encountered
+       533 +  - [ ] Install pytest-django
+       534 +  - [ ] Create tests/test_models.py
+       535 +  - [ ] Test Organization, User, License, LicenseSession 
+           + creation
+       536 +  - [ ] Test tenant isolation (queries return only tenant 
+           + data)
+       537 +  - [ ] Test relationships and foreign keys
+       538    
+       539    **Acceptance Criteria:**
+       540 -  - [ ] OAuth2 flow works for Google and GitHub
+       541 -  - [ ] JWT tokens contain correct claims
+       542 -  - [ ] Token refresh works correctly
+       540 +  - [ ] 80%+ model test coverage
+       541 +  - [ ] Tenant isolation verified with tests
+       542 +  - [ ] All relationships tested
+       543 +  - [ ] Tests pass consistently
+       544    
+       545 -  #### Task P1-T06: Security Documentation ⏸️
+       545 +  #### Task P1-T10: API Integration Tests ⏸️
+       546 +  **Time Estimate:** 4 hours
+       547 +  **Dependencies:** P1-T08
+       548 +  
+       549 +  - [ ] Create tests/test_api.py
+       550 +  - [ ] Test license acquisition flow (success + no seats)
+       551 +  - [ ] Test heartbeat mechanism
+       552 +  - [ ] Test release and seat freeing
+       553 +  - [ ] Test tenant isolation (cannot access other tenant's 
+           + licenses)
+       554 +  
+       555 +  **Acceptance Criteria:**
+       556 +  - [ ] 80%+ API endpoint test coverage
+       557 +  - [ ] All happy paths tested
+       558 +  - [ ] Error cases tested (no seats, invalid token)
+       559 +  - [ ] Multi-tenant isolation verified
+       560 +  
+       561 +  ### Days 8-10: Docker and Kubernetes Deployment
+       562 +  
+       563 +  #### Task P1-T11: Django Dockerfile ⏸️
+       564 +  **Time Estimate:** 2 hours
+       565 +  **Dependencies:** P1-T10
+       566 +  
+       567 +  - [ ] Create Dockerfile for Django application
+       568 +  - [ ] Use Python 3.11 slim base image
+       569 +  - [ ] Install production dependencies (gunicorn, 
+           + psycopg[binary])
+       570 +  - [ ] Configure static file collection
+       571 +  - [ ] Set environment variables for GCP integration
+       572 +  - [ ] Add health check endpoint
+       573 +  
+       574 +  **Acceptance Criteria:**
+       575 +  - [ ] Dockerfile builds successfully
+       576 +  - [ ] Image size optimized (<500MB)
+       577 +  - [ ] Health check responds correctly
+       578 +  - [ ] Environment variables properly configured
+       579 +  
+       580 +  #### Task P1-T12: Kubernetes Deployment Manifests ⏸️
+       581    **Time Estimate:** 3 hours
+       582 -  **Dependencies:** P1-T05
+       582 +  **Dependencies:** P1-T11
+       583    
+       584 -  - [ ] Document OAuth2 flow with sequence diagrams
+       585 -  - [ ] Create runbook for token validation
+       586 -  - [ ] Document KMS signing process
+       587 -  - [ ] Update C3-Security diagram with new components
+       588 -  - [ ] Create troubleshooting guide
+       584 +  - [ ] Create kubernetes/base/deployment.yaml
+       585 +  - [ ] Configure 3 replicas with rolling updates
+       586 +  - [ ] Add liveness and readiness probes
+       587 +  - [ ] Configure Secret Manager volume mounts
+       588 +  - [ ] Create Service (ClusterIP)
+       589 +  - [ ] Create Ingress with SSL certificate
+       590    
+       591    **Acceptance Criteria:**
+       592 -  - [ ] Security documentation complete
+       593 -  - [ ] Sequence diagrams created
+       594 -  - [ ] Runbook available for operations team
+       592 +  - [ ] Deployment manifest complete
+       593 +  - [ ] Probes configured correctly
+       594 +  - [ ] Secrets accessible from pods
+       595 +  - [ ] Service and Ingress created
+       596    
+       597 +  #### Task P1-T13: Deploy to GKE ⏸️
+       598 +  **Time Estimate:** 3 hours
+       599 +  **Dependencies:** P1-T12
+       600 +  
+       601 +  - [ ] Build Docker image: `docker build -t 
+           + gcr.io/coditect-cloud-infra/backend:v1 .`
+       602 +  - [ ] Push to Google Container Registry
+       603 +  - [ ] Apply Kubernetes manifests: `kubectl apply -k 
+           + kubernetes/base/`
+       604 +  - [ ] Verify pods running: `kubectl get pods`
+       605 +  - [ ] Test health endpoint via Service IP
+       606 +  - [ ] Configure DNS for licenses.coditect.ai
+       607 +  
+       608 +  **Acceptance Criteria:**
+       609 +  - [ ] Backend deployed to GKE
+       610 +  - [ ] 3 replicas running successfully
+       611 +  - [ ] Health checks passing
+       612 +  - [ ] Accessible via licenses.coditect.ai
+       613 +  
+       614    ### Phase 1 Deliverables ⏸️
+       615    
+       616 -  - [ ] Cloud KMS operational with RSA-4096 signing key
+       617 -  - [ ] Identity Platform configured with Google/GitHub OAuth
+       618 -  - [ ] End-to-end authentication flow tested
+       619 -  - [ ] Security architecture documented
+       616 +  - [ ] Django 5.2.8 backend with django-multitenant 3.2.3
+       617 +  - [ ] Automatic row-level tenant isolation operational
+       618 +  - [ ] Django REST Framework API with license endpoints
+       619 +  - [ ] Docker image built and deployed to GKE
+       620 +  - [ ] 80%+ test coverage (unit + integration)
+       621 +  - [ ] Health checks and monitoring configured
+       622    
+       623    ### Phase 1 Success Criteria ⏸️
+       624    
+       625 -  - [ ] Cloud KMS can sign arbitrary data
+       626 -  - [ ] Identity Platform OAuth flow works for Google and 
+           - GitHub
+       627 -  - [ ] JWT tokens contain correct claims (user_id, 
+           - tenant_id)
+       628 -  - [ ] Token validation succeeds with public key
+       629 -  - [ ] Security documentation complete
+       625 +  - [ ] All database models created with proper tenant 
+           + isolation
+       626 +  - [ ] License acquisition endpoint returns signed token
+       627 +  - [ ] Heartbeat mechanism keeps sessions alive
+       628 +  - [ ] Atomic seat counting prevents race conditions
+       629 +  - [ ] Multi-tenant isolation verified with tests
+       630 +  - [ ] Backend accessible at licenses.coditect.ai
+       631 +  - [ ] No FastAPI references remain in codebase
+       632    
+       633    ---
+       634    
+
+⏺ Excellent! Now I need to update the progress summary table at the top of
+  the file. Let me update Phase 1 task count from 6 to 13 tasks:
+
+⏺ Update(docs/project-management/TASKLIST-WITH-CHECKBOXES.md)
+  ⎿  Updated docs/project-management/TASKLIST-WITH-CHECKBOXES.md with 2  
+     additions and 2 removals
+       13    | Phase | Tasks | Completed | In Progress | Pending | 
+            Completion % |
+       14    |-------|-------|-----------|-------------|---------|-------
+            -------|
+       15    | **Phase 0** | 19 | 19 | 0 | 0 | 100% ✅ |
+       16 -  | **Phase 1** | 6 | 0 | 0 | 6 | 0% |
+       16 +  | **Phase 1** | 13 | 0 | 0 | 13 | 0% |
+       17    | **Phase 2** | 25 | 0 | 0 | 25 | 0% |
+       18    | **Phase 3** | 8 | 0 | 0 | 8 | 0% |
+       19    | **Phase 4** | 7 | 0 | 0 | 7 | 0% |
+       20    | **Phase 5** | 5 | 0 | 0 | 5 | 0% |
+       21    | **Phase 6** | 4 | 0 | 0 | 4 | 0% |
+       22 -  | **TOTAL** | **74** | **19** | **0** | **55** | **26%** |
+       22 +  | **TOTAL** | **81** | **19** | **0** | **62** | **23%** |
+       23    
+       24    ---
+       25    
+
+⏺ Now I need to update the header metadata to reflect the new total task
+  count:
+
+⏺ Update(docs/project-management/TASKLIST-WITH-CHECKBOXES.md)
+  ⎿  Updated docs/project-management/TASKLIST-WITH-CHECKBOXES.md with 3  
+     additions and 3 removals
+        1    # TASKLIST WITH CHECKBOXES - CODITECT License Management 
+            Platform
+        2    
+        3    **Project:** CODITECT License Management Platform (Django + 
+            React + PostgreSQL)
+        4 -  **Status:** Active Development - Documentation Complete (26
+          -  % Complete)
+        4 +  **Status:** Active Development - Phase 1 Django Backend (23
+          +  % Complete)
+        5    **Last Updated:** November 24, 2025
+        6 -  **Total Tasks:** 74 tasks across 7 phases
+        7 -  **Version:** 3.0 (Django + React Hybrid Architecture)
+        6 +  **Total Tasks:** 81 tasks across 7 phases
+        7 +  **Version:** 4.0 (Django Backend Rewrite)
+        8    
+        9    ---
+       10    
+
+⏺ Perfect! Now let me mark this task as complete and verify the changes:
+
+⏺ Now let me verify PROJECT-PLAN.md to confirm it's already Django-based
+  (which I already checked earlier in the conversation). Let me search for
+  any FastAPI references:
+
+⏺ Bash(grep -i "fastapi" /Users/halcasteel/PROJECTS/coditect-rollout-master/subm
+      odules/cloud/coditect-cloud-infra/docs/project-management/PROJECT-PLAN.md)
+  ⎿  No matches found
+
+⏺ Perfect! No FastAPI references found in PROJECT-PLAN.md (exit code 1 means
+   grep found no matches). Let me mark this task as complete:
+
+⏺ Perfect! The interrupted task has been completed successfully. Let me
+  create a summary of what was accomplished:
+
+  Summary
+
+  I've successfully completed the interrupted task: updating 
+  TASKLIST-WITH-CHECKBOXES.md with Django implementation tasks.
+
+  Changes Made
+
+  1. Updated Phase 1: Django Backend Foundation (7-10 days)
+  - Replaced old "Security Services" phase with complete Django
+  implementation roadmap
+  - Added 13 detailed tasks organized into 3 sub-phases:
+    - Days 1-3: Django project setup (4 tasks)
+    - Days 4-6: Django REST Framework API (4 tasks)
+    - Days 8-10: Docker and Kubernetes deployment (3 tasks)
+    - Day 7: Testing and validation (2 tasks)
+
+  2. Updated Progress Summary Table
+  - Phase 1 tasks: 6 → 13 tasks
+  - Total tasks: 74 → 81 tasks
+  - Overall completion: 26% → 23% (adjusted for new tasks)
+
+  3. Updated Document Metadata
+  - Version: 3.0 → 4.0 (Django Backend Rewrite)
+  - Status: Updated to reflect Phase 1 Django Backend focus
+
+  4. Verified PROJECT-PLAN.md
+  - ✅ Confirmed no FastAPI references exist
+  - ✅ Already Django-based, no changes needed
+
+  Key Tasks Added
+
+  Django Project Setup:
+  - P1-T01: Django project initialization
+  - P1-T02: Database models with django-multitenant (automatic tenant
+  isolation)
+  - P1-T03: Django database migrations
+  - P1-T04: Tenant middleware implementation
+
+  API Development:
+  - P1-T05: Django REST Framework setup
+  - P1-T06: License API serializers
+  - P1-T07: License acquisition endpoint with Redis atomic seat counting
+  - P1-T08: Heartbeat and release endpoints
+
+  Testing:
+  - P1-T09: Unit tests for models (80%+ coverage)
+  - P1-T10: API integration tests (multi-tenant isolation verified)
+
+  Deployment:
+  - P1-T11: Django Dockerfile
+  - P1-T12: Kubernetes deployment manifests
+  - P1-T13: Deploy to GKE at licenses.coditect.ai
+
+  Rationale for Django Backend
+
+  The tasks reflect the architectural decision to pivot from FastAPI to
+  Django 5.2.8 with django-multitenant because:
+  - ✅ Matches 120+ security hardening tasks already documented
+  - ✅ Automatic row-level tenant isolation (critical security feature)
+  - ✅ Built-in CSRF, XSS, SQL injection protection
+  - ✅ Lower audit risk with proven patterns
+
+  All planning documents are now aligned and ready for Django backend
+  implementation to begin.
+
+> git add commit push 
+
+⏺ I'll commit and push the TASKLIST updates to the repository.
+
+⏺ Bash(git add docs/project-management/TASKLIST-WITH-CHECKBOXES.md)
+  ⎿  (No content)
+
+⏺ Bash(git commit -m "feat(tasklist): Update Phase 1 with Django backend
+      implementation tasks…)
+  ⎿ [main a65b20b] feat(tasklist): Update Phase 1 with Django backend imple
+    mentation tasks
+     4 files changed, 215 insertions(+), 80 deletions(-)
+    … +5 lines (ctrl+o to expand)
+
+
+⏺ Bash(git push)
+  ⎿  To https://github.com/coditect-ai/coditect-cloud-infra.git
+        d7592d0..a65b20b  main -> main
+
+⏺ ✅ Successfully committed and pushed!
+
+  Commit: a65b20b - feat(tasklist): Update Phase 1 with Django backend
+  implementation tasks
+
+  Changes pushed to coditect-cloud-infra submodule:
+
+  1. TASKLIST-WITH-CHECKBOXES.md - Updated Phase 1 with 13 Django
+  implementation tasks
+  2. IMPLEMENTATION-STATUS.md → docs/project-management/ (file
+  reorganization)
+  3. CLOUD-KMS-DEPLOYMENT-SUMMARY.md → docs/reference/ (file reorganization)
+  4. test-kms-signing.py → scripts/ (file reorganization)
+
+  Summary:
+  - Phase 1 renamed from "Security Services" to "Django Backend Foundation"
+  - Added 13 detailed tasks for 7-10 day Django implementation
+  - Total tasks increased from 74 → 81
+  - Version updated to 4.0 (Django Backend Rewrite)
+  - All changes now in remote repository at coditect-ai/coditect-cloud-infra
+
+  The TASKLIST is now fully aligned with the Django architecture decision
+  and ready for Phase 1 implementation to begin.
+
+> I assume that the implementation plan updates were pushed as well? 
+
+⏺ Let me check the git status to see if the Django implementation plan
+  document is already committed or needs to be pushed:
+
+⏺ Bash(git status)
+  ⎿  On branch main                               
+     Your branch is up to date with 'origin/main'.
+     … +12 lines (ctrl+o to expand)
+
+⏺ Good catch! The implementation plan documents were created but not
+  committed yet. Let me add and push them now:
+
+⏺ Bash(rm docs/project-management/TASKLIST-WITH-CHECKBOXES.md.backup-20251124-08
+      3751)
+  ⎿  (No content)
+
+⏺ Bash(git add
+      docs/project-management/2025-11-24-django-backend-implementation-plan.md
+      docs/project-management/2025-11-24-post-security-review-critical-path.md)
+  ⎿  (No content)
+
+⏺ Bash(git commit -m "docs(planning): Add Django implementation plan and
+      critical path analysis…)
+  ⎿ [main cd71498] docs(planning): Add Django implementation plan and criti
+    cal path analysis
+     2 files changed, 2109 insertions(+)
+    … +4 lines (ctrl+o to expand)
+
+
+⏺ Bash(git push)
+  ⎿  To https://github.com/coditect-ai/coditect-cloud-infra.git
+        a65b20b..cd71498  main -> main
+
+⏺ ✅ Yes! All planning documents are now pushed.
+
+  Two commits successfully pushed:
+
+  1. Commit a65b20b - TASKLIST updates with Django implementation tasks
+  2. Commit cd71498 - Planning documents (just now):
+    - 2025-11-24-django-backend-implementation-plan.md (27KB, 1185 lines)
+    - 2025-11-24-post-security-review-critical-path.md (27KB)
+
+  Total changes: 2,109 insertions across both planning documents.
+
+  All Django architecture documentation is now in the remote repository at
+  coditect-ai/coditect-cloud-infra. The complete planning suite includes:
+
+  - ✅ Critical path analysis (3 deployment options, Phase 1-3 breakdown)
+  - ✅ Django implementation plan (10-14 day roadmap with code examples)
+  - ✅ TASKLIST with 13 Django backend tasks (Phase 1)
+  - ✅ PROJECT-PLAN.md (already Django-based, verified)
+
+  Ready for Phase 1 Django backend implementation to begin.
+
+
+

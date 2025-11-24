@@ -1,0 +1,999 @@
+
+▗ ▗   ▖ ▖  Claude Code v2.0.42
+           Sonnet 4.5 · Claude Max
+  ▘▘ ▝▝    /Users/halcasteel/.claude
+
+> Unknown slash command: config_validate 
+
+> pwd 
+
+⏺ I'm ready to help. What would you like to work on?
+
+> pwd 
+
+⏺ Bash(pwd)
+  ⎿  /Users/halcasteel/.claude
+
+⏺ /Users/halcasteel/.claude
+
+> I want to get the .coditect content to be set so that all of the 
+agents,skills,commands,scripts, etc are avaiable in the .claude should we do
+ that by updating the CLAUDE.md to use .coditect? 
+
+⏺ Let me explore both directories to understand the structure and determine
+  the best approach.
+
+⏺ Bash(ls -la /Users/halcasteel/.claude/.coditect)
+  ⎿  total 552                                              
+     drwxr-xr-x@ 38 halcasteel  staff   1216 Nov 19 11:44 .
+     drwx------@ 15 halcasteel  staff    480 Nov 19 11:50 ..
+     … +50 lines (ctrl+o to expand)
+
+⏺ Bash(ls -la /Users/halcasteel/.claude/)
+  ⎿  total 1840                                              
+     drwx------@ 15 halcasteel  staff     480 Nov 19 11:50 .
+     drwxr-x---+ 63 halcasteel  staff    2016 Nov 19 11:52 ..
+     … +14 lines (ctrl+o to expand)
+
+⏺ Search(pattern: "**/*", path: ".coditect")
+  ⎿  Found 100 files (ctrl+o to expand)
+
+⏺ I see .coditect is inside .claude with a comprehensive set of resources:
+  - 52 agents
+  - 77 commands
+  - 26 skills
+  - 27 scripts
+  - hooks, templates, orchestration, etc.
+
+  The .claude/CLAUDE.md is empty (0 bytes), while .coditect/CLAUDE.md has
+  17KB of content.
+
+  There are two main approaches:
+
+  Option 1: Symlink directories
+
+  Create symlinks from .claude to .coditect subdirectories:
+  ln -s .coditect/commands commands
+  ln -s .coditect/skills skills
+  ln -s .coditect/agents agents
+  # etc.
+
+  Option 2: Update CLAUDE.md to reference .coditect
+
+  Update the empty .claude/CLAUDE.md to include/reference
+  .coditect/CLAUDE.md
+
+  Recommendation: I'd suggest a hybrid approach:
+  1. Symlink the commands directory (Claude Code looks for slash commands in
+   ~/.claude/commands/)
+  2. Copy or symlink the CLAUDE.md content so Claude Code picks up the
+  instructions
+  3. Optionally symlink other resource directories
+
+  Would you like me to:
+  1. Create symlinks for commands, skills, agents, scripts, and hooks?
+  2. Copy .coditect/CLAUDE.md content to .claude/CLAUDE.md?
+  3. Or symlink CLAUDE.md directly?
+
+  Which approach do you prefer?
+
+> 1. I want everything available that .coditect provides available to claude
+ code 
+
+⏺ I'll create symlinks for all .coditect resources to make them available to
+   Claude Code.
+
+⏺ Bash(ls -la commands skills agents scripts hooks CLAUDE.md 2>&1)
+  ⎿  Error: Exit code 1
+     ls: agents: No such file or directory
+     ls: commands: No such file or directory
+     ls: hooks: No such file or directory
+     ls: scripts: No such file or directory
+     ls: skills: No such file or directory
+     -rw-------@ 1 halcasteel  staff  0 Nov 16 10:30 CLAUDE.md
+
+⏺ Creating symlinks for all .coditect resources:
+
+⏺ Bash(rm CLAUDE.md && ln -s .coditect/CLAUDE.md CLAUDE.md && ln -s
+      .coditect/commands commands && ln -s .coditect/skills skills && ln -s
+      .coditect/agents agents && ln…)
+  ⎿  Tool use rejected with user message: what is in the current CLAUDE.md?
+
+⏺ Read(CLAUDE.md)
+  ⎿  Read 1 line
+
+⏺ The current CLAUDE.md is empty (0 bytes). Safe to replace with the
+  symlink.
+
+  Want me to proceed with creating all the symlinks?
+
+> why can we not write the CLAUDE.md to point to the .coditect resources? 
+
+⏺ You're right - we can absolutely do that instead. There are two
+  approaches:
+
+  Option A: Symlink CLAUDE.md
+  - Automatically stays in sync when .coditect/CLAUDE.md is updated
+  - But the file just redirects, no customization
+
+  Option B: Write CLAUDE.md with references to .coditect
+  - Can include custom instructions + point to .coditect resources
+  - More explicit about where things are located
+  - Can merge multiple sources or add local overrides
+
+  For Option B, the CLAUDE.md could include the .coditect/CLAUDE.md content
+  and explicitly reference paths like:
+  Commands are located in: .coditect/commands/
+  Skills are located in: .coditect/skills/
+  Agents are located in: .coditect/agents/
+
+  However, Claude Code specifically looks for commands in
+  ~/.claude/commands/ - so that directory likely needs a symlink regardless
+  for slash commands to work.
+
+  Would you like me to:
+  1. Write a CLAUDE.md that includes .coditect content + explicit resource
+  paths
+  2. Still symlink the commands directory (required for slash commands to
+  work)
+
+> it looks like we should keep a custom CLAUDE.md in the directory, it will 
+give us more control over the directory specific activities we want to do 
+and then symlink everything in .coditect to bring everything we need in 
+,coditect into .claude to give it superpowers 
+
+⏺ That's a solid approach - custom CLAUDE.md for local control + symlinks
+  for all the .coditect superpowers.
+
+  Let me create the symlinks for all .coditect resources:
+
+⏺ Bash(ln -s .coditect/commands commands && ln -s .coditect/skills skills && ln
+      -s .coditect/agents agents && ln -s .coditect/scripts scripts && ln -s
+      .coditect/hooks…)
+  ⎿ lrwxr-xr-x@ 1 halcasteel  staff  16 Nov 19 11:58 agents -> .coditect/ag
+    ents
+    lrwxr-xr-x@ 1 halcasteel  staff  18 Nov 19 11:58 commands -> .coditect/
+    … +12 lines (ctrl+o to expand)
+
+
+
+⏺ All symlinks created. Now let me read the .coditect/CLAUDE.md so we can
+  craft your custom CLAUDE.md with the right references:
+
+⏺ Read(.coditect/CLAUDE.md)
+  ⎿  Read 408 lines
+
+⏺ Good context. Now let's craft a custom CLAUDE.md for .claude that:
+  1. Establishes global configuration
+  2. References the symlinked .coditect resources
+  3. Allows local customization
+
+  Here's a proposed structure:
+
+  # CLAUDE.md - Global Claude Code Configuration
+
+  ## Overview
+  This is the global `~/.claude` configuration with CODITECT framework
+  superpowers via symlinks.
+
+  ## Available Resources (via .coditect symlinks)
+  - **commands/** - 72 slash commands
+  - **agents/** - 50 specialized agents
+  - **skills/** - 189 reusable skills
+  - **scripts/** - 21 Python automation scripts
+  - **hooks/** - Event-driven automation
+  - **orchestration/** - Multi-agent coordination
+  - **templates/** - Project templates
+  - **docs/** - Reference documentation
+
+  ## Quick Reference
+  - Agent invocation: Use Task tool with `subagent_type="general-purpose"`
+  - Command guide: See `docs/SLASH-COMMANDS-REFERENCE.md`
+  - Full framework docs: `.coditect/CLAUDE.md`
+
+  ## Local Configuration
+  [Your custom instructions here]
+
+  ## Default Behaviors
+  [Project-specific defaults, preferences, etc.]
+
+  Would you like me to write this to CLAUDE.md, or do you want to customize
+  it further first?
+
+> do a thorough analsis of the .coditect directory and subidrectories to 
+determine how to maximize value 
+
+⏺ Explore(Analyze .coditect for max value)
+  ⎿  Done (39 tool uses · 83.0k tokens · 1m 60s)                           
+
+⏺ Analysis Complete
+
+  Here's a summary of what .coditect provides:
+
+  Complete Inventory
+
+  | Category      | Count | Highlights
+                   |
+  |---------------|-------|-------------------------------------------------
+  -----------------|
+  | Commands      | 75    | /implement, /analyze, /deliberation, /strategy
+                   |
+  | Agents        | 50    | orchestrator, competitive-market-analyst,
+  rust-expert-developer  |
+  | Skills        | 24    | production-patterns, foundationdb-queries,
+  rust-backend-patterns |
+  | Scripts       | 25+   | coditect-router, create-checkpoint.py,
+  export-dedup.py           |
+  | Orchestration | 12    | Multi-agent coordination system
+                   |
+  | Documentation | 25+   | Comprehensive guides and references
+                   |
+
+  Top 5 Daily Commands
+
+  1. /implement - Production-ready code with tests
+  2. /analyze - Code review with 1-5 rubric scoring
+  3. coditect-router - AI command selection (never memorize commands)
+  4. /deliberation - Pure planning without code
+  5. create-checkpoint.py - Session continuity (prevents forgetting)
+
+  Top 5 Powerful Agents
+
+  1. orchestrator - Coordinates 7 subagents for complex workflows
+  2. competitive-market-analyst - Market intelligence (TAM/SAM/SOM)
+  3. rust-expert-developer - Production Rust code
+  4. cloud-architect - GCP/AWS/Azure infrastructure
+  5. codebase-analyzer - Deep code understanding
+
+  Key Workflows
+
+  Full Feature:    /deliberation → /research → /implement → /analyze →
+  /commit
+  Rapid Feature:   /prototype → /test_generate → /implement → /commit
+  Architecture:    /strategy → /create_plan → /validate_plan → /implement
+  Session End:     create-checkpoint.py "description" --auto-push
+
+  Critical Setup
+
+  # Add to ~/.zshrc
+  alias cr='coditect-router'
+  alias cri='coditect-router -i'
+
+  ---
+  Would you like me to write a comprehensive custom CLAUDE.md that
+  incorporates:
+  1. Quick wins section (5-minute immediate value)
+  2. Top 10 daily commands
+  3. Key agents and invocation patterns
+  4. Essential workflows
+  5. Session continuity reminders
+  6. Getting started priorities?
+
+> everything possible and keep it organized and readable and useful 
+
+⏺ Write(CLAUDE.md)
+  ⎿  User rejected write to CLAUDE.md
+         1 +  # CLAUDE.md - Global Claude Code Configuration
+         2 +  
+         3 +  > **Global `~/.claude` configuration with CODITECT 
+           + framework superpowers**
+         4 +  
+         5 +  ---
+         6 +  
+         7 +  ## Quick Start (5 Minutes to Productivity)
+         8 +  
+         9 +  ### 1. Shell Aliases (Required)
+        10 +  ```bash
+        11 +  # Add to ~/.zshrc or ~/.bashrc
+        12 +  alias cr='coditect-router'
+        13 +  alias cri='coditect-router -i'
+        14 +  source ~/.zshrc
+        15 +  ```
+        16 +  
+        17 +  ### 2. Test the AI Router
+        18 +  ```bash
+        19 +  cr "I need to implement user authentication"
+        20 +  ```
+        21 +  
+        22 +  ### 3. Run Your First Workflow
+        23 +  ```
+        24 +  /deliberation "plan user profile feature"
+        25 +  /implement
+        26 +  /analyze
+        27 +  ```
+        28 +  
+        29 +  ### 4. Save Your Session
+        30 +  ```bash
+        31 +  python3 ~/.claude/.coditect/scripts/create-checkpoint.py 
+           + "First session complete" --auto-push
+        32 +  ```
+        33 +  
+        34 +  ---
+        35 +  
+        36 +  ## Available Resources
+        37 +  
+        38 +  All resources via `.coditect` symlinks:
+        39 +  
+        40 +  | Resource | Count | Location |
+        41 +  |----------|-------|----------|
+        42 +  | **Commands** | 75 | `commands/` |
+        43 +  | **Agents** | 50 | `agents/` |
+        44 +  | **Skills** | 24 | `skills/` |
+        45 +  | **Scripts** | 25+ | `scripts/` |
+        46 +  | **Orchestration** | 12 | `orchestration/` |
+        47 +  | **Documentation** | 25+ | `docs/` |
+        48 +  | **Templates** | 2 | `templates/` |
+        49 +  | **Hooks** | - | `hooks/` |
+        50 +  
+        51 +  ---
+        52 +  
+        53 +  ## Top 10 Commands for Daily Use
+        54 +  
+        55 +  ### Tier 1: Essential (Use Daily)
+        56 +  
+        57 +  #### `/implement`
+        58 +  **Production-ready code with full error handling**
+        59 +  ```
+        60 +  /implement "user authentication with JWT tokens"
+        61 +  ```
+        62 +  - Generates complete implementation with tests, docs, 
+           + observability
+        63 +  - Includes error handling and security considerations
+        64 +  - 5x faster than manual coding
+        65 +  
+        66 +  #### `/analyze`
+        67 +  **Code review with 1-5 rubric scoring**
+        68 +  ```
+        69 +  /analyze
+        70 +  ```
+        71 +  - Provides scores with justifications
+        72 +  - Identifies security issues, performance problems
+        73 +  - Quality gate before deployment
+        74 +  
+        75 +  #### `coditect-router` (AI Command Router)
+        76 +  **Never memorize commands - describe what you need**
+        77 +  ```bash
+        78 +  cr "I need to add a new API endpoint"
+        79 +  cri  # Interactive mode
+        80 +  ```
+        81 +  - Analyzes plain English requests
+        82 +  - Suggests optimal command with reasoning
+        83 +  - Shows alternatives and next steps
+        84 +  
+        85 +  #### `/test_generate`
+        86 +  **Comprehensive test generation (80%+ coverage)**
+        87 +  ```
+        88 +  /test_generate
+        89 +  ```
+        90 +  - Unit tests, integration tests, edge cases
+        91 +  - Framework-appropriate test patterns
+        92 +  - Coverage analysis
+        93 +  
+        94 +  #### `create-checkpoint.py`
+        95 +  **Session continuity - CRITICAL**
+        96 +  ```bash
+        97 +  python3 ~/.claude/.coditect/scripts/create-checkpoint.py 
+           + "Sprint 1 complete" --auto-push
+        98 +  ```
+        99 +  - Saves session context to MEMORY-CONTEXT
+       100 +  - Auto-pushes to GitHub backup
+       101 +  - Prevents catastrophic forgetting
+       102 +  
+       103 +  ### Tier 2: Planning & Strategy
+       104 +  
+       105 +  #### `/deliberation`
+       106 +  **Pure planning without code generation**
+       107 +  ```
+       108 +  /deliberation "design microservices architecture for 
+           + payments"
+       109 +  ```
+       110 +  - Task decomposition and dependencies
+       111 +  - Risk analysis and alternatives
+       112 +  - Avoids premature implementation
+       113 +  
+       114 +  #### `/strategy`
+       115 +  **Architectural planning with C4 diagrams**
+       116 +  ```
+       117 +  /strategy "cloud infrastructure for multi-tenant SaaS"
+       118 +  ```
+       119 +  - C4 diagrams (Context, Container, Component)
+       120 +  - ADRs and migration paths
+       121 +  - Scalability analysis
+       122 +  
+       123 +  #### `/research`
+       124 +  **Verify assumptions before implementation**
+       125 +  ```
+       126 +  /research "best practices for WebSocket authentication"
+       127 +  ```
+       128 +  - 5-20 tool calls for thorough research
+       129 +  - API/package availability checks
+       130 +  - Blocker identification
+       131 +  
+       132 +  ### Tier 3: Quality & Debugging
+       133 +  
+       134 +  #### `/debug`
+       135 +  **Systematic debugging assistance**
+       136 +  ```
+       137 +  /debug "users intermittently getting 500 errors on login"
+       138 +  ```
+       139 +  - Root cause analysis
+       140 +  - Reproduction steps
+       141 +  - Fix recommendations
+       142 +  
+       143 +  #### `/create_plan`
+       144 +  **Detailed implementation plan from requirements**
+       145 +  ```
+       146 +  /create_plan "implement real-time notifications system"
+       147 +  ```
+       148 +  - Step-by-step execution plan
+       149 +  - Dependencies and prerequisites
+       150 +  - Time estimates
+       151 +  
+       152 +  ---
+       153 +  
+       154 +  ## Commands by Category
+       155 +  
+       156 +  ### Planning & Strategy
+       157 +  | Command | Purpose |
+       158 +  |---------|---------|
+       159 +  | `/deliberation` | Pure planning without code |
+       160 +  | `/strategy` | Architectural planning with C4 |
+       161 +  | `/create_plan` | Implementation planning |
+       162 +  | `/validate_plan` | Plan verification |
+       163 +  | `/oneshot_plan` | Single-pass planning |
+       164 +  
+       165 +  ### Implementation
+       166 +  | Command | Purpose |
+       167 +  |---------|---------|
+       168 +  | `/implement` | Production-ready code |
+       169 +  | `/implement_plan` | Execute existing plans |
+       170 +  | `/prototype` | Rapid prototyping |
+       171 +  | `/action` | Autonomous implementation |
+       172 +  | `/refactor_clean` | Code cleanup |
+       173 +  
+       174 +  ### Research & Analysis
+       175 +  | Command | Purpose |
+       176 +  |---------|---------|
+       177 +  | `/research` | Verify assumptions |
+       178 +  | `/research_codebase` | Search codebase patterns |
+       179 +  | `/smart-research` | Auto-agent selection |
+       180 +  | `/multi-agent-research` | Coordinated research |
+       181 +  
+       182 +  ### Code Review & Quality
+       183 +  | Command | Purpose |
+       184 +  |---------|---------|
+       185 +  | `/analyze` | Production code review |
+       186 +  | `/full_review` | Comprehensive review |
+       187 +  | `/debug` | Debugging assistance |
+       188 +  | `/smart_debug` | Pattern-based debugging |
+       189 +  | `/security_sast` | Security testing |
+       190 +  
+       191 +  ### Testing
+       192 +  | Command | Purpose |
+       193 +  |---------|---------|
+       194 +  | `/test_generate` | Generate tests |
+       195 +  | `/tdd_cycle` | Test-driven development |
+       196 +  | `/complexity_gauge` | Resource estimation |
+       197 +  
+       198 +  ### Documentation
+       199 +  | Command | Purpose |
+       200 +  |---------|---------|
+       201 +  | `/document` | Generate API docs |
+       202 +  | `/doc_generate` | Auto-documentation |
+       203 +  | `/describe_pr` | PR descriptions |
+       204 +  
+       205 +  ### Git & Version Control
+       206 +  | Command | Purpose |
+       207 +  |---------|---------|
+       208 +  | `/commit` | Semantic commits |
+       209 +  | `/create_worktree` | Git worktree management |
+       210 +  | `/export` | Context export |
+       211 +  
+       212 +  ### Session Management
+       213 +  | Command | Purpose |
+       214 +  |---------|---------|
+       215 +  | `/context_save` | Save session context |
+       216 +  | `/context_restore` | Restore session |
+       217 +  | `/create_handoff` | Session handoff docs |
+       218 +  
+       219 +  **Full reference:** `docs/SLASH-COMMANDS-REFERENCE.md`
+       220 +  
+       221 +  ---
+       222 +  
+       223 +  ## Top 10 Agents
+       224 +  
+       225 +  ### Invocation Pattern (Task Tool)
+       226 +  ```python
+       227 +  Task(subagent_type="general-purpose", prompt="Use 
+           + [agent-name] subagent to [specific task]")
+       228 +  ```
+       229 +  
+       230 +  ### Tier 1: High-Impact Agents
+       231 +  
+       232 +  #### `orchestrator`
+       233 +  **Multi-agent workflow coordination**
+       234 +  ```python
+       235 +  Task(subagent_type="general-purpose", prompt="Use 
+           + orchestrator subagent to coordinate complete user 
+           + authentication implementation with research, implementation,
+           +  testing, and documentation phases")
+       236 +  ```
+       237 +  - Coordinates 7 specialized subagents
+       238 +  - Parallel execution with quality gates
+       239 +  - 10x faster for complex tasks
+       240 +  
+       241 +  #### `competitive-market-analyst`
+       242 +  **Market intelligence and positioning**
+       243 +  ```python
+       244 +  Task(subagent_type="general-purpose", prompt="Use 
+           + competitive-market-analyst subagent to analyze the AI code 
+           + assistant market with TAM/SAM/SOM and 5-7 competitor 
+           + profiles")
+       245 +  ```
+       246 +  - TAM/SAM/SOM analysis
+       247 +  - Competitor analysis (5-7 companies)
+       248 +  - Positioning recommendations
+       249 +  
+       250 +  #### `rust-expert-developer`
+       251 +  **Advanced Rust backend development**
+       252 +  ```python
+       253 +  Task(subagent_type="general-purpose", prompt="Use 
+           + rust-expert-developer subagent to implement a 
+           + high-performance WebSocket server with connection pooling")
+       254 +  ```
+       255 +  - Production Rust patterns
+       256 +  - Async/await best practices
+       257 +  - Security hardening
+       258 +  
+       259 +  #### `cloud-architect`
+       260 +  **Cloud infrastructure design**
+       261 +  ```python
+       262 +  Task(subagent_type="general-purpose", prompt="Use 
+           + cloud-architect subagent to design GCP infrastructure for 
+           + multi-tenant SaaS with autoscaling")
+       263 +  ```
+       264 +  - GCP/AWS/Azure architecture
+       265 +  - Cost optimization
+       266 +  - Scalability analysis
+       267 +  
+       268 +  #### `codebase-analyzer`
+       269 +  **Deep code understanding (HOW it works)**
+       270 +  ```python
+       271 +  Task(subagent_type="general-purpose", prompt="Use 
+           + codebase-analyzer subagent to analyze authentication flow 
+           + implementation and identify optimization opportunities")
+       272 +  ```
+       273 +  - Implementation analysis
+       274 +  - Pattern detection
+       275 +  - Refactoring guidance
+       276 +  
+       277 +  ### Tier 2: Specialized Agents
+       278 +  
+       279 +  #### `foundationdb-expert`
+       280 +  **FoundationDB operations and optimization**
+       281 +  ```python
+       282 +  Task(subagent_type="general-purpose", prompt="Use 
+           + foundationdb-expert subagent to design key patterns for 
+           + multi-tenant data isolation")
+       283 +  ```
+       284 +  
+       285 +  #### `web-search-researcher`
+       286 +  **External intelligence gathering**
+       287 +  ```python
+       288 +  Task(subagent_type="general-purpose", prompt="Use 
+           + web-search-researcher subagent to research current best 
+           + practices for GraphQL authentication")
+       289 +  ```
+       290 +  
+       291 +  #### `security-specialist`
+       292 +  **Enterprise security audits**
+       293 +  ```python
+       294 +  Task(subagent_type="general-purpose", prompt="Use 
+           + security-specialist subagent to perform security audit of 
+           + the payment processing module")
+       295 +  ```
+       296 +  
+       297 +  #### `testing-specialist`
+       298 +  **Comprehensive testing strategy**
+       299 +  ```python
+       300 +  Task(subagent_type="general-purpose", prompt="Use 
+           + testing-specialist subagent to design testing strategy for 
+           + microservices with 90% coverage target")
+       301 +  ```
+       302 +  
+       303 +  #### `software-design-architect`
+       304 +  **Software design documentation**
+       305 +  ```python
+       306 +  Task(subagent_type="general-purpose", prompt="Use 
+           + software-design-architect subagent to create SDD for the 
+           + notification service")
+       307 +  ```
+       308 +  
+       309 +  ### Agent Categories
+       310 +  
+       311 +  | Category | Agents |
+       312 +  |----------|--------|
+       313 +  | **Research & Analysis** | competitive-market-analyst, 
+           + web-search-researcher, codebase-analyzer, codebase-locator, 
+           + thoughts-analyzer |
+       314 +  | **Orchestration** | orchestrator, 
+           + orchestrator-code-review |
+       315 +  | **Development** | rust-expert-developer, 
+           + frontend-react-typescript-expert, actix-web-specialist |
+       316 +  | **Database** | foundationdb-expert, database-architect |
+       317 +  | **Infrastructure** | cloud-architect, 
+           + monitoring-specialist, k8s-statefulset-specialist, 
+           + devops-engineer |
+       318 +  | **Testing & QA** | testing-specialist, 
+           + security-specialist, qa-reviewer |
+       319 +  | **Architecture** | senior-architect, 
+           + software-design-architect, coditect-adr-specialist |
+       320 +  | **Business** | business-intelligence-analyst, 
+           + venture-capital-business-analyst |
+       321 +  
+       322 +  **Full catalog:** `AGENT-INDEX.md`
+       323 +  
+       324 +  ---
+       325 +  
+       326 +  ## Key Workflows
+       327 +  
+       328 +  ### Full Feature Development
+       329 +  ```
+       330 +  /deliberation → /research → /implement → /analyze → 
+           + /document → /commit
+       331 +  ```
+       332 +  **Time:** 4-6 hours | **Use for:** Complex, production 
+           + features
+       333 +  
+       334 +  ### Rapid Feature Development
+       335 +  ```
+       336 +  /prototype → /test_generate → /implement → /commit
+       337 +  ```
+       338 +  **Time:** 1-2 hours | **Use for:** Quick iterations, MVPs
+       339 +  
+       340 +  ### Bug Fix
+       341 +  ```
+       342 +  /debug → /implement → /analyze → /commit
+       343 +  ```
+       344 +  **Time:** 1-2 hours | **Use for:** Issue resolution
+       345 +  
+       346 +  ### Architecture Design
+       347 +  ```
+       348 +  /strategy → /create_plan → /validate_plan → /implement
+       349 +  ```
+       350 +  **Time:** 2-4 hours | **Use for:** System design, major 
+           + features
+       351 +  
+       352 +  ### Performance Optimization
+       353 +  ```
+       354 +  /db-performance-analyzer → /optimize → /test_generate → 
+           + /commit
+       355 +  ```
+       356 +  **Time:** 2-3 hours | **Use for:** Performance improvements
+       357 +  
+       358 +  ### Multi-Agent Research
+       359 +  ```
+       360 +  /multi-agent-research → orchestrator coordinates agents → 
+           + synthesis
+       361 +  ```
+       362 +  **Time:** 3-4 hours | **Use for:** Comprehensive analysis
+       363 +  
+       364 +  ### Session End (ALWAYS DO THIS)
+       365 +  ```bash
+       366 +  python3 ~/.claude/.coditect/scripts/create-checkpoint.py 
+           + "Description" --auto-push
+       367 +  ```
+       368 +  **Time:** 30 seconds | **Use for:** Every session end
+       369 +  
+       370 +  ---
+       371 +  
+       372 +  ## Session Continuity System
+       373 +  
+       374 +  ### The Problem: Catastrophic Forgetting
+       375 +  Each Claude Code session starts fresh with no memory of 
+           + previous work.
+       376 +  
+       377 +  ### The Solution: MEMORY-CONTEXT
+       378 +  ```bash
+       379 +  # End of every session
+       380 +  python3 ~/.claude/.coditect/scripts/create-checkpoint.py 
+           + "Sprint 1: Auth complete" --auto-push
+       381 +  ```
+       382 +  
+       383 +  ### What Gets Saved
+       384 +  - Session summary and decisions
+       385 +  - Code changes and rationale
+       386 +  - Next steps and blockers
+       387 +  - Git commit references
+       388 +  - Timestamp and context
+       389 +  
+       390 +  ### Storage Location
+       391 +  ```
+       392 +  .coditect/MEMORY-CONTEXT/
+       393 +  ├── checkpoints/          # Session snapshots
+       394 +  ├── exports/              # Conversation exports
+       395 +  ├── backups/              # Database backups
+       396 +  └── checkpoint.config.json
+       397 +  ```
+       398 +  
+       399 +  ### Best Practices
+       400 +  1. **Create checkpoint at every session end**
+       401 +  2. **Use descriptive names:** 
+           + "Sprint-1-Auth-Module-Complete"
+       402 +  3. **Always use `--auto-push`** for GitHub backup
+       403 +  4. **Reference checkpoints** when starting new sessions
+       404 +  
+       405 +  ---
+       406 +  
+       407 +  ## Scripts Reference
+       408 +  
+       409 +  ### Core Automation
+       410 +  
+       411 +  | Script | Purpose | Usage |
+       412 +  |--------|---------|-------|
+       413 +  | `coditect-router` | AI command selection | `cr "your 
+           + request"` |
+       414 +  | `create-checkpoint.py` | Session continuity | `python3 
+           + scripts/create-checkpoint.py "desc" --auto-push` |
+       415 +  | `export-dedup.py` | Conversation export | `python3 
+           + scripts/export-dedup.py` |
+       416 +  | `coditect-quicklaunch.sh` | Project initialization | 
+           + `./scripts/coditect-quicklaunch.sh` |
+       417 +  | `coditect-tutorial.sh` | Interactive tutorial | 
+           + `./scripts/coditect-tutorial.sh` |
+       418 +  | `generate-project-plan.py` | Auto PROJECT-PLAN.md | 
+           + `python3 scripts/generate-project-plan.py` |
+       419 +  
+       420 +  ### Setup & Installation
+       421 +  
+       422 +  | Script | Purpose |
+       423 +  |--------|---------|
+       424 +  | `coditect-interactive-setup.py` | GUI installer |
+       425 +  | `coditect-setup.py` | Environment configuration |
+       426 +  | `setup.sh` | Shell setup |
+       427 +  | `update-all-submodules.sh` | Submodule sync |
+       428 +  
+       429 +  ---
+       430 +  
+       431 +  ## Configuration
+       432 +  
+       433 +  ### settings.local.json
+       434 +  Located at `~/.claude/settings.local.json` - controls 
+           + permissions:
+       435 +  - Git operations (add, commit, push)
+       436 +  - Python execution
+       437 +  - Web search/fetch
+       438 +  - File operations
+       439 +  
+       440 +  ### settings.agents-research.json
+       441 +  Agent-specific configuration for research workflows.
+       442 +  
+       443 +  ---
+       444 +  
+       445 +  ## Documentation Quick Reference
+       446 +  
+       447 +  ### Essential Reading (Start Here)
+       448 +  1. **`1-2-3-SLASH-COMMAND-QUICK-START.md`** - Command 
+           + learning system
+       449 +  2. **`AGENT-INDEX.md`** - Complete agent catalog
+       450 +  3. **`docs/SLASH-COMMANDS-REFERENCE.md`** - Full command 
+           + reference
+       451 +  
+       452 +  ### Deep Dives
+       453 +  - **`AZ1.AI-CODITECT-1-2-3-QUICKSTART.md`** - 3-phase 
+           + methodology
+       454 +  - **`C4-ARCHITECTURE-METHODOLOGY.md`** - C4 diagrams guide
+       455 +  - **`MEMORY-CONTEXT-GUIDE.md`** - Session continuity
+       456 +  - **`WHAT-IS-CODITECT.md`** - Framework philosophy
+       457 +  
+       458 +  ### Architecture & Planning
+       459 +  - **`docs/AUTONOMOUS-AGENT-SYSTEM-DESIGN.md`** - System 
+           + architecture
+       460 +  - **`docs/ORCHESTRATOR-PROJECT-PLAN.md`** - 135+ 
+           + implementation tasks
+       461 +  - **`docs/MULTI-AGENT-ARCHITECTURE-BEST-PRACTICES.md`** - 
+           + Patterns
+       462 +  
+       463 +  ### Training
+       464 +  - **`user-training/README.md`** - Training program overview
+       465 +  - **`user-training/1-2-3-ONBOARDING-HOWTO-QUICK-GUIDE.md`**
+           +  - 30-min quick start
+       466 +  - **`user-training/CODITECT-OPERATOR-TRAINING-SYSTEM.md`** 
+           + - Full certification
+       467 +  
+       468 +  ---
+       469 +  
+       470 +  ## Getting Started Priorities
+       471 +  
+       472 +  ### Week 1: Foundation
+       473 +  
+       474 +  **Day 1 (1 hour)**
+       475 +  - [ ] Add shell aliases (`cr`, `cri`) to ~/.zshrc
+       476 +  - [ ] Test coditect-router: `cr "implement user login"`
+       477 +  - [ ] Read `1-2-3-SLASH-COMMAND-QUICK-START.md`
+       478 +  
+       479 +  **Day 2-3 (2 hours)**
+       480 +  - [ ] Run first workflow: `/deliberation` → `/implement` → 
+           + `/analyze`
+       481 +  - [ ] Create first checkpoint with `--auto-push`
+       482 +  - [ ] Explore `AGENT-INDEX.md`
+       483 +  
+       484 +  **Day 4-5 (2 hours)**
+       485 +  - [ ] Practice `/research` and `/debug` commands
+       486 +  - [ ] Try Task Tool agent invocation
+       487 +  - [ ] Review `docs/SLASH-COMMANDS-REFERENCE.md`
+       488 +  
+       489 +  ### Week 2: Intermediate
+       490 +  
+       491 +  - [ ] Master orchestrator agent for complex tasks
+       492 +  - [ ] Practice multi-agent workflows
+       493 +  - [ ] Complete quick training: 
+           + `user-training/1-2-3-ONBOARDING-HOWTO-QUICK-GUIDE.md`
+       494 +  - [ ] Develop checkpoint discipline (every session)
+       495 +  
+       496 +  ### Week 3-4: Advanced
+       497 +  
+       498 +  - [ ] Complete full training program (4-6 hours)
+       499 +  - [ ] Use 80% of commands regularly
+       500 +  - [ ] Build custom workflows for your domain
+       501 +  - [ ] Contribute improvements to framework
+       502 +  
+       503 +  ---
+       504 +  
+       505 +  ## Troubleshooting
+       506 +  
+       507 +  ### Command not found
+       508 +  ```bash
+       509 +  # Verify symlinks
+       510 +  ls -la ~/.claude/commands
+       511 +  
+       512 +  # Check command exists
+       513 +  ls ~/.claude/commands/ | grep "command-name"
+       514 +  ```
+       515 +  
+       516 +  ### Agent invocation not working
+       517 +  ```python
+       518 +  # Must use Task Tool Pattern
+       519 +  Task(subagent_type="general-purpose", prompt="Use 
+           + agent-name subagent to...")
+       520 +  
+       521 +  # NOT just natural language (this doesn't work)
+       522 +  "Use orchestrator to coordinate..."
+       523 +  ```
+       524 +  
+       525 +  ### Checkpoint fails
+       526 +  ```bash
+       527 +  # Check Python available
+       528 +  python3 --version
+       529 +  
+       530 +  # Run with verbose output
+       531 +  python3 ~/.claude/.coditect/scripts/create-checkpoint.py 
+           + "test" --auto-push -v
+       532 +  ```
+       533 +  
+       534 +  ### Router not suggesting commands
+       535 +  ```bash
+       536 +  # Verify ANTHROPIC_API_KEY set (optional but better 
+           + results)
+       537 +  echo $ANTHROPIC_API_KEY
+       538 +  
+       539 +  # Falls back to heuristic mode without API key
+       540 +  ```
+       541 +  
+       542 +  **Full troubleshooting:** 
+           + `user-training/CODITECT-TROUBLESHOOTING-GUIDE.md`
+       543 +  
+       544 +  ---
+       545 +  
+       546 +  ## Command Selection Helper
+       547 +  
+       548 +  **Don't know which command to use?**
+       549 +  
+       550 +  ### Option 1: AI Router (Recommended)
+       551 +  ```bash
+       552 +  cr "describe what you want to do"
+       553 +  ```
+       554 +  
+       555 +  ### Option 2: Interactive Guide
+       556 +  ```
+       557 +  /COMMAND-GUIDE
+       558 +  ```
+       559 +  
+       560 +  ### Option 3: Agent Suggestion
+       561 +  ```
+       562 +  /suggest-agent "your task description"
+       563 +  ```
+       564 +  
+       565 +  ### Option 4: Agent Dispatcher
+       566 +  ```
+       567 +  /agent-dispatcher "complex multi-phase task"
+       568 +  ```
+       569 +  
+       570 +  ---
+       571 +  
+       572 +  ## Local Configuration
+       573 +  
+       574 +  ### Project-Specific Overrides
+       575 +  Add project-specific instructions below this section when 
+           + working on particular projects.
+       576 +  
+       577 +  ### Default Behaviors
+       578 +  - Always create checkpoints at session end
+       579 +  - Use `/analyze` before committing significant changes
+       580 +  - Prefer `/deliberation` before `/implement` for complex 
+           + features
+       581 +  - Use coditect-router when unsure which command to use
+       582 +  
+       583 +  ---
+       584 +  
+       585 +  ## Framework Information
+       586 +  
+       587 +  **CODITECT** - Distributed Intelligence Development 
+           + Platform
+       588 +  - **Creator:** Hal Casteel, Founder/CEO/CTO, AZ1.AI INC.
+       589 +  - **Purpose:** Transform ideas into production-ready 
+           + products systematically
+       590 +  - **Architecture:** Symlink-based distributed intelligence 
+           + (`.coditect` → `.claude`)
+       591 +  
+       592 +  ### Current Status
+       593 +  - **Framework Completion:** 78%
+       594 +  - **Agents:** 50 operational
+       595 +  - **Commands:** 75 available
+       596 +  - **Skills:** 24 reusable
+       597 +  - **All tests passing:** A+ grade
+       598 +  
+       599 +  ### Resources
+       600 +  - **Full documentation:** `.coditect/README.md`
+       601 +  - **Framework status:** `.coditect/CLAUDE.md`
+       602 +  - **Verification report:** 
+           + `.coditect/VERIFICATION-REPORT.md`
+       603 +  
+       604 +  ---
+       605 +  
+       606 +  ## Quick Reference Card
+       607 +  
+       608 +  ```
+       609 +  DAILY COMMANDS
+       610 +  --------------
+       611 +  cr "request"          AI command selection
+       612 +  /implement            Production code
+       613 +  /analyze              Code review
+       614 +  /test_generate        Generate tests
+       615 +  checkpoint --auto-push Session save
+       616 +  
+       617 +  PLANNING
+       618 +  --------
+       619 +  /deliberation         Pure planning
+       620 +  /strategy             Architecture
+       621 +  /create_plan          Implementation plan
+       622 +  /research             Verify assumptions
+       623 +  
+       624 +  WORKFLOWS
+       625 +  ---------
+       626 +  Feature:  /deliberation → /research → /implement → /analyze
+           +  → /commit
+       627 +  Bug fix:  /debug → /implement → /analyze → /commit
+       628 +  Design:   /strategy → /create_plan → /implement
+       629 +  
+       630 +  AGENTS (Task Tool)
+       631 +  ------------------
+       632 +  orchestrator          Multi-agent coordination
+       633 +  competitive-market-analyst  Market research
+       634 +  rust-expert-developer Production Rust
+       635 +  cloud-architect       Infrastructure
+       636 +  codebase-analyzer     Code understanding
+       637 +  
+       638 +  SESSION END (ALWAYS)
+       639 +  --------------------
+       640 +  python3 ~/.claude/.coditect/scripts/create-checkpoint.py 
+           + "desc" --auto-push
+       641 +  ```
+       642 +  
+       643 +  ---
+       644 +  
+       645 +  *Last updated: 2024-11-19*
+       646 +  *CODITECT Framework v1.0*
+
+
+
