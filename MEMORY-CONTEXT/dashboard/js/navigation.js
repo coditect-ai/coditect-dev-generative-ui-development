@@ -1077,7 +1077,7 @@ class NavigationController {
                                     <div class="grid grid-cols-1" style="gap: var(--space-2);">
                                         ${checkpoint.files_modified.slice(0, 20).map(file => `
                                             <button
-                                                onclick="window.dashboardNav.openFileModal('${this.escapeHtml(file).replace(/'/g, "\\'")}')"
+                                                onclick="window.navigationController.openFileModal('${this.escapeHtml(file).replace(/'/g, "\\'")}')"
                                                 class="file-reference-btn"
                                                 style="
                                                     padding: var(--space-3);
