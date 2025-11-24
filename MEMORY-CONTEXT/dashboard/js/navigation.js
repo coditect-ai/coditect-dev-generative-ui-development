@@ -22,6 +22,7 @@ class NavigationController {
             'files': { title: 'Files', icon: '📁' },
             'checkpoints': { title: 'Sessions', icon: '💬' },
             'commands': { title: 'Commands', icon: '⚡' },
+            'search': { title: 'Search Results', icon: '🔍' },
             'about': { title: 'About MEMORY-CONTEXT', icon: 'ℹ️' },
             'help': { title: 'Help', icon: '❓' }
         };
