@@ -344,6 +344,120 @@ class MessageDeduplicator:
         """Get list of all tracked checkpoint IDs"""
         return list(self.checkpoint_index.keys())
 
+    def reindex(self, backup: bool = True) -> Dict[str, Any]:
+        """
+        Rebuild all indices from the unique_messages.jsonl source file.
+
+        This is useful for:
+        - Recovering from corrupted index files
+        - Recalculating statistics after manual changes
+        - Verifying index integrity
+
+        Args:
+            backup: If True, create backups of existing indices before rebuilding
+
+        Returns:
+            Dictionary with reindex statistics
+
+        Raises:
+            StorageError: If reindex operation fails
+        """
+        try:
+            logger.info("Starting reindex operation...")
+
+            # Backup existing indices if requested
+            if backup:
+                import shutil
+                from datetime import datetime
+                timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+
+                for idx_file in [self.hashes_file, self.checkpoint_index_file]:
+                    if idx_file.exists():
+                        backup_path = idx_file.parent / f"{idx_file.name}.backup-{timestamp}"
+                        shutil.copy2(idx_file, backup_path)
+                        logger.info(f"Created backup: {backup_path}")
+
+            # Reset indices
+            self.global_hashes = set()
+            self.checkpoint_index = {}
+
+            # Rebuild from unique_messages.jsonl
+            messages_processed = 0
+            checkpoints_found = set()
+
+            if not self.messages_file.exists():
+                logger.warning(f"No messages file found at {self.messages_file}")
+                return {
+                    'messages_processed': 0,
+                    'unique_hashes': 0,
+                    'checkpoints_found': 0,
+                    'status': 'no_source_file'
+                }
+
+            logger.info(f"Reading messages from {self.messages_file}...")
+
+            with open(self.messages_file, 'r', encoding='utf-8') as f:
+                for line_num, line in enumerate(f, 1):
+                    try:
+                        entry = json.loads(line.strip())
+                        content_hash = entry.get('hash')
+                        checkpoint_id = entry.get('checkpoint')
+
+                        if not content_hash:
+                            logger.warning(f"Line {line_num}: Missing hash, skipping")
+                            continue
+
+                        # Add to global hashes
+                        self.global_hashes.add(content_hash)
+
+                        # Update checkpoint index if checkpoint is specified
+                        if checkpoint_id:
+                            checkpoints_found.add(checkpoint_id)
+
+                            if checkpoint_id not in self.checkpoint_index:
+                                self.checkpoint_index[checkpoint_id] = {
+                                    'created': entry.get('first_seen', ''),
+                                    'message_hashes': []
+                                }
+
+                            if content_hash not in self.checkpoint_index[checkpoint_id]['message_hashes']:
+                                self.checkpoint_index[checkpoint_id]['message_hashes'].append(content_hash)
+
+                        messages_processed += 1
+
+                        if messages_processed % 1000 == 0:
+                            logger.info(f"Processed {messages_processed} messages...")
+
+                    except json.JSONDecodeError as e:
+                        logger.warning(f"Line {line_num}: Invalid JSON, skipping - {e}")
+                        continue
+                    except Exception as e:
+                        logger.warning(f"Line {line_num}: Processing error - {e}")
+                        continue
+
+            # Save rebuilt indices
+            logger.info("Saving rebuilt indices...")
+            self._save_hashes()
+            self._save_checkpoint_index()
+
+            stats = {
+                'messages_processed': messages_processed,
+                'unique_hashes': len(self.global_hashes),
+                'checkpoints_found': len(checkpoints_found),
+                'status': 'success'
+            }
+
+            logger.info("Reindex complete:")
+            logger.info(f"  Messages processed: {stats['messages_processed']}")
+            logger.info(f"  Unique hashes: {stats['unique_hashes']}")
+            logger.info(f"  Checkpoints found: {stats['checkpoints_found']}")
+
+            return stats
+
+        except Exception as e:
+            logger.error(f"Reindex operation failed: {e}")
+            raise StorageError(f"Failed to reindex: {e}") from e
+
 
 # Backward compatibility: Import the old parser functions
 def parse_claude_export_file(filepath: Path) -> Dict[str, Any]:
@@ -429,10 +543,16 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Message Deduplicator")
-    parser.add_argument("--file", "-f", required=True, help="Export file to process")
+
+    # Mode selection (mutually exclusive)
+    mode_group = parser.add_mutually_exclusive_group(required=True)
+    mode_group.add_argument("--file", "-f", help="Export file to process")
+    mode_group.add_argument("--reindex", action="store_true", help="Rebuild indices from unique_messages.jsonl")
+
     parser.add_argument("--storage-dir", "-d", default="dedup_state", help="Storage directory")
     parser.add_argument("--checkpoint", "-c", help="Optional checkpoint ID")
     parser.add_argument("--dry-run", action="store_true", help="Don't save state")
+    parser.add_argument("--no-backup", action="store_true", help="Skip backup creation during reindex")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
@@ -446,26 +566,47 @@ if __name__ == "__main__":
         # Initialize
         dedup = MessageDeduplicator(args.storage_dir)
 
-        # Parse export
-        export_data = parse_claude_export_file(Path(args.file))
+        if args.reindex:
+            # Reindex mode
+            print("\n🔄 Starting reindex operation...")
+            print(f"Storage directory: {args.storage_dir}")
+            print(f"Backup: {'No' if args.no_backup else 'Yes'}")
+            print()
 
-        # Process
-        new_messages, stats = dedup.process_export(
-            export_data,
-            checkpoint_id=args.checkpoint,
-            dry_run=args.dry_run
-        )
+            stats = dedup.reindex(backup=not args.no_backup)
 
-        # Print results
-        print(f"\nResults:")
-        print(f"  Total messages: {stats['total_messages']}")
-        print(f"  New unique: {stats['new_unique']}")
-        print(f"  Duplicates: {stats['duplicates_filtered']}")
-        print(f"  Dedup rate: {stats['dedup_rate']:.1f}%")
-        print(f"  Global unique: {stats['global_unique_count']}")
+            print(f"\n✅ Reindex completed successfully!")
+            print(f"\nResults:")
+            print(f"  Messages processed: {stats['messages_processed']}")
+            print(f"  Unique hashes: {stats['unique_hashes']}")
+            print(f"  Checkpoints found: {stats['checkpoints_found']}")
+            print(f"  Status: {stats['status']}")
 
-        logger.info("Deduplication completed successfully")
-        sys.exit(0)
+            logger.info("Reindex completed successfully")
+            sys.exit(0)
+
+        else:
+            # Normal dedup mode
+            # Parse export
+            export_data = parse_claude_export_file(Path(args.file))
+
+            # Process
+            new_messages, stats = dedup.process_export(
+                export_data,
+                checkpoint_id=args.checkpoint,
+                dry_run=args.dry_run
+            )
+
+            # Print results
+            print(f"\nResults:")
+            print(f"  Total messages: {stats['total_messages']}")
+            print(f"  New unique: {stats['new_unique']}")
+            print(f"  Duplicates: {stats['duplicates_filtered']}")
+            print(f"  Dedup rate: {stats['dedup_rate']:.1f}%")
+            print(f"  Global unique: {stats['global_unique_count']}")
+
+            logger.info("Deduplication completed successfully")
+            sys.exit(0)
 
     except ParseError as e:
         print(f"\n❌ Parse Error: {e}")
