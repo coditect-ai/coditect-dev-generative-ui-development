@@ -183,7 +183,7 @@ function initD3TimelineEnhanced(data, nav) {
         .style('box-shadow', 'var(--shadow-xl)')
         .style('pointer-events', 'auto')
         .style('cursor', 'move')
-        .style('z-index', '1000')
+        .style('z-index', '3000')
         .style('font-size', '13px')
         .style('max-width', '400px');
 
@@ -310,6 +310,9 @@ function initD3TimelineEnhanced(data, nav) {
         })
         .on('click', function(event, d) {
             event.stopPropagation();
+            // Hide tooltip when session is clicked
+            tooltip.style('visibility', 'hidden');
+            // Show detail panel
             showDetailPanel(d, nav);
         });
 
