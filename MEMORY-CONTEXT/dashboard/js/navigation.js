@@ -350,19 +350,323 @@ class NavigationController {
         return div.innerHTML;
     }
 
-    renderTimeline() {
+    async renderTimeline() {
         const mainContent = document.querySelector('.main-content');
-        mainContent.innerHTML = `
-            <div class="timeline-view">
-                <h2>📅 Activity Timeline</h2>
-                <p>Timeline visualization coming in Week 2 (D3.js implementation)</p>
-                <div style="background: #f5f5f5; padding: 2rem; border-radius: 8px; text-align: center; margin-top: 2rem;">
-                    <h3>Timeline Chart</h3>
-                    <p>Interactive D3.js timeline will be implemented in Task 2.1</p>
-                    <p>Will show message distribution by date with zoom/pan controls</p>
+        mainContent.innerHTML = '<div class="loading">Loading timeline data...</div>';
+
+        try {
+            const checkpoints = await window.dashboardData.loadCheckpoints();
+
+            // Parse dates and sort chronologically
+            const timelineData = checkpoints
+                .map(c => ({
+                    ...c,
+                    date: new Date(c.date || c.timestamp),
+                    messageCount: c.message_count || 0
+                }))
+                .filter(c => !isNaN(c.date.getTime()))
+                .sort((a, b) => a.date - b.date);
+
+            if (timelineData.length === 0) {
+                mainContent.innerHTML = '<div class="card"><p>No timeline data available</p></div>';
+                return;
+            }
+
+            mainContent.innerHTML = `
+                <div class="timeline-view">
+                    <div class="section-header">
+                        <h1>📅 Activity Timeline</h1>
+                        <p class="text-secondary">${timelineData.length} sessions from ${this.formatDate(timelineData[0].date)} to ${this.formatDate(timelineData[timelineData.length - 1].date)}</p>
+                    </div>
+
+                    <div class="card" style="margin-bottom: var(--space-6);">
+                        <div class="card-content">
+                            <div class="flex gap-4" style="flex-wrap: wrap; margin-bottom: var(--space-4);">
+                                <div>
+                                    <label for="timeline-filter-topic" style="display: block; font-weight: 600; margin-bottom: var(--space-2); color: var(--text-primary);">Filter by Topic:</label>
+                                    <select id="timeline-filter-topic" class="form-control" style="min-width: 200px;">
+                                        <option value="">All Topics</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="timeline-filter-range" style="display: block; font-weight: 600; margin-bottom: var(--space-2); color: var(--text-primary);">Date Range:</label>
+                                    <select id="timeline-filter-range" class="form-control" style="min-width: 200px;">
+                                        <option value="all">All Time</option>
+                                        <option value="7">Last 7 Days</option>
+                                        <option value="30">Last 30 Days</option>
+                                        <option value="90">Last 90 Days</option>
+                                        <option value="365">Last Year</option>
+                                    </select>
+                                </div>
+                                <div style="display: flex; align-items: flex-end;">
+                                    <button id="timeline-reset-btn" class="btn btn-secondary">Reset Filters</button>
+                                </div>
+                            </div>
+                            <div style="padding: var(--space-2); background: var(--bg-tertiary); border-radius: var(--radius-sm); font-size: var(--text-sm);">
+                                <strong>💡 Tip:</strong> Scroll to zoom, drag to pan, click sessions to view details
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div id="timeline-chart"></div>
+                    </div>
+
+                    <div id="timeline-legend" class="card" style="margin-top: var(--space-4);">
+                        <div class="card-header">
+                            <h3 class="card-title">Legend</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="flex gap-4" style="flex-wrap: wrap;">
+                                <div class="flex items-center gap-2">
+                                    <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--primary-500);"></div>
+                                    <span>1-50 messages</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div style="width: 18px; height: 18px; border-radius: 50%; background: var(--primary-500);"></div>
+                                    <span>51-200 messages</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary-500);"></div>
+                                    <span>201-500 messages</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--primary-500);"></div>
+                                    <span>501+ messages</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+
+            // Initialize D3 timeline
+            this.initD3Timeline(timelineData);
+
+        } catch (error) {
+            console.error('Failed to load timeline:', error);
+            mainContent.innerHTML = `
+                <div class="card">
+                    <div class="card-content">
+                        <h3 style="color: var(--error-500);">❌ Failed to Load Timeline</h3>
+                        <p>${this.escapeHtml(error.message)}</p>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    initD3Timeline(data) {
+        // Chart dimensions
+        const margin = { top: 40, right: 40, bottom: 60, left: 60 };
+        const width = Math.min(1200, document.getElementById('timeline-chart').clientWidth) - margin.left - margin.right;
+        const height = 500 - margin.top - margin.bottom;
+
+        // Clear any existing chart
+        d3.select('#timeline-chart').selectAll('*').remove();
+
+        // Create SVG
+        const svg = d3.select('#timeline-chart')
+            .append('svg')
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', height + margin.top + margin.bottom)
+            .append('g')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
+
+        // Scales
+        const xScale = d3.scaleTime()
+            .domain(d3.extent(data, d => d.date))
+            .range([0, width]);
+
+        const yScale = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.messageCount)])
+            .range([height, 0]);
+
+        const sizeScale = d3.scaleSqrt()
+            .domain([0, d3.max(data, d => d.messageCount)])
+            .range([6, 30]);
+
+        // Axes
+        const xAxis = d3.axisBottom(xScale)
+            .ticks(10)
+            .tickFormat(d3.timeFormat('%b %d, %Y'));
+
+        const yAxis = d3.axisLeft(yScale)
+            .ticks(5)
+            .tickFormat(d => d.toLocaleString());
+
+        svg.append('g')
+            .attr('class', 'x-axis')
+            .attr('transform', `translate(0,${height})`)
+            .call(xAxis)
+            .selectAll('text')
+            .attr('transform', 'rotate(-45)')
+            .style('text-anchor', 'end')
+            .style('font-size', '12px')
+            .style('fill', 'var(--text-secondary)');
+
+        svg.append('g')
+            .attr('class', 'y-axis')
+            .call(yAxis)
+            .selectAll('text')
+            .style('font-size', '12px')
+            .style('fill', 'var(--text-secondary)');
+
+        // Axis labels
+        svg.append('text')
+            .attr('transform', `translate(${width / 2},${height + margin.bottom - 10})`)
+            .style('text-anchor', 'middle')
+            .style('font-size', '14px')
+            .style('font-weight', '600')
+            .style('fill', 'var(--text-primary)')
+            .text('Date');
+
+        svg.append('text')
+            .attr('transform', 'rotate(-90)')
+            .attr('y', 0 - margin.left)
+            .attr('x', 0 - (height / 2))
+            .attr('dy', '1em')
+            .style('text-anchor', 'middle')
+            .style('font-size', '14px')
+            .style('font-weight', '600')
+            .style('fill', 'var(--text-primary)')
+            .text('Messages per Session');
+
+        // Tooltip
+        const tooltip = d3.select('body')
+            .append('div')
+            .attr('class', 'timeline-tooltip')
+            .style('position', 'absolute')
+            .style('visibility', 'hidden')
+            .style('background', 'var(--bg-primary)')
+            .style('border', '1px solid var(--border-primary)')
+            .style('border-radius', 'var(--radius-md)')
+            .style('padding', 'var(--space-3)')
+            .style('box-shadow', 'var(--shadow-lg)')
+            .style('pointer-events', 'none')
+            .style('z-index', '1000')
+            .style('font-size', '14px')
+            .style('max-width', '300px');
+
+        // Plot sessions as circles
+        svg.selectAll('.session-dot')
+            .data(data)
+            .enter()
+            .append('circle')
+            .attr('class', 'session-dot')
+            .attr('cx', d => xScale(d.date))
+            .attr('cy', d => yScale(d.messageCount))
+            .attr('r', d => sizeScale(d.messageCount))
+            .style('fill', 'var(--primary-500)')
+            .style('opacity', 0.7)
+            .style('stroke', 'var(--primary-700)')
+            .style('stroke-width', '2px')
+            .style('cursor', 'pointer')
+            .on('mouseover', function(event, d) {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .style('opacity', 1)
+                    .attr('r', sizeScale(d.messageCount) * 1.2);
+
+                tooltip
+                    .style('visibility', 'visible')
+                    .html(`
+                        <div style="color: var(--text-primary);">
+                            <strong style="display: block; margin-bottom: 8px; font-size: 15px;">${d.title || d.id}</strong>
+                            <div style="font-size: 13px; color: var(--text-secondary);">
+                                <div style="margin-bottom: 4px;"><strong>Date:</strong> ${d.date.toLocaleDateString()}</div>
+                                <div style="margin-bottom: 4px;"><strong>Messages:</strong> ${d.messageCount.toLocaleString()}</div>
+                                <div style="margin-bottom: 4px;"><strong>Topics:</strong> ${(d.top_topics || []).slice(0, 3).join(', ') || 'None'}</div>
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-primary); font-size: 12px; color: var(--primary-500);">
+                                    Click to view session details →
+                                </div>
+                            </div>
+                        </div>
+                    `);
+            })
+            .on('mousemove', function(event) {
+                tooltip
+                    .style('top', (event.pageY - 10) + 'px')
+                    .style('left', (event.pageX + 10) + 'px');
+            })
+            .on('mouseout', function(event, d) {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .style('opacity', 0.7)
+                    .attr('r', sizeScale(d.messageCount));
+
+                tooltip.style('visibility', 'hidden');
+            })
+            .on('click', function(event, d) {
+                window.location.hash = `#checkpoints/${d.id}`;
+            });
+
+        // Zoom behavior
+        const zoom = d3.zoom()
+            .scaleExtent([0.5, 10])
+            .on('zoom', (event) => {
+                const newXScale = event.transform.rescaleX(xScale);
+
+                svg.select('.x-axis').call(xAxis.scale(newXScale));
+
+                svg.selectAll('.session-dot')
+                    .attr('cx', d => newXScale(d.date));
+            });
+
+        d3.select('#timeline-chart svg').call(zoom);
+
+        // Filter handlers
+        document.getElementById('timeline-filter-range').addEventListener('change', (e) => {
+            this.filterTimeline(data, e.target.value, document.getElementById('timeline-filter-topic').value);
+        });
+
+        document.getElementById('timeline-reset-btn').addEventListener('click', () => {
+            document.getElementById('timeline-filter-range').value = 'all';
+            document.getElementById('timeline-filter-topic').value = '';
+            this.initD3Timeline(data);
+        });
+
+        // Populate topics filter
+        const allTopics = new Set();
+        data.forEach(d => {
+            if (d.top_topics) {
+                d.top_topics.forEach(t => allTopics.add(t));
+            }
+        });
+
+        const topicSelect = document.getElementById('timeline-filter-topic');
+        Array.from(allTopics).sort().forEach(topic => {
+            const option = document.createElement('option');
+            option.value = topic;
+            option.textContent = topic;
+            topicSelect.appendChild(option);
+        });
+
+        topicSelect.addEventListener('change', (e) => {
+            this.filterTimeline(data, document.getElementById('timeline-filter-range').value, e.target.value);
+        });
+    }
+
+    filterTimeline(allData, dateRange, topic) {
+        let filtered = [...allData];
+
+        // Filter by date range
+        if (dateRange !== 'all') {
+            const days = parseInt(dateRange);
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - days);
+            filtered = filtered.filter(d => d.date >= cutoffDate);
+        }
+
+        // Filter by topic
+        if (topic) {
+            filtered = filtered.filter(d => d.top_topics && d.top_topics.includes(topic));
+        }
+
+        // Re-render with filtered data
+        this.initD3Timeline(filtered);
     }
 
     async renderTopics(filter) {
