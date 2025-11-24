@@ -659,14 +659,20 @@ async function initD3TimelineEnhanced(data, nav) {
                 .style('pointer-events', 'none');
         })
         .on('click', function(event, d) {
+            console.log('Session bubble clicked!', d);
             event.stopPropagation();
+            event.preventDefault();
+
             // Hide tooltip when session is clicked
             tooltip
                 .style('visibility', 'hidden')
                 .style('pointer-events', 'none');
+
             // Show detail panel
+            console.log('Calling showDetailPanel...');
             showDetailPanel(d, nav);
-        });
+        })
+        .style('cursor', 'pointer');
 
     // Plot git commits as squares (separate row above sessions)
     const commitYPosition = -40; // Positioned above the chart area (negative y = above)
@@ -755,13 +761,19 @@ async function initD3TimelineEnhanced(data, nav) {
                 .style('pointer-events', 'none');
         })
         .on('click', function(event, d) {
+            console.log('Commit square clicked!', d);
             event.stopPropagation();
+            event.preventDefault();
+
             tooltip
                 .style('visibility', 'hidden')
                 .style('pointer-events', 'none');
+
             // Show commit detail panel
+            console.log('Calling showCommitDetailPanel...');
             showCommitDetailPanel(d, nav);
-        });
+        })
+        .style('cursor', 'pointer');
 
     // Setup navigation handlers
     setupNavigationHandlers(nav);
