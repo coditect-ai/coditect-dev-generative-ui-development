@@ -57,6 +57,41 @@ fi
 
 echo ""
 
+# Step 1.5: Rebuild search index
+echo -e "${YELLOW}Step 1.5: Rebuilding search index...${NC}"
+cd "$SCRIPT_DIR/scripts"
+
+if [ -f "index-messages.py" ]; then
+    python3 index-messages.py --rebuild
+
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✓ Search index rebuilt successfully${NC}"
+    else
+        echo -e "${YELLOW}⚠ Search index rebuild failed (non-critical)${NC}"
+    fi
+else
+    echo -e "${YELLOW}⚠ index-messages.py not found, skipping search index${NC}"
+fi
+
+echo ""
+
+# Step 1.6: Regenerate dashboard
+echo -e "${YELLOW}Step 1.6: Regenerating dashboard data...${NC}"
+
+if [ -f "generate-dashboard.py" ]; then
+    python3 generate-dashboard.py
+
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✓ Dashboard data regenerated successfully${NC}"
+    else
+        echo -e "${YELLOW}⚠ Dashboard regeneration failed (non-critical)${NC}"
+    fi
+else
+    echo -e "${YELLOW}⚠ generate-dashboard.py not found, skipping dashboard${NC}"
+fi
+
+echo ""
+
 # Step 2: Process all submodules
 echo -e "${YELLOW}Step 2: Processing submodules...${NC}"
 cd "$MASTER_ROOT"
