@@ -1,8 +1,32 @@
 {
   "version": "1.0",
-  "generated_at": "2025-11-24T18:33:44.945581Z",
+  "generated_at": "2025-11-24T18:40:37.667372Z",
   "github_url": "https://github.com/coditect-ai/coditect-rollout-master",
   "commits": [
+    {
+      "hash": "129311fa2ac98f6164f41f9abcc46c37d380ce3f",
+      "short_hash": "129311f",
+      "author": "Hal Casteel",
+      "email": "hal.casteel@gmail.com",
+      "date": "2025-11-24T13:36:51-05:00",
+      "timestamp": 1764009411000,
+      "subject": "fix(dashboard): Protect index.html from regeneration, restore working version",
+      "body": "Problem: index.html was overwritten during dashboard data regeneration,\nbreaking the entire application (static HTML vs dynamic JavaScript app).\n\nRoot cause: generate_html() always ran and overwrote index.html, even though\nwe protected CSS/JS files with --include-static flag.\n\nFixes:\n1. Restored working index.html from previous commit (HEAD~1)\n   - Logo image\n   - Theme toggle\n   - D3.js in CSP\n   - Dynamic content loading\n   - Full footer with scripts\n\n2. Modified generate-dashboard.py to skip index.html generation by default\n   - index.html now only regenerated with --include-static flag\n   - Same protection as CSS/JS files\n   - Clear console message about what's preserved\n\n3. Updated REGENERATION-WARNING.md\n   - Document that index.html is now protected by default\n   - Clarify --include-static overwrites HTML too\n   - Update \"Files That Are Safe\" section\n\nBehavior now:\n\u2705 python3 scripts/generate-dashboard.py\n   \u2192 Only updates JSON data files\n   \u2192 Preserves CSS, JS, and HTML\n\n\u26a0\ufe0f python3 scripts/generate-dashboard.py --include-static\n   \u2192 Updates JSON data files\n   \u2192 Overwrites CSS, JS, AND HTML (use with caution!)\n\nThis ensures customizations to index.html are never lost during data updates.\n\n\ud83e\udd16 Generated with Claude Code\nCo-Authored-By: Claude <noreply@anthropic.com>",
+      "type": "fix",
+      "github_url": "https://github.com/coditect-ai/coditect-rollout-master/commit/129311fa2ac98f6164f41f9abcc46c37d380ce3f"
+    },
+    {
+      "hash": "ae7c1b791d0df7d590d80f18ac2020a6bccf4fcf",
+      "short_hash": "ae7c1b7",
+      "author": "Hal Casteel",
+      "email": "hal.casteel@gmail.com",
+      "date": "2025-11-24T13:34:11-05:00",
+      "timestamp": 1764009251000,
+      "subject": "feat(dashboard): Add git commits to timeline with GitHub links and filters",
+      "body": "Implemented comprehensive git commit visualization on timeline:\n\n1. **Backend: Git Commit Extraction (generate-dashboard.py)**\n   - Extract git history (500 commits) from repository\n   - Auto-detect GitHub repo URL from git remote\n   - Parse commit metadata: hash, author, date, subject, body\n   - Detect commit type from conventional commit format (feat, fix, docs, etc.)\n   - Generate GitHub commit URLs\n   - Export to data/git-commits.json\n\n2. **Frontend: Timeline Visualization (timeline-enhanced.js)**\n   - Load git commits alongside sessions\n   - Render commits as diamonds below x-axis (vs circles for sessions)\n   - Color-code by commit type:\n     * Green (feat) | Red (fix) | Blue (docs) | Purple (refactor)\n     * Orange (test) | Gray (chore) | Violet (ci) | Pink (style)\n   - Interactive tooltips showing commit details\n   - Click commit \u2192 Opens GitHub commit page in new tab\n\n3. **Filter Controls (navigation.js)**\n   - Added \"Show:\" checkboxes for Sessions and Commits\n   - Independent toggle for each data type\n   - Filters update timeline visualization instantly\n   - Both enabled by default\n\n4. **Enhanced Legend**\n   - Split into two sections: Sessions (circles) and Commits (diamonds)\n   - Show all commit types with color coding\n   - Indicate GitHub clickability\n\nFeatures:\n\u2705 331 git commits loaded and visualized\n\u2705 Click commits to view full diff on GitHub\n\u2705 Filter timeline to show only sessions, only commits, or both\n\u2705 Hover for detailed commit info (author, type, message, body)\n\u2705 Conventional commit type detection with proper colors\n\u2705 Diamonds positioned below x-axis to avoid session overlap\n\nNext enhancements:\n- Add commit type filter (show only feat, fix, etc.)\n- Search/filter by commit author\n- Link sessions to commits by date proximity\n\n\ud83e\udd16 Generated with Claude Code\nCo-Authored-By: Claude <noreply@anthropic.com>",
+      "type": "feat",
+      "github_url": "https://github.com/coditect-ai/coditect-rollout-master/commit/ae7c1b791d0df7d590d80f18ac2020a6bccf4fcf"
+    },
     {
       "hash": "910aeb606a06141c454c7163cccc5437e01ad905",
       "short_hash": "910aeb6",

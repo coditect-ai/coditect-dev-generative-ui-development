@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 """
-CODITECT Knowledge Navigation System - Static Dashboard Generator
-Generates interactive HTML dashboard from SQLite database
+CODITECT Knowledge Navigation System - Dashboard Data Generator
+Generates JSON data files from SQLite database for dashboard consumption
 
 Usage:
-    python3 generate-dashboard.py [--rebuild] [--include-static]
-
-Options:
-    --rebuild         Remove existing dashboard directory before generation
-    --include-static  Include/overwrite CSS and JS files (DEFAULT: skip to preserve customizations)
+    python3 generate-dashboard.py
 
 Output:
-    dashboard/ directory with HTML, CSS, JS, and JSON data files
+    dashboard/data/ directory with JSON data files
+
+NOTE: This script ONLY generates data files. It does NOT touch HTML, CSS, or JS
+      files - those are source code and should be managed via git.
 """
 
 import sqlite3
@@ -39,7 +38,8 @@ class DashboardGenerator:
             'topics_exported': 0,
             'files_exported': 0,
             'checkpoints_exported': 0,
-            'commands_exported': 0
+            'commands_exported': 0,
+            'git_commits_exported': 0
         }
         # Cache for export metadata
         self.export_metadata_cache = {}
@@ -750,6 +750,7 @@ class DashboardGenerator:
         with open(commits_file, 'w') as f:
             json.dump(commit_data, f, indent=2)
 
+        self.stats['git_commits_exported'] = len(commits)
         print(f"✓ Exported {len(commits)} git commits")
         return commit_data
 
@@ -1327,7 +1328,7 @@ console.log('✓ Data Loader loaded');
     def print_summary(self):
         """Print generation summary"""
         print("\n" + "="*80)
-        print("DASHBOARD GENERATION COMPLETE")
+        print("DATA GENERATION COMPLETE")
         print("="*80)
         print(f"Messages exported:    {self.stats['messages_exported']:,}")
         print(f"Pages generated:      {self.stats['pages_generated']}")
@@ -1335,22 +1336,17 @@ console.log('✓ Data Loader loaded');
         print(f"Files exported:       {self.stats['files_exported']}")
         print(f"Checkpoints exported: {self.stats['checkpoints_exported']}")
         print(f"Commands exported:    {self.stats['commands_exported']:,}")
+        print(f"Git commits exported: {self.stats['git_commits_exported']}")
         print("="*80)
-        print(f"\n✓ Dashboard generated at: {self.output_dir}/")
-        print(f"\nTo view: Open file://{self.output_dir.absolute()}/index.html in your browser")
-        print("\nNext steps:")
-        print("  1. Review generated HTML and JSON files")
-        print("  2. Proceed with Task 1.3: Dashboard Layout & Navigation")
-        print("  3. Implement full JavaScript interactivity (Tasks 1.4-1.5)")
+        print(f"\n✓ Data files generated at: {self.output_dir}/data/")
+        print(f"\n📊 To view dashboard: Open file://{self.output_dir.absolute()}/index.html in browser")
+        print("\n💡 Note: HTML/CSS/JS files are source code (not generated)")
+        print("   They are version-controlled via git and edited directly")
 
 
 def main():
     """Main execution"""
     import sys
-
-    # Parse arguments
-    rebuild = '--rebuild' in sys.argv
-    include_static = '--include-static' in sys.argv
 
     # Paths
     script_dir = Path(__file__).parent
@@ -1358,17 +1354,13 @@ def main():
     output_dir = script_dir.parent / 'dashboard'
 
     print("="*80)
-    print("CODITECT KNOWLEDGE NAVIGATION DASHBOARD GENERATOR")
+    print("CODITECT DASHBOARD DATA GENERATOR")
     print("="*80)
-    print(f"Database:       {db_path}")
-    print(f"Output:         {output_dir}")
-    print(f"Rebuild:        {rebuild}")
-    print(f"Include Static: {include_static} (CSS/JS files will {'be overwritten' if include_static else 'be preserved'})")
+    print(f"Database: {db_path}")
+    print(f"Output:   {output_dir}/data/")
     print("="*80)
-
-    if rebuild and output_dir.exists():
-        print(f"\n⚠️  Removing existing dashboard directory...")
-        shutil.rmtree(output_dir)
+    print("\n⚡ Generating JSON data files only (HTML/CSS/JS are source code)")
+    print("   Dashboard application files are managed via git, not generated\n")
 
     # Generate dashboard
     generator = DashboardGenerator(str(db_path), str(output_dir))
@@ -1377,7 +1369,7 @@ def main():
         generator.connect()
         generator.create_directories()
 
-        # Export all data
+        # Export all data files
         message_index = generator.export_messages(page_size=100)
         topics = generator.export_topics()
         files = generator.export_files()
@@ -1385,14 +1377,8 @@ def main():
         commands = generator.export_commands()
         git_commits = generator.export_git_commits(limit=500)
 
-        # Copy static assets (only if explicitly requested)
-        if include_static:
-            print("\n⚠️  --include-static flag detected: Overwriting CSS/JS/HTML files...")
-            generator.copy_static_assets()
-            generator.generate_html(message_index, topics, files, checkpoints, commands, git_commits)
-        else:
-            print("\n✓ Preserving existing CSS/JS/HTML files (use --include-static to overwrite)")
-            print("   Note: Only JSON data files in data/ directory are updated")
+        print("\n✅ Data generation complete!")
+        print("   HTML/CSS/JS files unchanged (managed via git)")
 
         generator.print_summary()
 

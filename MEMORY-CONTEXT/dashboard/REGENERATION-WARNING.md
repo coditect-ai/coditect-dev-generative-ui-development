@@ -26,79 +26,39 @@ The `generate-dashboard.py` script **overwrites** CSS and JavaScript files when 
 
 Restored CSS/JS files from previous commit (14cc3d8) before the regeneration.
 
-## How to Prevent This
+## Solution (FINAL FIX - 2025-11-24)
 
-### Option 1: Default Behavior (Recommended) ✅ IMPLEMENTED
-**As of 2025-11-24, the script NOW preserves CSS/JS files by default:**
+**The script NOW ONLY generates data files. It NEVER touches HTML/CSS/JS:**
 
 ```bash
-# Default: Only regenerate JSON data files, preserve CSS/JS
+# Only way to run the script - generates JSON data only
 python3 scripts/generate-dashboard.py
-
-# Explicit: Overwrite CSS/JS files (use with caution!)
-python3 scripts/generate-dashboard.py --include-static
 ```
 
-**Status:** ✅ Implemented - CSS/JS files are now preserved by default!
+**Status:** ✅ **COMPLETELY FIXED** - HTML/CSS/JS are now treated as source code!
 
-### Option 2: Manual Process
-1. **BEFORE** running `generate-dashboard.py`:
-   ```bash
-   # Backup CSS/JS files
-   cp -r MEMORY-CONTEXT/dashboard/css MEMORY-CONTEXT/dashboard/css.backup
-   cp -r MEMORY-CONTEXT/dashboard/js MEMORY-CONTEXT/dashboard/js.backup
-   ```
+- Script renamed: "Dashboard Data Generator" (not "Dashboard Generator")
+- Removed all flags and options
+- Removed `copy_static_assets()` calls
+- Removed `generate_html()` calls
+- HTML/CSS/JS are version-controlled source files, edited directly
 
-2. Run regeneration:
-   ```bash
-   python3 scripts/generate-dashboard.py
-   ```
+## What the Script Does Now
 
-3. **AFTER** regeneration, restore CSS/JS:
-   ```bash
-   # Restore CSS/JS files
-   cp -r MEMORY-CONTEXT/dashboard/css.backup/* MEMORY-CONTEXT/dashboard/css/
-   cp -r MEMORY-CONTEXT/dashboard/js.backup/* MEMORY-CONTEXT/dashboard/js/
-   ```
+**ONLY generates JSON data files:**
+- `dashboard/data/messages.json` - Message index
+- `dashboard/data/messages-page-*.json` - Paginated messages
+- `dashboard/data/topics.json` - Topic taxonomy
+- `dashboard/data/files.json` - File references
+- `dashboard/data/checkpoints.json` - Session data
+- `dashboard/data/commands.json` - Command history
+- `dashboard/data/git-commits.json` - Git commit history
 
-### Option 3: Modify generate-dashboard.py
-Add a `--skip-static` flag to skip copying static assets:
-
-```python
-parser.add_argument(
-    '--skip-static',
-    action='store_true',
-    help='Skip copying CSS/JS static assets (preserve existing files)'
-)
-
-# In main():
-if not args.skip_static:
-    generator._copy_static_assets()
-```
-
-Then use:
-```bash
-python3 scripts/generate-dashboard.py --skip-static
-```
-
-## Files That Get Overwritten (with --include-static)
-
-When `--include-static` flag is used, these files are **replaced**:
-- `dashboard/css/main.css`
-- `dashboard/css/layout.css`
-- `dashboard/css/components.css`
-- `dashboard/css/print.css`
-- `dashboard/js/navigation.js`
-- `dashboard/js/data-loader.js`
-- `dashboard/index.html` ⚠️ **ALSO OVERWRITTEN** (as of 2025-11-24)
-
-## Files That Are Safe (default behavior)
-
-These files are **NOT** overwritten by default:
-- `dashboard/css/*.css` (preserved)
-- `dashboard/js/*.js` (preserved)
-- `dashboard/index.html` (preserved) ✅ **NEW: Now protected by default**
-- `dashboard/data/*.json` (intentionally regenerated with new data)
+**NEVER touches these source files:**
+- `dashboard/index.html` - Application entry point
+- `dashboard/css/*.css` - Styling
+- `dashboard/js/*.js` - Application logic
+- `dashboard/assets/*` - Images, fonts, etc.
 
 ## Current Status
 
