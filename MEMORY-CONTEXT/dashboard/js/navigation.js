@@ -270,9 +270,9 @@ class NavigationController {
                         <div class="grid grid-cols-2">
                             ${data.topTopics.map(topic => `
                                 <div class="card clickable" onclick="window.location.hash='#topics/${topic.name}'">
-                                    <h3 class="card-title">${this.escapeHtml(topic.name)}</h3>
+                                    <h3 class="card-title">${this.escapeHtml(topic.display_name || topic.name)}</h3>
                                     <p style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--primary-500); margin: var(--space-2) 0;">
-                                        ${topic.count.toLocaleString()}
+                                        ${topic.message_count.toLocaleString()}
                                     </p>
                                     <p class="text-sm" style="color: var(--text-tertiary);">
                                         ${topic.percentage}% of all messages
