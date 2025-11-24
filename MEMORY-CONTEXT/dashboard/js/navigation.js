@@ -1374,6 +1374,48 @@ class NavigationController {
         return parts.length > 1 ? parts.pop() : 'file';
     }
 
+    extractDateFromId(id) {
+        // Extract date from checkpoint ID using regex
+        const isoMatch = id.match(/(\d{4}-\d{2}-\d{2}T[\d:]+Z)/);
+        if (isoMatch) {
+            return new Date(isoMatch[1]);
+        }
+        const dateMatch = id.match(/(\d{4}-\d{2}-\d{2})/);
+        if (dateMatch) {
+            return new Date(dateMatch[1] + 'T00:00:00Z');
+        }
+        return new Date();
+    }
+
+    extractProject(id) {
+        const patterns = [
+            /CODITECT-([A-Z-]+)/i,
+            /PROJECTS\/([^\/]+)/i,
+            /submodules\/([^\/]+)/i
+        ];
+        for (const pattern of patterns) {
+            const match = id.match(pattern);
+            if (match) return match[1];
+        }
+        return null;
+    }
+
+    extractSubmodule(id) {
+        const match = id.match(/submodules\/[^\/]+\/([^\/]+)/i);
+        return match ? match[1] : null;
+    }
+
+    extractModulesFromFiles(files) {
+        const modules = new Set();
+        files.forEach(file => {
+            const match = file.match(/submodules\/([^\/]+)\/([^\/]+)/i);
+            if (match) {
+                modules.add(`${match[1]}/${match[2]}`);
+            }
+        });
+        return Array.from(modules);
+    }
+
     async renderCheckpoints(id) {
         const mainContent = document.querySelector('.main-content');
 
@@ -1383,6 +1425,12 @@ class NavigationController {
 
             try {
                 const checkpoint = await window.dashboardData.loadCheckpoint(id);
+
+                // Extract metadata
+                const dateExtracted = this.extractDateFromId(checkpoint.id);
+                const project = this.extractProject(checkpoint.id);
+                const submodule = this.extractSubmodule(checkpoint.id);
+                const modules = this.extractModulesFromFiles(checkpoint.files_modified || []);
 
                 mainContent.innerHTML = `
                     <div class="checkpoint-detail-view">
@@ -1396,6 +1444,47 @@ class NavigationController {
                                 <p class="card-subtitle">${checkpoint.summary}</p>
                             </div>
                             <div class="card-content">
+                                <!-- Session Metadata -->
+                                <div style="background: var(--primary-100); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6);">
+                                    <h3 style="margin-bottom: var(--space-3); color: var(--primary-900);">📋 Session Context</h3>
+                                    <div class="grid grid-cols-2" style="gap: var(--space-3);">
+                                        <div>
+                                            <strong style="color: var(--primary-900);">📅 Date & Time:</strong>
+                                            <div style="color: var(--primary-700); font-weight: 600; margin-top: var(--space-1);">
+                                                ${dateExtracted.toLocaleDateString()} ${dateExtracted.toLocaleTimeString()}
+                                            </div>
+                                        </div>
+                                        ${project ? `
+                                            <div>
+                                                <strong style="color: var(--primary-900);">📦 Project:</strong>
+                                                <div style="color: var(--primary-700); font-weight: 600; margin-top: var(--space-1);">
+                                                    ${this.escapeHtml(project)}
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                        ${submodule ? `
+                                            <div>
+                                                <strong style="color: var(--primary-900);">📂 Submodule:</strong>
+                                                <div style="color: var(--primary-700); font-weight: 600; margin-top: var(--space-1);">
+                                                    ${this.escapeHtml(submodule)}
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                        ${modules.length > 0 ? `
+                                            <div style="grid-column: 1 / -1;">
+                                                <strong style="color: var(--primary-900);">🔧 Modules Worked On (${modules.length}):</strong>
+                                                <div style="margin-top: var(--space-2); display: flex; flex-wrap: wrap; gap: var(--space-2);">
+                                                    ${modules.map(mod => `
+                                                        <span class="badge" style="background: var(--primary-200); color: var(--primary-900);">
+                                                            ${this.escapeHtml(mod)}
+                                                        </span>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+
                                 <div class="grid grid-cols-4" style="margin-bottom: var(--space-6);">
                                     <div class="stat-card">
                                         <h3>Total Messages</h3>
@@ -1491,25 +1580,45 @@ class NavigationController {
                         <h2>💬 Conversation Sessions (${checkpoints.length} total)</h2>
 
                         <div class="grid grid-cols-1" style="gap: var(--space-4); margin-top: var(--space-6);">
-                            ${checkpoints.map(checkpoint => `
-                                <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')">
-                                    <div class="card-header" style="cursor: pointer;">
-                                        <div>
-                                            <h3 class="card-title">${this.escapeHtml(checkpoint.title)}</h3>
-                                            <p class="card-subtitle">${checkpoint.message_count} messages • ${checkpoint.commands_executed} commands</p>
+                            ${checkpoints.map(checkpoint => {
+                                const date = this.extractDateFromId(checkpoint.id);
+                                const project = this.extractProject(checkpoint.id);
+                                const submodule = this.extractSubmodule(checkpoint.id);
+                                const modules = this.extractModulesFromFiles(checkpoint.files_modified || []);
+
+                                return `
+                                    <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')">
+                                        <div class="card-header" style="cursor: pointer;">
+                                            <div style="flex: 1;">
+                                                <h3 class="card-title">${this.escapeHtml(checkpoint.title)}</h3>
+                                                <p class="card-subtitle">
+                                                    📅 ${date.toLocaleDateString()} ${date.toLocaleTimeString()} •
+                                                    💬 ${checkpoint.message_count} messages •
+                                                    ⚡ ${checkpoint.commands_executed} commands
+                                                    ${project ? ` • 📦 ${project}` : ''}
+                                                    ${submodule ? ` • 📂 ${submodule}` : ''}
+                                                </p>
+                                            </div>
+                                            <span class="card-collapse-icon">▼</span>
                                         </div>
-                                        <span class="card-collapse-icon">▼</span>
+                                        <div class="card-content">
+                                            <p><strong>Summary:</strong> ${checkpoint.summary}</p>
+                                            <p style="margin-top: var(--space-2);"><strong>Topics:</strong> ${checkpoint.top_topics.slice(0, 3).join(', ')}</p>
+                                            ${modules.length > 0 ? `
+                                                <p style="margin-top: var(--space-2);">
+                                                    <strong>Modules (${modules.length}):</strong>
+                                                    ${modules.slice(0, 3).map(m => `<span class="badge" style="margin-left: var(--space-1);">${this.escapeHtml(m)}</span>`).join('')}
+                                                    ${modules.length > 3 ? `<span class="text-tertiary"> +${modules.length - 3} more</span>` : ''}
+                                                </p>
+                                            ` : ''}
+                                            <button onclick="event.stopPropagation(); window.location.hash='#checkpoints/${encodeURIComponent(checkpoint.id)}'"
+                                                    class="btn-primary" style="margin-top: var(--space-4);">
+                                                View Full Details
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="card-content">
-                                        <p><strong>Summary:</strong> ${checkpoint.summary}</p>
-                                        <p style="margin-top: var(--space-2);"><strong>Topics:</strong> ${checkpoint.top_topics.slice(0, 3).join(', ')}</p>
-                                        <button onclick="event.stopPropagation(); window.location.hash='#checkpoints/${encodeURIComponent(checkpoint.id)}'"
-                                                class="btn-primary" style="margin-top: var(--space-4);">
-                                            View Full Details
-                                        </button>
-                                    </div>
-                                </div>
-                            `).join('')}
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `;
