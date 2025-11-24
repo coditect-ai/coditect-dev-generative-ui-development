@@ -452,6 +452,7 @@ class NavigationController {
                                             <option value="month">Monthly View</option>
                                             <option value="week">Weekly View</option>
                                             <option value="day">Daily View</option>
+                                            <option value="hour">Hourly View (5min)</option>
                                         </select>
                                     </div>
                                 </div>

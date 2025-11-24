@@ -482,6 +482,9 @@ async function initD3TimelineEnhanced(data, nav) {
 function calculatePeriodStart(endDate, zoomLevel) {
     const start = new Date(endDate);
     switch (zoomLevel) {
+        case 'hour':
+            start.setHours(start.getHours() - 1);
+            break;
         case 'day':
             start.setDate(start.getDate() - 1);
             break;
@@ -498,6 +501,8 @@ function calculatePeriodStart(endDate, zoomLevel) {
 
 function getTimeFormat(zoomLevel) {
     switch (zoomLevel) {
+        case 'hour':
+            return '%I:%M %p'; // 12-hour format with AM/PM (e.g., 02:35 PM)
         case 'day':
             return '%I:%M %p';
         case 'week':
@@ -510,6 +515,8 @@ function getTimeFormat(zoomLevel) {
 
 function getTickCount(zoomLevel) {
     switch (zoomLevel) {
+        case 'hour':
+            return 12; // 5-minute intervals: 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 minutes
         case 'day':
             return 24;
         case 'week':
@@ -540,12 +547,21 @@ function updatePeriodInfo() {
     const info = document.getElementById('timeline-period-info');
     if (info) {
         const zoomLabel = {
+            'hour': 'Hourly (5min intervals)',
             'day': 'Daily',
             'week': 'Weekly',
             'month': 'Monthly'
         }[timelineState.zoomLevel];
 
-        info.textContent = `📍 Viewing ${zoomLabel}: ${timelineState.currentPeriodStart.toLocaleDateString()} - ${timelineState.currentPeriodEnd.toLocaleDateString()}`;
+        // For hourly view, show time; for others, show date
+        let periodText;
+        if (timelineState.zoomLevel === 'hour') {
+            periodText = `${timelineState.currentPeriodStart.toLocaleString()} - ${timelineState.currentPeriodEnd.toLocaleString()}`;
+        } else {
+            periodText = `${timelineState.currentPeriodStart.toLocaleDateString()} - ${timelineState.currentPeriodEnd.toLocaleDateString()}`;
+        }
+
+        info.textContent = `📍 Viewing ${zoomLabel}: ${periodText}`;
     }
 }
 
