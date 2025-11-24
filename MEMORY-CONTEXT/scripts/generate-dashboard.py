@@ -4,7 +4,11 @@ CODITECT Knowledge Navigation System - Static Dashboard Generator
 Generates interactive HTML dashboard from SQLite database
 
 Usage:
-    python3 generate-dashboard.py [--rebuild]
+    python3 generate-dashboard.py [--rebuild] [--include-static]
+
+Options:
+    --rebuild         Remove existing dashboard directory before generation
+    --include-static  Include/overwrite CSS and JS files (DEFAULT: skip to preserve customizations)
 
 Output:
     dashboard/ directory with HTML, CSS, JS, and JSON data files
@@ -1216,6 +1220,7 @@ def main():
 
     # Parse arguments
     rebuild = '--rebuild' in sys.argv
+    include_static = '--include-static' in sys.argv
 
     # Paths
     script_dir = Path(__file__).parent
@@ -1225,9 +1230,10 @@ def main():
     print("="*80)
     print("CODITECT KNOWLEDGE NAVIGATION DASHBOARD GENERATOR")
     print("="*80)
-    print(f"Database: {db_path}")
-    print(f"Output:   {output_dir}")
-    print(f"Rebuild:  {rebuild}")
+    print(f"Database:       {db_path}")
+    print(f"Output:         {output_dir}")
+    print(f"Rebuild:        {rebuild}")
+    print(f"Include Static: {include_static} (CSS/JS files will {'be overwritten' if include_static else 'be preserved'})")
     print("="*80)
 
     if rebuild and output_dir.exists():
@@ -1248,8 +1254,14 @@ def main():
         checkpoints = generator.export_checkpoints()
         commands = generator.export_commands()
 
-        # Copy static assets and generate HTML
-        generator.copy_static_assets()
+        # Copy static assets (only if explicitly requested)
+        if include_static:
+            print("\n⚠️  --include-static flag detected: Overwriting CSS/JS files...")
+            generator.copy_static_assets()
+        else:
+            print("\n✓ Preserving existing CSS/JS files (use --include-static to overwrite)")
+
+        # Generate HTML
         generator.generate_html(message_index, topics, files, checkpoints, commands)
 
         generator.print_summary()

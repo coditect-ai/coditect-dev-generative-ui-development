@@ -28,15 +28,18 @@ Restored CSS/JS files from previous commit (14cc3d8) before the regeneration.
 
 ## How to Prevent This
 
-### Option 1: Regenerate Data Only (Recommended)
-Use the data regeneration script without touching CSS/JS:
+### Option 1: Default Behavior (Recommended) ✅ IMPLEMENTED
+**As of 2025-11-24, the script NOW preserves CSS/JS files by default:**
 
 ```bash
-# Only regenerate JSON data files
-python3 scripts/generate-dashboard.py --data-only
+# Default: Only regenerate JSON data files, preserve CSS/JS
+python3 scripts/generate-dashboard.py
+
+# Explicit: Overwrite CSS/JS files (use with caution!)
+python3 scripts/generate-dashboard.py --include-static
 ```
 
-**Note:** The `--data-only` flag doesn't exist yet. Need to modify script to add it.
+**Status:** ✅ Implemented - CSS/JS files are now preserved by default!
 
 ### Option 2: Manual Process
 1. **BEFORE** running `generate-dashboard.py`:
@@ -108,10 +111,10 @@ All enhancements are back:
 
 ## Recommendation
 
-**Before next regeneration:**
-1. Modify `generate-dashboard.py` to add `--skip-static` flag
-2. Always use `--skip-static` when regenerating data
-3. Only regenerate static assets if intentionally updating base templates
+**✅ Script updated (2025-11-24):**
+1. ✅ Default behavior now PRESERVES CSS/JS files (safe!)
+2. ✅ Use `python3 scripts/generate-dashboard.py` to regenerate data only
+3. ⚠️ Only use `--include-static` if intentionally updating base templates
 
 ---
 
