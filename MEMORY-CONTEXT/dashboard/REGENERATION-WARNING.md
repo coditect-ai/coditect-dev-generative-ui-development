@@ -81,21 +81,24 @@ Then use:
 python3 scripts/generate-dashboard.py --skip-static
 ```
 
-## Files That Get Overwritten
+## Files That Get Overwritten (with --include-static)
 
-When `_copy_static_assets()` runs, these files are **replaced**:
+When `--include-static` flag is used, these files are **replaced**:
 - `dashboard/css/main.css`
 - `dashboard/css/layout.css`
 - `dashboard/css/components.css`
 - `dashboard/css/print.css`
 - `dashboard/js/navigation.js`
 - `dashboard/js/data-loader.js`
+- `dashboard/index.html` ⚠️ **ALSO OVERWRITTEN** (as of 2025-11-24)
 
-## Files That Are Safe
+## Files That Are Safe (default behavior)
 
-These files are **NOT** overwritten:
-- `dashboard/data/*.json` (regenerated, but that's the point)
-- `dashboard/index.html` (regenerated, but usually safe)
+These files are **NOT** overwritten by default:
+- `dashboard/css/*.css` (preserved)
+- `dashboard/js/*.js` (preserved)
+- `dashboard/index.html` (preserved) ✅ **NEW: Now protected by default**
+- `dashboard/data/*.json` (intentionally regenerated with new data)
 
 ## Current Status
 

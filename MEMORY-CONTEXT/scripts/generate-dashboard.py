@@ -1387,13 +1387,12 @@ def main():
 
         # Copy static assets (only if explicitly requested)
         if include_static:
-            print("\n⚠️  --include-static flag detected: Overwriting CSS/JS files...")
+            print("\n⚠️  --include-static flag detected: Overwriting CSS/JS/HTML files...")
             generator.copy_static_assets()
+            generator.generate_html(message_index, topics, files, checkpoints, commands, git_commits)
         else:
-            print("\n✓ Preserving existing CSS/JS files (use --include-static to overwrite)")
-
-        # Generate HTML
-        generator.generate_html(message_index, topics, files, checkpoints, commands)
+            print("\n✓ Preserving existing CSS/JS/HTML files (use --include-static to overwrite)")
+            print("   Note: Only JSON data files in data/ directory are updated")
 
         generator.print_summary()
 
