@@ -1331,12 +1331,17 @@ class NavigationController {
                         </div>
                     ` : `
                         <div class="search-results">
-                            ${results.slice(0, 50).map(result => `
-                                <div class="card message-result" style="margin-bottom: var(--space-4);">
+                            ${results.slice(0, 50).map(result => {
+                                const isCheckpointResult = result.message.role === 'checkpoint';
+                                const checkpointLink = isCheckpointResult ? `#checkpoints/${encodeURIComponent(result.message.checkpoint_id)}` : '';
+
+                                return `
+                                <${isCheckpointResult ? 'a href="' + checkpointLink + '" style="text-decoration: none; color: inherit;"' : 'div'} class="card message-result" style="margin-bottom: var(--space-4); ${isCheckpointResult ? 'cursor: pointer; transition: all var(--transition-fast);' : ''}" ${isCheckpointResult ? 'onmouseover="this.style.transform=\'translateX(4px)\'; this.style.boxShadow=\'var(--shadow-lg)\';" onmouseout="this.style.transform=\'\'; this.style.boxShadow=\'var(--shadow-md)\';"' : ''}>
                                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-2);">
                                         <div style="display: flex; gap: var(--space-2); align-items: center;">
                                             <span class="badge badge-${result.message.role}">${result.message.role}</span>
                                             ${result.message.has_code ? '<span class="badge">📝 Code</span>' : ''}
+                                            ${isCheckpointResult ? '<span class="badge" style="background: var(--primary-500); color: white;">Click to View →</span>' : ''}
                                         </div>
                                         <span class="text-xs text-tertiary">${this.formatDate(result.message.first_seen || result.message.timestamp)}</span>
                                     </div>
@@ -1346,12 +1351,12 @@ class NavigationController {
                                     </div>
 
                                     <div style="display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--text-tertiary); flex-wrap: wrap;">
-                                        <span>Words: ${result.message.word_count}</span>
+                                        <span>${isCheckpointResult ? 'Messages' : 'Words'}: ${result.message.word_count}</span>
                                         <span style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Session: ${this.escapeHtml(result.message.checkpoint_id)}</span>
                                         <span>Match score: ${result.score.toFixed(2)}</span>
                                     </div>
-                                </div>
-                            `).join('')}
+                                </${isCheckpointResult ? 'a' : 'div'}>
+                            `}).join('')}
 
                             ${results.length > 50 ? `
                                 <div class="card" style="text-align: center; background: var(--bg-tertiary);">
@@ -1386,7 +1391,13 @@ class NavigationController {
         const messagesData = await window.dashboardData.loadOverviewData();
         const allMessages = messagesData.stats ? await this.loadAllMessages() : [];
 
+        // Also load checkpoints for checkpoint-specific searches
+        const checkpoints = await window.dashboardData.loadCheckpoints();
+
         const queryLower = query.toLowerCase();
+
+        // Detect if this looks like a checkpoint ID search
+        const looksLikeCheckpointId = /export|checkpoint|session/i.test(query) || query.includes('-');
 
         // Detect and normalize date queries
         const dateFormats = this.detectDateQuery(query);
@@ -1396,10 +1407,70 @@ class NavigationController {
             console.log('📅 Detected date query, searching dates:', dateFormats);
         }
 
-        const queryWords = queryLower.split(/\s+/).filter(w => w.length > 0);
+        if (looksLikeCheckpointId) {
+            console.log('💬 Detected checkpoint ID search pattern');
+        }
+
+        // Split query into words
+        // For checkpoint IDs, don't split on hyphens; for regular text, split on both spaces and hyphens
+        const queryWords = looksLikeCheckpointId
+            ? queryLower.split(/\s+/).filter(w => w.length > 0)  // Keep hyphens intact for checkpoint IDs
+            : queryLower.split(/[\s\-]+/).filter(w => w.length > 0); // Split on hyphens for regular search
 
         // Search and score results
         const results = [];
+
+        // First, search checkpoints directly if query looks like checkpoint ID
+        if (looksLikeCheckpointId) {
+            for (const checkpoint of checkpoints) {
+                const checkpointIdLower = (checkpoint.id || '').toLowerCase();
+                const checkpointTitleLower = (checkpoint.title || '').toLowerCase();
+
+                // Check if checkpoint ID or title contains the full query or significant parts
+                if (checkpointIdLower.includes(queryLower) || checkpointTitleLower.includes(queryLower)) {
+                    // Add a synthetic result representing this checkpoint
+                    results.push({
+                        message: {
+                            role: 'checkpoint',
+                            checkpoint_id: checkpoint.id,
+                            content_preview: `Session: ${checkpoint.title}\nMessages: ${checkpoint.message_count} (${checkpoint.user_messages} user, ${checkpoint.assistant_messages} assistant)\nTop topics: ${(checkpoint.top_topics || []).slice(0, 3).join(', ')}`,
+                            first_seen: checkpoint.date,
+                            word_count: checkpoint.message_count,
+                            has_code: false
+                        },
+                        score: 100, // High score for direct checkpoint match
+                        matchedWords: queryWords.length,
+                        preview: `🎯 Checkpoint Match: ${checkpoint.title}\n\n${checkpoint.summary || ''}\n\nMessages: ${checkpoint.message_count} | Date: ${checkpoint.date}`
+                    });
+                    continue; // Don't also search individual messages from this checkpoint
+                }
+
+                // Also check if multiple query words match the checkpoint ID
+                let checkpointWordMatches = 0;
+                for (const word of queryWords) {
+                    if (word.length > 2 && checkpointIdLower.includes(word)) {
+                        checkpointWordMatches++;
+                    }
+                }
+
+                // If most query words match, add this checkpoint
+                if (checkpointWordMatches >= Math.min(3, queryWords.length * 0.6)) {
+                    results.push({
+                        message: {
+                            role: 'checkpoint',
+                            checkpoint_id: checkpoint.id,
+                            content_preview: `Session: ${checkpoint.title}\nMessages: ${checkpoint.message_count}`,
+                            first_seen: checkpoint.date,
+                            word_count: checkpoint.message_count,
+                            has_code: false
+                        },
+                        score: 50 + checkpointWordMatches * 5,
+                        matchedWords: checkpointWordMatches,
+                        preview: `💬 Checkpoint: ${checkpoint.title}\n\n${checkpoint.summary || ''}\n\nMessages: ${checkpoint.message_count} | Top topics: ${(checkpoint.top_topics || []).slice(0, 3).join(', ')}`
+                    });
+                }
+            }
+        }
 
         for (const message of allMessages) {
             const contentLower = (message.content_preview || message.content || '').toLowerCase();
