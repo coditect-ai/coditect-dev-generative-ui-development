@@ -536,11 +536,43 @@ class NavigationController {
         try {
             const filesData = await window.dashboardData.loadFiles();
 
+            // Transform and calculate statistics from the actual data structure
+            // The JSON has: files array with filepath, reference_count, file_type, etc.
+            // And a pre-built file_tree object
+
+            // Filter out invalid entries (URLs, malformed paths, etc.)
+            const validFiles = (filesData.files || []).filter(file => {
+                return file &&
+                       file.filepath &&
+                       typeof file.filepath === 'string' &&
+                       !file.filepath.startsWith('//') &&  // Skip URLs
+                       !file.filepath.startsWith('http') && // Skip HTTP URLs
+                       file.filepath.length > 0;
+            });
+
+            // Calculate summary statistics
+            const totalReferences = validFiles.reduce((sum, f) => sum + (f.reference_count || 0), 0);
+            const uniqueFiles = validFiles.length;
+
+            // Get unique file types
+            const fileTypes = [...new Set(validFiles.map(f => f.file_type).filter(Boolean))];
+
+            // Sort by reference_count descending for top files
+            const topFiles = [...validFiles]
+                .sort((a, b) => (b.reference_count || 0) - (a.reference_count || 0))
+                .slice(0, 20)
+                .map(f => ({
+                    path: f.filepath,
+                    count: f.reference_count || 0,
+                    file_type: f.file_type
+                }));
+
             console.log('📁 Files data loaded:', {
-                totalFiles: filesData.total_files,
-                totalUnique: filesData.total_unique_files,
-                filesArrayLength: filesData.files?.length,
-                topFilesLength: filesData.top_files?.length,
+                totalReferences,
+                uniqueFiles,
+                fileTypesCount: fileTypes.length,
+                topFilesLength: topFiles.length,
+                hasFileTree: !!filesData.file_tree,
                 filter: filter
             });
 
@@ -550,15 +582,15 @@ class NavigationController {
                 return;
             }
 
-            // Build hierarchical tree structure
-            const tree = this.buildFileTree(filesData.files || []);
+            // Use the pre-built file tree if available, otherwise build from files
+            const tree = filesData.file_tree || this.buildFileTree(validFiles);
 
             mainContent.innerHTML = `
                 <div class="files-view">
                     <div class="section-header">
                         <h1>📁 Files & Code References</h1>
                         <p class="text-secondary">
-                            ${filesData.total_files.toLocaleString()} file references across ${filesData.total_unique_files.toLocaleString()} unique files
+                            ${totalReferences.toLocaleString()} file references across ${uniqueFiles.toLocaleString()} unique files
                         </p>
                     </div>
 
@@ -566,20 +598,20 @@ class NavigationController {
                         <div class="grid grid-cols-4">
                             <div class="stat-card">
                                 <h4>Total References</h4>
-                                <p class="stat-value">${filesData.total_files.toLocaleString()}</p>
+                                <p class="stat-value">${totalReferences.toLocaleString()}</p>
                             </div>
                             <div class="stat-card">
                                 <h4>Unique Files</h4>
-                                <p class="stat-value">${filesData.total_unique_files.toLocaleString()}</p>
+                                <p class="stat-value">${uniqueFiles.toLocaleString()}</p>
                             </div>
                             <div class="stat-card">
                                 <h4>Most Referenced</h4>
-                                <p class="stat-value">${filesData.top_files[0]?.count || 0}×</p>
-                                <p class="text-xs" style="margin-top: var(--space-1);">${this.getFileName(filesData.top_files[0]?.path || '')}</p>
+                                <p class="stat-value">${topFiles[0]?.count || 0}×</p>
+                                <p class="text-xs" style="margin-top: var(--space-1);">${this.getFileName(topFiles[0]?.path || '')}</p>
                             </div>
                             <div class="stat-card">
                                 <h4>File Types</h4>
-                                <p class="stat-value">${filesData.file_types?.length || 0}</p>
+                                <p class="stat-value">${fileTypes.length}</p>
                             </div>
                         </div>
                     </div>
@@ -587,7 +619,7 @@ class NavigationController {
                     <div class="card">
                         <h3 style="margin-bottom: var(--space-4);">Top Referenced Files</h3>
                         <div style="display: grid; gap: var(--space-2);">
-                            ${filesData.top_files.slice(0, 10).map(file => `
+                            ${topFiles.slice(0, 10).map(file => `
                                 <a href="#files/${encodeURIComponent(file.path)}" class="file-item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); background: var(--bg-secondary); border-radius: var(--radius-md); transition: all var(--transition-fast); text-decoration: none; color: inherit;">
                                     <div style="flex: 1; min-width: 0;">
                                         <div style="display: flex; align-items: center; gap: var(--space-2);">
@@ -639,13 +671,16 @@ class NavigationController {
         }
 
         files.forEach(file => {
+            // Support both 'path' (transformed) and 'filepath' (raw JSON) fields
+            const filePath = file.path || file.filepath;
+
             // Skip invalid entries
-            if (!file || !file.path || typeof file.path !== 'string') {
+            if (!file || !filePath || typeof filePath !== 'string') {
                 console.warn('buildFileTree: skipping invalid file entry', file);
                 return;
             }
 
-            const parts = file.path.split('/');
+            const parts = filePath.split('/');
             let current = tree;
 
             parts.forEach((part, index) => {
@@ -660,7 +695,7 @@ class NavigationController {
                 }
 
                 if (index === parts.length - 1) {
-                    current[part].count = file.count || 0;
+                    current[part].count = file.count || file.reference_count || 0;
                 }
 
                 current = current[part].children;
@@ -670,8 +705,38 @@ class NavigationController {
         return tree;
     }
 
-    renderFileTree(tree, indent = '') {
-        const entries = Object.values(tree);
+    renderFileTree(tree, indent = '', currentPath = '') {
+        if (!tree || typeof tree !== 'object') {
+            return '';
+        }
+
+        const entries = Object.entries(tree).map(([name, data]) => {
+            // Handle both pre-built tree structure (type: "file"|"directory")
+            // and custom built tree structure (isFile: boolean, children: {})
+            const isFile = data.type === 'file' || data.isFile === true;
+            const path = currentPath ? `${currentPath}/${name}` : name;
+
+            // Get children - either from 'children' property or from all properties except special ones
+            let children = {};
+            if (data.children && typeof data.children === 'object') {
+                children = data.children;
+            } else if (!isFile) {
+                // For pre-built tree, children are stored as direct properties
+                children = Object.fromEntries(
+                    Object.entries(data).filter(([key]) =>
+                        key !== 'type' && key !== 'count' && key !== 'name' && key !== 'path'
+                    )
+                );
+            }
+
+            return {
+                name,
+                path,
+                isFile,
+                count: data.count || 0,
+                children
+            };
+        });
 
         // Sort: folders first, then files, alphabetically
         entries.sort((a, b) => {
@@ -703,7 +768,7 @@ class NavigationController {
                             ${hasChildren ? `<span class="badge badge-sm">${Object.keys(entry.children).length}</span>` : ''}
                         </div>
                         <div class="file-tree-children collapsed">
-                            ${this.renderFileTree(entry.children, indent + 20)}
+                            ${this.renderFileTree(entry.children, indent + 20, entry.path)}
                         </div>
                     </div>
                 `;
