@@ -102,8 +102,8 @@ class NavigationController {
         if (view === 'checkpoints' && parts[1]) {
             id = decodeURIComponent(parts[1]);
         } else {
-            filter = parts[1] || null;
-            id = parts[2] || null;
+            filter = parts[1] ? decodeURIComponent(parts[1]) : null;
+            id = parts[2] ? decodeURIComponent(parts[2]) : null;
         }
 
         // Validate view
