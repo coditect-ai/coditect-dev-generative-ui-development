@@ -445,81 +445,87 @@ class DashboardGenerator:
         return file_data
 
     def scan_checkpoint_markdown_files(self) -> List[Dict[str, Any]]:
-        """Scan checkpoints/ directory for actual markdown files"""
-        checkpoints_dir = self.db_path.parent / 'checkpoints'
+        """Scan checkpoints/ and sessions/ directories for actual markdown files"""
         checkpoint_files = []
 
-        if not checkpoints_dir.exists():
-            print("  Warning: checkpoints/ directory not found")
-            return checkpoint_files
+        # Scan both checkpoints/ and sessions/ directories
+        scan_dirs = [
+            self.db_path.parent / 'checkpoints',
+            self.db_path.parent / 'sessions'
+        ]
 
-        for md_file in sorted(checkpoints_dir.glob('*.md'), reverse=True):
-            # Use filename without extension as ID
-            checkpoint_id = md_file.stem
+        for checkpoints_dir in scan_dirs:
+            if not checkpoints_dir.exists():
+                print(f"  Warning: {checkpoints_dir.name}/ directory not found")
+                continue
 
-            # Extract date from filename
-            checkpoint_date = 'Unknown'
-            # Try ISO format first (2025-11-16T09-26-41Z)
-            iso_match = re.match(r'(\d{4}-\d{2}-\d{2}T[\d-]+Z)', checkpoint_id)
-            if iso_match:
-                # Convert to proper ISO format
-                date_str = iso_match.group(1).replace('T', 'T').replace('-', ':', 2).replace('-', ':', 2)
-                checkpoint_date = date_str
-            else:
-                # Try simple date format (2025-11-16)
-                date_match = re.match(r'(\d{4}-\d{2}-\d{2})', checkpoint_id)
-                if date_match:
-                    checkpoint_date = date_match.group(1) + 'T12:00:00Z'
+            for md_file in sorted(checkpoints_dir.glob('*.md'), reverse=True):
+                # Use filename without extension as ID
+                checkpoint_id = md_file.stem
 
-            # Read first few lines for title/summary
-            try:
-                with open(md_file, 'r', encoding='utf-8') as f:
-                    lines = f.readlines()[:20]
-                    title = checkpoint_id  # Default to filename
+                # Extract date from filename
+                checkpoint_date = 'Unknown'
+                # Try ISO format first (2025-11-16T09-26-41Z)
+                iso_match = re.match(r'(\d{4}-\d{2}-\d{2}T[\d-]+Z)', checkpoint_id)
+                if iso_match:
+                    # Convert to proper ISO format
+                    date_str = iso_match.group(1).replace('T', 'T').replace('-', ':', 2).replace('-', ':', 2)
+                    checkpoint_date = date_str
+                else:
+                    # Try simple date format (2025-11-16)
+                    date_match = re.match(r'(\d{4}-\d{2}-\d{2})', checkpoint_id)
+                    if date_match:
+                        checkpoint_date = date_match.group(1) + 'T12:00:00Z'
+
+                # Read first few lines for title/summary
+                try:
+                    with open(md_file, 'r', encoding='utf-8') as f:
+                        lines = f.readlines()[:20]
+                        title = checkpoint_id  # Default to filename
+                        summary = ''
+
+                        # Look for markdown title
+                        for line in lines:
+                            if line.startswith('# '):
+                                title = line[2:].strip()
+                                break
+
+                        # Look for summary or first paragraph
+                        in_para = False
+                        for line in lines:
+                            if line.strip() and not line.startswith('#'):
+                                summary += line.strip() + ' '
+                                in_para = True
+                                if len(summary) > 200:
+                                    break
+                            elif in_para and not line.strip():
+                                break
+
+                        summary = summary[:200].strip()
+                except Exception as e:
+                    print(f"  Warning: Could not read {md_file.name}: {e}")
+                    title = checkpoint_id
                     summary = ''
 
-                    # Look for markdown title
-                    for line in lines:
-                        if line.startswith('# '):
-                            title = line[2:].strip()
-                            break
-
-                    # Look for summary or first paragraph
-                    in_para = False
-                    for line in lines:
-                        if line.strip() and not line.startswith('#'):
-                            summary += line.strip() + ' '
-                            in_para = True
-                            if len(summary) > 200:
-                                break
-                        elif in_para and not line.strip():
-                            break
-
-                    summary = summary[:200].strip()
-            except Exception as e:
-                print(f"  Warning: Could not read {md_file.name}: {e}")
-                title = checkpoint_id
-                summary = ''
-
-            checkpoint_files.append({
-                'id': checkpoint_id,
-                'title': title,
-                'date': checkpoint_date,
-                'message_count': 0,  # Not tracked for checkpoint files
-                'user_messages': 0,
-                'assistant_messages': 0,
-                'top_topics': [],
-                'files_modified': [],
-                'commands_executed': 0,
-                'summary': summary if summary else 'Checkpoint session',
-                'project_name': '',
-                'repository': '',
-                'participants': [],
-                'objectives': '',
-                'export_tags': ['checkpoint'],
-                'export_time': '',
-                'source': 'markdown'  # Mark as coming from markdown file
-            })
+                checkpoint_files.append({
+                    'id': checkpoint_id,
+                    'title': title,
+                    'date': checkpoint_date,
+                    'message_count': 0,  # Not tracked for checkpoint files
+                    'user_messages': 0,
+                    'assistant_messages': 0,
+                    'top_topics': [],
+                    'files_modified': [],
+                    'commands_executed': 0,
+                    'summary': summary if summary else 'Checkpoint session',
+                    'project_name': '',
+                    'repository': '',
+                    'participants': [],
+                    'objectives': '',
+                    'export_tags': ['checkpoint'],
+                    'export_time': '',
+                    'source': 'markdown'  # Mark as coming from markdown file
+                })
 
         return checkpoint_files
 
@@ -626,7 +632,7 @@ class DashboardGenerator:
                 timeline_data[date_key]['checkpoints'].append(checkpoint_id)
 
         # Scan for actual checkpoint markdown files
-        print("  Scanning checkpoints/ directory for markdown files...")
+        print("  Scanning checkpoints/ and sessions/ directories for markdown files...")
         markdown_checkpoints = self.scan_checkpoint_markdown_files()
         print(f"  Found {len(markdown_checkpoints)} checkpoint markdown files")
 
