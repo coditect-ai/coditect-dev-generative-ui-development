@@ -1505,6 +1505,24 @@ class NavigationController {
                                             </div>
                                         ` : ''}
 
+                                        ${gitData.file_modified_time || gitData.file_created_time ? `
+                                            <div style="margin-bottom: var(--space-3); padding: var(--space-3); background: var(--success-100); border-radius: var(--radius-sm); border: 1px solid var(--success-300);">
+                                                <div style="font-size: var(--text-sm); color: var(--text-primary);">
+                                                    <strong>📁 File System Timestamps (Accurate)</strong>
+                                                </div>
+                                                ${gitData.file_modified_time ? `
+                                                    <div style="margin-top: var(--space-2); font-size: var(--text-sm); color: var(--text-secondary);">
+                                                        <strong>Modified:</strong> ${new Date(gitData.file_modified_time).toLocaleString()}
+                                                    </div>
+                                                ` : ''}
+                                                ${gitData.file_created_time ? `
+                                                    <div style="margin-top: var(--space-1); font-size: var(--text-sm); color: var(--text-secondary);">
+                                                        <strong>Created:</strong> ${new Date(gitData.file_created_time).toLocaleString()}
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        ` : ''}
+
                                         <div style="max-height: 400px; overflow-y: auto;">
                                             ${gitData.commits.map(commit => `
                                                 <div style="padding: var(--space-3); margin-bottom: var(--space-2); background: var(--bg-primary); border-left: 3px solid var(--primary-500); border-radius: var(--radius-sm);">
