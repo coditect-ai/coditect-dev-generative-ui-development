@@ -362,15 +362,15 @@ async function initD3TimelineEnhanced(data, nav) {
             showDetailPanel(d, nav);
         });
 
-    // Plot git commits as squares (top of timeline, above sessions)
-    const commitYPosition = 30; // Top of timeline
+    // Plot git commits as squares (separate row above sessions)
+    const commitYPosition = -40; // Positioned above the chart area (negative y = above)
 
     svg.selectAll('.commit-marker')
         .data(periodCommits)
         .enter()
         .append('path')
         .attr('class', 'commit-marker')
-        .attr('d', d3.symbol().type(d3.symbolSquare).size(100))
+        .attr('d', d3.symbol().type(d3.symbolSquare).size(256)) // Increased from 100 to 256 (16x16 pixels)
         .attr('transform', d => `translate(${xScale(d.date)},${commitYPosition})`)
         .style('fill', d => getCommitColor(d.type))
         .style('opacity', 0.75)
@@ -382,7 +382,7 @@ async function initD3TimelineEnhanced(data, nav) {
                 .transition()
                 .duration(150)
                 .style('opacity', 1)
-                .attr('d', d3.symbol().type(d3.symbolSquare).size(150));
+                .attr('d', d3.symbol().type(d3.symbolSquare).size(324)); // Increased from 150 to 324 (18x18 pixels on hover)
 
             tooltip
                 .html(`
@@ -428,7 +428,7 @@ async function initD3TimelineEnhanced(data, nav) {
                 .transition()
                 .duration(150)
                 .style('opacity', 0.75)
-                .attr('d', d3.symbol().type(d3.symbolSquare).size(100));
+                .attr('d', d3.symbol().type(d3.symbolSquare).size(256)); // Restore to new default size
 
             tooltip.style('visibility', 'hidden');
         })

@@ -101,7 +101,7 @@ class DataIntegrityError(ExportDedupError):
 
 def setup_logging(log_dir: Path) -> logging.Logger:
     """
-    Configure dual logging (file + stdout).
+    Configure dual logging (file + stdout) with step tracking.
 
     Args:
         log_dir: Directory for log files
@@ -135,6 +135,51 @@ def setup_logging(log_dir: Path) -> logging.Logger:
 
 
 # ============================================================================
+# CENTRALIZED LOGGING HELPERS
+# ============================================================================
+
+def log_step_start(step_num: int, step_name: str, logger: logging.Logger) -> datetime:
+    """Log the start of a major workflow step with timestamp."""
+    start_time = datetime.now()
+    logger.info(f"\n{'='*60}")
+    logger.info(f"Step {step_num}: {step_name}")
+    logger.info(f"{'='*60}")
+    logger.debug(f"Step {step_num} started at: {start_time.isoformat()}")
+    return start_time
+
+
+def log_step_success(step_num: int, step_name: str, start_time: datetime, logger: logging.Logger) -> None:
+    """Log successful completion of a step with duration."""
+    duration = (datetime.now() - start_time).total_seconds()
+    logger.info(f"✅ Step {step_num} complete: {step_name} ({duration:.2f}s)")
+    logger.debug(f"Step {step_num} completed at: {datetime.now().isoformat()}")
+
+
+def log_step_error(step_num: int, step_name: str, error: Exception, logger: logging.Logger) -> None:
+    """Log step failure with error details."""
+    logger.error(f"❌ Step {step_num} failed: {step_name}")
+    logger.error(f"   Error: {str(error)}")
+    logger.debug(f"   Error type: {type(error).__name__}", exc_info=True)
+
+
+def log_checkpoint(message: str, logger: logging.Logger) -> None:
+    """Log a verification checkpoint with timestamp."""
+    logger.debug(f"✓ CHECKPOINT: {message}")
+
+
+def log_verification_success(what: str, details: str, logger: logging.Logger) -> None:
+    """Log successful verification with details."""
+    logger.info(f"  ✓ Verified: {what}")
+    logger.debug(f"     Details: {details}")
+
+
+def log_verification_failure(what: str, details: str, logger: logging.Logger) -> None:
+    """Log verification failure."""
+    logger.error(f"  ✗ Verification failed: {what}")
+    logger.error(f"     Details: {details}")
+
+
+# ============================================================================
 # SIGNAL HANDLING
 # ============================================================================
 
@@ -153,6 +198,61 @@ class GracefulExit:
 
 
 # ============================================================================
+# PRE-FLIGHT VALIDATION
+# ============================================================================
+
+def validate_environment(repo_root: Path, memory_context_dir: Path, logger: logging.Logger) -> None:
+    """
+    Validate environment before starting operations.
+
+    Args:
+        repo_root: Repository root path
+        memory_context_dir: MEMORY-CONTEXT directory
+        logger: Logger instance
+
+    Raises:
+        ExportDedupError: If environment validation fails
+    """
+    log_checkpoint("Starting environment validation", logger)
+
+    # Check disk space (need at least 100MB free)
+    try:
+        import shutil as space_shutil
+        stat = space_shutil.disk_usage(repo_root)
+        free_mb = stat.free / (1024 * 1024)
+
+        if free_mb < 100:
+            raise ExportDedupError(f"Insufficient disk space: {free_mb:.1f}MB free (need 100MB minimum)")
+
+        log_verification_success("Disk space", f"{free_mb:.1f}MB available", logger)
+    except Exception as e:
+        logger.warning(f"Could not check disk space: {e}")
+
+    # Check write permissions
+    try:
+        test_file = memory_context_dir / ".write-test"
+        test_file.write_text("test")
+        test_file.unlink()
+        log_verification_success("Write permissions", f"MEMORY-CONTEXT is writable", logger)
+    except Exception as e:
+        raise ExportDedupError(f"Cannot write to MEMORY-CONTEXT: {e}") from e
+
+    # Verify dedup_state directory structure
+    dedup_dir = memory_context_dir / "dedup_state"
+    if dedup_dir.exists():
+        required_files = ["checkpoint_index.json", "global_hashes.json"]
+        for req_file in required_files:
+            file_path = dedup_dir / req_file
+            if not file_path.exists():
+                logger.warning(f"Missing dedup state file: {req_file} (will be created)")
+        log_verification_success("Dedup state", "Directory structure valid", logger)
+    else:
+        logger.info("  ℹ️  Dedup state directory will be created")
+
+    log_checkpoint("Environment validation complete", logger)
+
+
+# ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
 
@@ -166,16 +266,19 @@ def compute_file_checksum(filepath: Path) -> str:
     Returns:
         Hex digest of SHA-256 hash
     """
+    log_checkpoint(f"Computing checksum for {filepath.name}", logging.getLogger("export_dedup"))
     sha256 = hashlib.sha256()
     with open(filepath, "rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
             sha256.update(chunk)
-    return sha256.hexdigest()
+    checksum = sha256.hexdigest()
+    log_checkpoint(f"Checksum computed: {checksum[:16]}...", logging.getLogger("export_dedup"))
+    return checksum
 
 
 def create_backup(filepath: Path, logger: logging.Logger) -> Path:
     """
-    Create timestamped backup of file.
+    Create timestamped backup of file with verification.
 
     Args:
         filepath: File to backup
@@ -188,17 +291,41 @@ def create_backup(filepath: Path, logger: logging.Logger) -> Path:
         BackupError: If backup creation fails
     """
     try:
+        log_checkpoint(f"Creating backup of {filepath.name}", logger)
+
+        # Generate backup path
         backup_path = filepath.parent / f"{filepath.name}.backup-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+
+        # Get original size for verification
+        original_size = filepath.stat().st_size
+        log_checkpoint(f"Original file size: {original_size} bytes", logger)
+
+        # Create backup
         shutil.copy2(filepath, backup_path)
-        logger.debug(f"Created backup: {backup_path}")
+        log_checkpoint(f"Backup file created: {backup_path.name}", logger)
+
+        # Verify backup
+        if not backup_path.exists():
+            raise BackupError(f"Backup file was not created: {backup_path}")
+
+        backup_size = backup_path.stat().st_size
+        if backup_size != original_size:
+            raise BackupError(f"Backup size mismatch: {backup_size} != {original_size}")
+
+        log_verification_success("Backup created", f"{backup_path.name} ({backup_size} bytes)", logger)
+        logger.debug(f"Backup verified: {backup_path}")
+
         return backup_path
+
+    except BackupError:
+        raise
     except Exception as e:
         raise BackupError(f"Failed to create backup of {filepath}: {e}") from e
 
 
 def atomic_write(filepath: Path, content: str, logger: logging.Logger) -> None:
     """
-    Atomically write content to file using temp + rename.
+    Atomically write content to file using temp + rename with verification.
 
     Args:
         filepath: Target file path
@@ -210,6 +337,8 @@ def atomic_write(filepath: Path, content: str, logger: logging.Logger) -> None:
     """
     temp_file = None
     try:
+        log_checkpoint(f"Atomically writing {filepath.name} ({len(content)} bytes)", logger)
+
         # Create temp file in same directory for atomic rename
         temp_fd, temp_path = tempfile.mkstemp(
             dir=filepath.parent,
@@ -217,20 +346,44 @@ def atomic_write(filepath: Path, content: str, logger: logging.Logger) -> None:
             text=True
         )
         temp_file = Path(temp_path)
+        log_checkpoint(f"Created temp file: {temp_file.name}", logger)
 
         # Write to temp file
         with os.fdopen(temp_fd, 'w', encoding='utf-8') as f:
             f.write(content)
 
+        log_checkpoint(f"Content written to temp file", logger)
+
+        # Verify temp file before rename
+        if not temp_file.exists():
+            raise OutputError(f"Temp file disappeared: {temp_file}")
+
+        temp_size = temp_file.stat().st_size
+        log_checkpoint(f"Temp file size: {temp_size} bytes", logger)
+
         # Atomic rename
         temp_file.rename(filepath)
+        log_checkpoint(f"Atomic rename complete: {temp_file.name} -> {filepath.name}", logger)
+
+        # Verify final file
+        if not filepath.exists():
+            raise OutputError(f"File not created after atomic rename: {filepath}")
+
+        final_size = filepath.stat().st_size
+        if final_size != temp_size:
+            raise OutputError(f"Size mismatch after rename: {final_size} != {temp_size}")
+
+        log_verification_success("Atomic write", f"{filepath.name} ({final_size} bytes)", logger)
         logger.debug(f"Atomically wrote: {filepath}")
 
+    except OutputError:
+        raise
     except Exception as e:
         # Clean up temp file on failure
         if temp_file and temp_file.exists():
             try:
                 temp_file.unlink()
+                log_checkpoint(f"Cleaned up temp file after error", logger)
             except:
                 pass
         raise OutputError(f"Failed to write {filepath}: {e}") from e
@@ -242,7 +395,7 @@ def verify_data_integrity(
     logger: logging.Logger
 ) -> None:
     """
-    Verify data integrity after processing.
+    Verify data integrity after processing with comprehensive checks.
 
     Args:
         original_checksum: Original file checksum
@@ -253,21 +406,47 @@ def verify_data_integrity(
         DataIntegrityError: If checksums don't match
     """
     try:
+        log_checkpoint(f"Verifying data integrity for {processed_file.name}", logger)
+
+        # Check file exists
+        if not processed_file.exists():
+            log_verification_failure("File existence", f"{processed_file.name} not found", logger)
+            raise DataIntegrityError(f"Processed file disappeared: {processed_file}")
+
+        log_checkpoint("File exists", logger)
+
+        # Check file is not empty
+        file_size = processed_file.stat().st_size
+        if file_size == 0:
+            log_verification_failure("File size", f"{processed_file.name} is empty", logger)
+            raise DataIntegrityError(f"Processed file is empty: {processed_file}")
+
+        log_checkpoint(f"File size: {file_size} bytes", logger)
+
+        # Compute checksum
         processed_checksum = compute_file_checksum(processed_file)
 
         # Note: For dedup, checksums will differ (that's the point!)
         # But we verify the file is readable and non-corrupt
-        if not processed_file.exists():
-            raise DataIntegrityError(f"Processed file disappeared: {processed_file}")
+        log_checkpoint(f"Processed checksum: {processed_checksum[:16]}...", logger)
 
-        if processed_file.stat().st_size == 0:
-            raise DataIntegrityError(f"Processed file is empty: {processed_file}")
+        # Verify file is readable by attempting to read first and last bytes
+        with open(processed_file, 'rb') as f:
+            first_byte = f.read(1)
+            f.seek(-1, 2)  # Seek to last byte
+            last_byte = f.read(1)
 
+        if not first_byte or not last_byte:
+            log_verification_failure("File readability", "Cannot read file contents", logger)
+            raise DataIntegrityError(f"File is not readable: {processed_file}")
+
+        log_verification_success("Data integrity", f"{processed_file.name} valid ({file_size} bytes)", logger)
         logger.debug(f"Data integrity verified: {processed_file}")
 
     except DataIntegrityError:
         raise
     except Exception as e:
+        log_verification_failure("Integrity check", str(e), logger)
         raise DataIntegrityError(f"Integrity verification failed: {e}") from e
 
 
@@ -479,17 +658,27 @@ def run_export_dedup(
         logger.info("="*60)
         logger.info("")
 
-        # Step 1: Find all exports
-        logger.info("Step 1: Looking for export files...")
-        logger.info("  Searching:")
-        logger.info(f"    • Repo root: {repo_root}")
-        logger.info(f"    • MEMORY-CONTEXT: {memory_context_dir}")
-        logger.info(f"    • Current directory: {Path.cwd()}")
-        logger.info(f"    • Submodules (recursive)")
-        logger.info(f"    • Common temp locations")
-        logger.info("")
+        # Step 0: Environment validation
+        step0_start = log_step_start(0, "Environment Validation", logger)
+        try:
+            validate_environment(repo_root, memory_context_dir, logger)
+            log_step_success(0, "Environment Validation", step0_start, logger)
+        except ExportDedupError as e:
+            log_step_error(0, "Environment Validation", e, logger)
+            raise
 
-        all_exports = find_all_exports(repo_root, memory_context_dir, logger)
+        # Step 1: Find all exports
+        step1_start = log_step_start(1, "Finding Export Files", logger)
+        try:
+            logger.info("  Searching:")
+            logger.info(f"    • Repo root: {repo_root}")
+            logger.info(f"    • MEMORY-CONTEXT: {memory_context_dir}")
+            logger.info(f"    • Current directory: {Path.cwd()}")
+            logger.info(f"    • Submodules (recursive)")
+            logger.info(f"    • Common temp locations")
+            logger.info("")
+
+            all_exports = find_all_exports(repo_root, memory_context_dir, logger)
 
         if not all_exports:
             logger.warning("\n⚠️  No export files found!")
