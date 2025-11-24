@@ -36,6 +36,8 @@ class DashboardGenerator:
             'checkpoints_exported': 0,
             'commands_exported': 0
         }
+        # Cache for export metadata
+        self.export_metadata_cache = {}
 
     def connect(self):
         """Connect to SQLite database"""
@@ -44,6 +46,69 @@ class DashboardGenerator:
         self.conn = sqlite3.connect(self.db_path)
         self.conn.row_factory = sqlite3.Row
         print(f"✓ Connected to {self.db_path}")
+
+    def load_export_metadata(self, checkpoint_id: str) -> Dict[str, Any]:
+        """Load rich metadata from export JSON file if available"""
+        if checkpoint_id in self.export_metadata_cache:
+            return self.export_metadata_cache[checkpoint_id]
+
+        # Try to find corresponding export JSON file
+        exports_dir = self.db_path.parent / 'exports'
+        if not exports_dir.exists():
+            return {}
+
+        matched = False
+        # Match checkpoint ID to export file (they might have different naming)
+        for export_file in exports_dir.glob('*.json'):
+            try:
+                with open(export_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    metadata = data.get('metadata', {})
+
+                    # Check if this export matches our checkpoint
+                    # Remove .md extension for comparison
+                    checkpoint_file = metadata.get('checkpoint_file', '').replace('.md', '')
+
+                    # Try multiple matching strategies
+                    # 1. Exact match
+                    # 2. Checkpoint ID contains the filename
+                    # 3. Filename is at the end of checkpoint ID
+                    if (checkpoint_file and (
+                        checkpoint_id == checkpoint_file or
+                        checkpoint_file in checkpoint_id or
+                        checkpoint_id.endswith(checkpoint_file))):
+                        # Extract rich metadata
+                        result = {
+                            'repository': metadata.get('repository', ''),
+                            'project_name': self._extract_project_name(metadata.get('repository', '')),
+                            'participants': metadata.get('participants', []),
+                            'objectives': metadata.get('objectives', ''),
+                            'tags': metadata.get('tags', []),
+                            'export_time': metadata.get('export_time', '')
+                        }
+                        self.export_metadata_cache[checkpoint_id] = result
+                        return result
+            except Exception as e:
+                continue
+
+        return {}
+
+    def _extract_project_name(self, repository_path: str) -> str:
+        """Extract project name from repository path"""
+        if not repository_path:
+            return ''
+
+        # Get the last directory name from the path
+        # e.g., /Users/.../coditect-rollout-master/submodules/coditect-project-dot-claude
+        # -> coditect-project-dot-claude
+        path = Path(repository_path)
+        project_name = path.name
+
+        # If it's the master repo, try to get a better name
+        if 'coditect-rollout-master' in repository_path and '/submodules/' not in repository_path:
+            return 'coditect-rollout-master'
+
+        return project_name
 
     def close(self):
         """Close database connection"""
@@ -445,6 +510,10 @@ class DashboardGenerator:
             commands_executed = cursor.fetchone()['count']
 
             checkpoint_date = row['date'] or ''
+
+            # Load rich metadata from export JSON if available
+            export_meta = self.load_export_metadata(checkpoint_id)
+
             checkpoint = {
                 'id': checkpoint_id,
                 'title': row['title'] or '',
@@ -455,7 +524,14 @@ class DashboardGenerator:
                 'top_topics': top_topics,
                 'files_modified': files_modified,
                 'commands_executed': commands_executed,
-                'summary': f"{role_counts.get('user', 0)} user messages, {role_counts.get('assistant', 0)} assistant responses"
+                'summary': f"{role_counts.get('user', 0)} user messages, {role_counts.get('assistant', 0)} assistant responses",
+                # Rich metadata from export JSON
+                'project_name': export_meta.get('project_name', ''),
+                'repository': export_meta.get('repository', ''),
+                'participants': export_meta.get('participants', []),
+                'objectives': export_meta.get('objectives', ''),
+                'export_tags': export_meta.get('tags', []),
+                'export_time': export_meta.get('export_time', '')
             }
             checkpoints.append(checkpoint)
 
