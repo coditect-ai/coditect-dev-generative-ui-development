@@ -366,9 +366,10 @@ class NavigationController {
                 }
 
                 // Pattern 2: 2025-11-17 (date only)
+                // Use noon UTC to avoid timezone issues causing date to shift
                 const dateMatch = id.match(/(\d{4}-\d{2}-\d{2})/);
                 if (dateMatch) {
-                    return new Date(dateMatch[1] + 'T00:00:00Z');
+                    return new Date(dateMatch[1] + 'T12:00:00Z');
                 }
 
                 // Fallback to current date if no pattern found
@@ -1380,9 +1381,10 @@ class NavigationController {
         if (isoMatch) {
             return new Date(isoMatch[1]);
         }
+        // Use noon UTC to avoid timezone issues causing date to shift
         const dateMatch = id.match(/(\d{4}-\d{2}-\d{2})/);
         if (dateMatch) {
-            return new Date(dateMatch[1] + 'T00:00:00Z');
+            return new Date(dateMatch[1] + 'T12:00:00Z');
         }
         return new Date();
     }
