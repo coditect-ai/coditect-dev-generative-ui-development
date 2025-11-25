@@ -376,8 +376,33 @@ class DashboardDataManager {
     async loadGitCommitsForCheckpoint(checkpointId) {
         console.log(`🔀 Loading git commits for: ${checkpointId}`);
         const data = await this.loadGitCommits();
+
+        // Check if sessions property exists (it might not in current data structure)
+        if (!data.sessions) {
+            console.warn('⚠️  git-commits.json has no sessions property');
+            console.log('📊 Available properties:', Object.keys(data));
+            // Return empty structure instead of null to prevent rendering errors
+            return {
+                checkpoint_id: checkpointId,
+                commits: [],
+                branch: null,
+                file_modified_time: null,
+                file_created_time: null,
+                working_dir_status: null,
+                submodules: []
+            };
+        }
+
         const session = data.sessions.find(s => s.checkpoint_id === checkpointId);
-        return session || null;
+        return session || {
+            checkpoint_id: checkpointId,
+            commits: [],
+            branch: null,
+            file_modified_time: null,
+            file_created_time: null,
+            working_dir_status: null,
+            submodules: []
+        };
     }
 
     /**
