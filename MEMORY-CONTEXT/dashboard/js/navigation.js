@@ -1779,8 +1779,8 @@ class NavigationController {
                                                     ${modules.length > 3 ? `<span class="text-tertiary"> +${modules.length - 3} more</span>` : ''}
                                                 </p>
                                             ` : ''}
-                                            <button onclick="event.stopPropagation(); window.location.hash='#checkpoints/${encodeURIComponent(checkpoint.id)}'"
-                                                    class="btn-primary" style="margin-top: var(--space-4);">
+                                            <button onclick="event.stopPropagation(); event.preventDefault(); window.location.hash='#checkpoints/${encodeURIComponent(checkpoint.id)}'; return false;"
+                                                    class="btn-primary" style="margin-top: var(--space-4); user-select: none; cursor: pointer;">
                                                 View Full Details
                                             </button>
                                         </div>
