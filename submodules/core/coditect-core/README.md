@@ -774,6 +774,8 @@ Innovation Through Systematic Development
 
 
 ## Recent Checkpoints
+- **[2025-11-25T06-31-54Z]** [Automated export and deduplication](MEMORY-CONTEXT/checkpoints/2025-11-25T06-31-54Z-Automated-export-and-deduplication.md)
+
 - **[2025-11-24T21-02-17Z]** [Automated export and deduplication](MEMORY-CONTEXT/checkpoints/2025-11-24T21-02-17Z-Automated-export-and-deduplication.md)
 
 - **[2025-11-24T20-48-39Z]** [Automated export and deduplication](MEMORY-CONTEXT/checkpoints/2025-11-24T20-48-39Z-Automated-export-and-deduplication.md)

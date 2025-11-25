@@ -30,24 +30,51 @@ from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 import argparse
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('checkpoint-creation.log', mode='a')
-    ]
-)
-logger = logging.getLogger(__name__)
+# Add core to path for imports
+sys.path.insert(0, str(Path(__file__).parent / "core"))
+
+# Import unified logger for dual-mode logging (local + GCP)
+try:
+    from unified_logger import setup_unified_logger
+    UNIFIED_LOGGER_AVAILABLE = True
+except ImportError:
+    UNIFIED_LOGGER_AVAILABLE = False
+
+# Configure logging using UnifiedLogger (auto-detects local vs GCP)
+if UNIFIED_LOGGER_AVAILABLE:
+    logger = setup_unified_logger(
+        component="create-checkpoint",
+        log_file=Path("checkpoint-creation.log"),
+        max_lines=5000,
+        console_level=logging.INFO,
+        file_level=logging.DEBUG
+    )
+else:
+    # Fallback to standard logging if UnifiedLogger not available
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.StreamHandler(sys.stdout),
+            logging.FileHandler('checkpoint-creation.log', mode='a')
+        ]
+    )
+    logger = logging.getLogger(__name__)
 
 # Privacy integration (optional - fail gracefully if not available)
 try:
-    sys.path.insert(0, str(Path(__file__).parent / "core"))
     from privacy_integration import process_checkpoint_with_privacy
     PRIVACY_AVAILABLE = True
 except ImportError:
     PRIVACY_AVAILABLE = False
+
+# Git staging manager (required for comprehensive file staging)
+try:
+    from git_staging_manager import GitStagingManager
+    GIT_STAGING_AVAILABLE = True
+except ImportError:
+    logger.warning("Git staging manager not available - using basic git add")
+    GIT_STAGING_AVAILABLE = False
 
 # Session export integration (optional - fail gracefully if not available)
 try:
@@ -787,7 +814,7 @@ See Sprint +1 tasks in project TASKLISTs.
             return ""
 
     def commit_changes(self, checkpoint_filename: str, sprint_description: str) -> None:
-        """Commit all changes to git.
+        """Commit all changes to git with comprehensive file staging.
 
         Args:
             checkpoint_filename: Name of checkpoint file
@@ -795,10 +822,31 @@ See Sprint +1 tasks in project TASKLISTs.
         """
         os.chdir(self.base_dir)
 
-        # Add checkpoint and README
-        self._run_command(f"git add MEMORY-CONTEXT/checkpoints/{checkpoint_filename}")
-        self._run_command("git add README.md")
-        self._run_command("git add MEMORY-CONTEXT/")
+        # Use comprehensive git staging manager to capture ALL changes
+        if GIT_STAGING_AVAILABLE:
+            logger.info("Using comprehensive git staging manager...")
+            staging_manager = GitStagingManager(self.base_dir, logger)
+            staging_result = staging_manager.stage_all_changes(include_untracked=True)
+
+            if not staging_result.success:
+                logger.error(f"❌ Git staging failed with {len(staging_result.errors)} errors:")
+                for error in staging_result.errors:
+                    logger.error(f"   • {error}")
+                raise RuntimeError("Comprehensive git staging failed")
+
+            logger.info(f"✅ Staged {len(staging_result.files_staged)} files comprehensively")
+
+            # Log what was staged for audit trail
+            if staging_result.files_staged:
+                logger.debug(f"Staged files: {', '.join(sorted(staging_result.files_staged)[:10])}")
+                if len(staging_result.files_staged) > 10:
+                    logger.debug(f"... and {len(staging_result.files_staged) - 10} more")
+        else:
+            # Fallback to basic git add if staging manager unavailable
+            logger.warning("Using basic git add (staging manager unavailable)")
+            self._run_command(f"git add MEMORY-CONTEXT/checkpoints/{checkpoint_filename}")
+            self._run_command("git add README.md")
+            self._run_command("git add MEMORY-CONTEXT/")
 
         # Commit
         commit_msg = f"""Create checkpoint: {sprint_description}
