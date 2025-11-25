@@ -1823,19 +1823,7 @@ class NavigationController {
                                 </div>
                                 <div class="card-content" style="text-align: left !important;">
                                     <div style="max-height: 600px; overflow-y: auto; text-align: left !important;">
-                                        ${cmds.slice(0, 50).map(cmd => `
-                                            <div style="padding: var(--space-3); margin: var(--space-2) 0; background: var(--bg-tertiary); border-radius: var(--radius-md); font-family: monospace; font-size: var(--text-sm); border-left: 3px solid var(--primary-500); text-align: left !important;">
-                                                <div style="color: var(--text-primary); font-weight: var(--font-semibold); margin-bottom: var(--space-2); word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word; text-align: left !important;">
-                                                    ${this.escapeHtml(cmd.command_text)}
-                                                </div>
-                                                <div style="color: var(--text-tertiary); font-size: var(--text-xs); word-wrap: break-word; overflow-wrap: break-word; text-align: left !important;">
-                                                    📅 ${new Date(cmd.timestamp).toLocaleString()}
-                                                </div>
-                                                <div style="color: var(--text-tertiary); font-size: var(--text-xs); margin-top: var(--space-1); word-wrap: break-word; overflow-wrap: break-word; text-align: left !important;">
-                                                    📂 Session: ${this.escapeHtml(cmd.checkpoint_id)}
-                                                </div>
-                                            </div>
-                                        `).join('')}
+                                        ${cmds.slice(0, 50).map(cmd => `<div style="padding: var(--space-3); margin: var(--space-2) 0; background: var(--bg-tertiary); border-radius: var(--radius-md); font-family: monospace; font-size: var(--text-sm); border-left: 3px solid var(--primary-500); text-align: left !important;"><div style="color: var(--text-primary); font-weight: var(--font-semibold); margin-bottom: var(--space-2); word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word; text-align: left !important;">${this.escapeHtml(cmd.command_text)}</div><div style="color: var(--text-tertiary); font-size: var(--text-xs); word-wrap: break-word; overflow-wrap: break-word; text-align: left !important;">📅 ${new Date(cmd.timestamp).toLocaleString()}</div><div style="color: var(--text-tertiary); font-size: var(--text-xs); margin-top: var(--space-1); word-wrap: break-word; overflow-wrap: break-word; text-align: left !important;">📂 Session: ${this.escapeHtml(cmd.checkpoint_id)}</div></div>`).join('')}
                                         ${cmds.length > 50 ? `
                                             <p class="text-sm text-tertiary" style="text-align: left !important; margin-top: var(--space-4);">
                                                 ... and ${cmds.length - 50} more ${type} commands
