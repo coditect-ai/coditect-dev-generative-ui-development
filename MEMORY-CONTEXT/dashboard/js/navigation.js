@@ -1734,7 +1734,8 @@ class NavigationController {
 
                         <div class="grid grid-cols-1" style="gap: var(--space-4); margin-top: var(--space-6);">
                             ${checkpoints.map(checkpoint => {
-                                const date = this.extractDateFromId(checkpoint.id);
+                                const dateStr = this.extractDateFromId(checkpoint.id);
+                                const date = dateStr ? new Date(dateStr) : new Date(checkpoint.date || checkpoint.id);
                                 const project = this.extractProject(checkpoint.id);
                                 const submodule = this.extractSubmodule(checkpoint.id);
                                 const modules = this.extractModulesFromFiles(checkpoint.files_modified || []);
@@ -1745,7 +1746,7 @@ class NavigationController {
                                             <div style="flex: 1;">
                                                 <h3 class="card-title">${this.escapeHtml(checkpoint.title)}</h3>
                                                 <p class="card-subtitle">
-                                                    📅 ${date.toLocaleDateString()} ${date.toLocaleTimeString()} •
+                                                    📅 ${!isNaN(date.getTime()) ? `${date.toLocaleDateString()} ${date.toLocaleTimeString()}` : 'Unknown date'} •
                                                     💬 ${checkpoint.message_count} messages •
                                                     ⚡ ${checkpoint.commands_executed} commands
                                                     ${project ? ` • 📦 ${project}` : ''}
