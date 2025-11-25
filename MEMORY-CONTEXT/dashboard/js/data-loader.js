@@ -232,7 +232,25 @@ class DashboardDataManager {
     async loadCheckpoint(id) {
         console.log(`💬 Loading checkpoint: ${id}`);
         const checkpoints = await this.loadCheckpoints();
-        return checkpoints.find(c => c.id === id) || null;
+        console.log(`📊 Total checkpoints loaded: ${checkpoints.length}`);
+        console.log(`🔍 Searching for ID: "${id}"`);
+        console.log(`🔍 First checkpoint ID: "${checkpoints[0]?.id}"`);
+
+        const found = checkpoints.find(c => {
+            const match = c.id === id;
+            if (match) {
+                console.log(`✅ Found matching checkpoint!`);
+            }
+            return match;
+        });
+
+        if (!found) {
+            console.log(`❌ No match found. Checking for similar IDs...`);
+            const similar = checkpoints.filter(c => c.id.includes('2025-11-17'));
+            console.log(`📋 Checkpoints containing '2025-11-17':`, similar.map(c => c.id));
+        }
+
+        return found || null;
     }
 
     /**
