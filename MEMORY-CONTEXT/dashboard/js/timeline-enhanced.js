@@ -588,92 +588,6 @@ async function initD3TimelineEnhanced(data, nav) {
         }
     });
 
-    // Add SVG filters for glassy 3D effect
-    const defs = svg.append('defs');
-
-    // Create drop shadow filter for depth
-    const dropShadow = defs.append('filter')
-        .attr('id', 'drop-shadow')
-        .attr('height', '200%')
-        .attr('width', '200%');
-
-    dropShadow.append('feGaussianBlur')
-        .attr('in', 'SourceAlpha')
-        .attr('stdDeviation', 4);
-
-    dropShadow.append('feOffset')
-        .attr('dx', 2)
-        .attr('dy', 4)
-        .attr('result', 'offsetblur');
-
-    const feMerge = dropShadow.append('feMerge');
-    feMerge.append('feMergeNode');
-    feMerge.append('feMergeNode')
-        .attr('in', 'SourceGraphic');
-
-    // Create glassy shine gradient for session bubbles
-    const glassGradient = defs.append('radialGradient')
-        .attr('id', 'glass-gradient')
-        .attr('cx', '35%')
-        .attr('cy', '35%');
-
-    glassGradient.append('stop')
-        .attr('offset', '0%')
-        .attr('stop-color', '#ffffff')
-        .attr('stop-opacity', 0.6);
-
-    glassGradient.append('stop')
-        .attr('offset', '50%')
-        .attr('stop-color', '#06b6d4')
-        .attr('stop-opacity', 0.8);
-
-    glassGradient.append('stop')
-        .attr('offset', '100%')
-        .attr('stop-color', '#0e7490')
-        .attr('stop-opacity', 1);
-
-    // Create glassy gradient for orange commits
-    const glassGradientOrange = defs.append('radialGradient')
-        .attr('id', 'glass-gradient-orange')
-        .attr('cx', '30%')
-        .attr('cy', '30%');
-
-    glassGradientOrange.append('stop')
-        .attr('offset', '0%')
-        .attr('stop-color', '#ffffff')
-        .attr('stop-opacity', 0.7);
-
-    glassGradientOrange.append('stop')
-        .attr('offset', '60%')
-        .attr('stop-color', '#fb923c')
-        .attr('stop-opacity', 0.9);
-
-    glassGradientOrange.append('stop')
-        .attr('offset', '100%')
-        .attr('stop-color', '#f97316')
-        .attr('stop-opacity', 1);
-
-    // Create glassy gradient for magenta commits
-    const glassGradientMagenta = defs.append('radialGradient')
-        .attr('id', 'glass-gradient-magenta')
-        .attr('cx', '30%')
-        .attr('cy', '30%');
-
-    glassGradientMagenta.append('stop')
-        .attr('offset', '0%')
-        .attr('stop-color', '#ffffff')
-        .attr('stop-opacity', 0.7);
-
-    glassGradientMagenta.append('stop')
-        .attr('offset', '60%')
-        .attr('stop-color', '#e879f9')
-        .attr('stop-opacity', 0.9);
-
-    glassGradientMagenta.append('stop')
-        .attr('offset', '100%')
-        .attr('stop-color', '#d946ef')
-        .attr('stop-opacity', 1);
-
     // Plot sessions as circles
     svg.selectAll('.session-dot')
         .data(periodData)
@@ -697,10 +611,9 @@ async function initD3TimelineEnhanced(data, nav) {
                 .duration(200)
                 .ease(d3.easeCubicOut)
                 .style('opacity', 1)
-                .style('fill', 'url(#glass-gradient)') // Apply glassy gradient
+                .style('fill', '#06b6d4')
                 .style('stroke', '#ffffff')
                 .style('stroke-width', '4px')
-                .style('filter', 'url(#drop-shadow)') // Apply 3D shadow
                 .attr('r', sizeScale(d.messageCount) * 1.4);
 
             const project = extractProject(d.id);
@@ -709,7 +622,7 @@ async function initD3TimelineEnhanced(data, nav) {
             tooltip
                 .html(`
                     <div style="color: var(--text-primary);">
-                        <strong style="display: block; margin-bottom: 10px; font-size: 15px; color: var(--primary-600);">${nav.escapeHtml(d.title || d.id).substring(0, 80)}${d.title?.length > 80 ? '...' : ''}</strong>
+                        <strong style="display: block; margin-bottom: 10px; font-size: 15px; color: var(--text-primary);">${nav.escapeHtml(d.title || d.id).substring(0, 80)}${d.title?.length > 80 ? '...' : ''}</strong>
                         <div style="font-size: 13px; line-height: 1.6;">
                             <div style="margin-bottom: 6px;"><strong>📅 Date:</strong> ${d.date.toLocaleString()}</div>
                             <div style="margin-bottom: 6px;"><strong>💬 Messages:</strong> ${d.messageCount.toLocaleString()} (${d.user_messages} user, ${d.assistant_messages} assistant)</div>
@@ -718,7 +631,7 @@ async function initD3TimelineEnhanced(data, nav) {
                             <div style="margin-bottom: 6px;"><strong>🏷️ Topics:</strong> ${(d.top_topics || []).slice(0, 5).join(', ') || 'None'}</div>
                             <div style="margin-bottom: 6px;"><strong>📄 Files:</strong> ${(d.files_modified || []).length || 0}</div>
                             <div style="margin-bottom: 6px;"><strong>⚡ Commands:</strong> ${d.commands_executed || 0}</div>
-                            <div style="margin-top: 10px; padding-top: 10px; border-top: 2px solid var(--border-primary); font-size: 12px; color: var(--primary-600); font-weight: 600;">
+                            <div style="margin-top: 10px; padding-top: 10px; border-top: 2px solid var(--border-primary); font-size: 12px; color: var(--text-primary); font-weight: 600;">
                                 🔍 Click for full details →
                             </div>
                         </div>
@@ -811,26 +724,25 @@ async function initD3TimelineEnhanced(data, nav) {
             const node = this.parentNode.appendChild(this);
 
             const currentColor = d3.select(this).style('fill');
-            // If blue, use orange gradient; if green, use magenta gradient
-            const hoverGradient = currentColor.includes('59, 130, 246') || currentColor.includes('3b82f6')
-                ? 'url(#glass-gradient-orange)' // Orange gradient for blue commits
-                : 'url(#glass-gradient-magenta)'; // Magenta gradient for green commits
+            // Brighten color on hover
+            const hoverColor = currentColor.includes('59, 130, 246') || currentColor.includes('3b82f6')
+                ? '#60a5fa' // Lighter blue for blue commits
+                : '#4ade80'; // Lighter green for green commits
 
             d3.select(node)
                 .transition()
                 .duration(200)
                 .ease(d3.easeCubicOut)
                 .style('opacity', 1)
-                .style('fill', hoverGradient)
+                .style('fill', hoverColor)
                 .style('stroke', '#ffffff')
                 .style('stroke-width', '5px')
-                .style('filter', 'url(#drop-shadow)') // Apply 3D shadow
                 .attr('d', d3.symbol().type(d3.symbolSquare).size(1800)); // Increased to 1800 (42x42 pixels on hover)
 
             tooltip
                 .html(`
                     <div style="color: var(--text-primary);">
-                        <strong style="display: block; margin-bottom: 10px; font-size: 15px; color: #22c55e;">
+                        <strong style="display: block; margin-bottom: 10px; font-size: 15px; color: var(--text-primary);">
                             🔧 ${nav.escapeHtml(d.subject).substring(0, 80)}${d.subject?.length > 80 ? '...' : ''}
                         </strong>
                         <div style="font-size: 13px; line-height: 1.6;">
@@ -839,7 +751,7 @@ async function initD3TimelineEnhanced(data, nav) {
                             <div style="margin-bottom: 6px;"><strong>🏷️ Type:</strong> ${d.type}</div>
                             <div style="margin-bottom: 6px;"><strong>🔗 Commit:</strong> <code>${d.short_hash}</code></div>
                             ${d.body ? `<div style="margin-top: 8px; padding: 8px; background: var(--bg-secondary); border-radius: 4px; max-height: 150px; overflow-y: auto;">${nav.escapeHtml(d.body).substring(0, 300)}${d.body.length > 300 ? '...' : ''}</div>` : ''}
-                            ${d.github_url ? `<div style="margin-top: 10px; padding-top: 10px; border-top: 2px solid var(--border-primary); font-size: 12px; color: #22c55e; font-weight: 600;">
+                            ${d.github_url ? `<div style="margin-top: 10px; padding-top: 10px; border-top: 2px solid var(--border-primary); font-size: 12px; color: var(--text-primary); font-weight: 600;">
                                 🔗 Click to view on GitHub →
                             </div>` : ''}
                         </div>
@@ -1308,8 +1220,8 @@ function showDetailPanel(checkpoint, nav) {
 
         ${project ? `
             <div style="margin-bottom: var(--space-4); padding: var(--space-3); background: var(--primary-100); border-radius: var(--radius-md);">
-                <strong style="color: var(--primary-900);">📦 Project:</strong> <span style="color: var(--primary-700); font-weight: 600;">${nav.escapeHtml(project)}</span>
-                ${submodule ? `<br><strong style="color: var(--primary-900);">📂 Submodule:</strong> <span style="color: var(--primary-700); font-weight: 600;">${nav.escapeHtml(submodule)}</span>` : ''}
+                <strong style="color: var(--text-primary);">📦 Project:</strong> <span style="color: var(--text-primary); font-weight: 600;">${nav.escapeHtml(project)}</span>
+                ${submodule ? `<br><strong style="color: var(--text-primary);">📂 Submodule:</strong> <span style="color: var(--text-primary); font-weight: 600;">${nav.escapeHtml(submodule)}</span>` : ''}
             </div>
         ` : ''}
 
@@ -1322,7 +1234,7 @@ function showDetailPanel(checkpoint, nav) {
             <h4 style="margin-bottom: var(--space-2); color: var(--text-primary);">Top Topics (${(checkpoint.top_topics || []).length})</h4>
             <div class="flex gap-2" style="flex-wrap: wrap;">
                 ${(checkpoint.top_topics || []).map(topic => `
-                    <span class="badge" style="background: var(--primary-100); color: var(--primary-900);">${nav.escapeHtml(topic)}</span>
+                    <span class="badge" style="background: var(--primary-100); color: var(--text-primary);">${nav.escapeHtml(topic)}</span>
                 `).join('')}
             </div>
         </div>
@@ -1384,7 +1296,7 @@ async function showDetailPanel(sessionData, nav) {
     // Show loading state
     content.innerHTML = `
         <div style="text-align: center; padding: var(--space-8);">
-            <div style="font-size: 24px; color: var(--primary-500);">Loading messages...</div>
+            <div style="font-size: 24px; color: var(--text-primary);">Loading messages...</div>
         </div>
     `;
     panel.style.setProperty('display', 'block', 'important');
@@ -1405,7 +1317,7 @@ async function showDetailPanel(sessionData, nav) {
         // Format the session details with message list
         content.innerHTML = `
             <div style="margin-bottom: var(--space-6);">
-                <h2 style="margin: 0 0 var(--space-4) 0; color: var(--primary-500); font-size: 24px;">
+                <h2 style="margin: 0 0 var(--space-4) 0; color: var(--text-primary); font-size: 24px;">
                     Session Details
                 </h2>
                 <button onclick="document.getElementById('timeline-detail-panel').style.display='none'"
@@ -1446,7 +1358,7 @@ async function showDetailPanel(sessionData, nav) {
                         <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Topics</div>
                         <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
                             ${sessionData.topics.map(topic => `
-                                <span style="background: var(--primary-100); color: var(--primary-700); padding: 4px 12px; border-radius: var(--radius-full); font-size: 13px; font-weight: 500;">
+                                <span style="background: var(--primary-100); color: var(--text-primary); padding: 4px 12px; border-radius: var(--radius-full); font-size: 13px; font-weight: 500;">
                                     ${topic}
                                 </span>
                             `).join('')}
@@ -1474,7 +1386,7 @@ async function showDetailPanel(sessionData, nav) {
                                      onmouseover="this.style.background='var(--bg-tertiary)'"
                                      onmouseout="this.style.background='var(--bg-secondary)'">
                                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-1);">
-                                        <span style="font-weight: 600; color: var(--primary-600); font-size: 13px;">Message ${idx + 1}</span>
+                                        <span style="font-weight: 600; color: var(--text-primary); font-size: 13px;">Message ${idx + 1}</span>
                                         <span style="font-size: 12px; color: var(--text-tertiary); background: ${msg.role === 'user' ? 'var(--primary-100)' : 'var(--success-100)'}; padding: 2px 8px; border-radius: var(--radius-sm);">${msg.role}</span>
                                     </div>
                                     <div style="font-size: 14px; color: var(--text-primary); line-height: 1.4;">${msg.content_preview}</div>
@@ -1520,7 +1432,7 @@ function showCommitDetailPanel(commitData, nav) {
     // Format the commit details
     content.innerHTML = `
         <div style="margin-bottom: var(--space-6);">
-            <h2 style="margin: 0 0 var(--space-4) 0; color: var(--primary-500); font-size: 24px;">
+            <h2 style="margin: 0 0 var(--space-4) 0; color: var(--text-primary); font-size: 24px;">
                 Git Commit Details
             </h2>
             <button onclick="document.getElementById('timeline-detail-panel').style.display='none'"
@@ -1629,7 +1541,7 @@ window.showMessageDetail = async function(messageHash, messageNumber, totalMessa
     // Show loading while we fetch full content
     content.innerHTML = `
         <div style="text-align: center; padding: var(--space-8);">
-            <div style="font-size: 24px; color: var(--primary-500);">Loading full message...</div>
+            <div style="font-size: 24px; color: var(--text-primary);">Loading full message...</div>
         </div>
     `;
 
@@ -1675,7 +1587,7 @@ window.showMessageDetail = async function(messageHash, messageNumber, totalMessa
                         onmouseout="this.style.background='#ffffff';">
                     ← Back
                 </button>
-                <h2 style="margin: 0; color: var(--primary-500); font-size: 24px;">
+                <h2 style="margin: 0; color: var(--text-primary); font-size: 24px;">
                     Message ${messageNumber} of ${totalMessages}
                 </h2>
             </div>
@@ -1698,7 +1610,7 @@ window.showMessageDetail = async function(messageHash, messageNumber, totalMessa
                 ${message.tags && message.tags.length > 0 ? `
                     <div style="display: flex; gap: var(--space-1);">
                         ${message.tags.slice(0, 3).map(tag => `
-                            <span style="background: var(--primary-100); color: var(--primary-700); padding: 2px 8px; border-radius: var(--radius-sm); font-size: 11px;">${tag}</span>
+                            <span style="background: var(--primary-100); color: var(--text-primary); padding: 2px 8px; border-radius: var(--radius-sm); font-size: 11px;">${tag}</span>
                         `).join('')}
                     </div>
                 ` : ''}

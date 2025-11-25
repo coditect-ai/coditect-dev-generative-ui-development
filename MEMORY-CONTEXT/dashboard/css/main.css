@@ -212,13 +212,14 @@ p {
 }
 
 a {
-    color: var(--primary-500);
+    color: var(--primary-800);
     text-decoration: none;
     transition: color var(--transition-fast);
+    font-weight: var(--font-medium);
 }
 
 a:hover {
-    color: var(--primary-600);
+    color: var(--primary-900);
     text-decoration: underline;
 }
 
@@ -262,39 +263,49 @@ pre code {
     justify-content: center;
     padding: var(--space-2) var(--space-4);
     font-size: var(--text-base);
-    font-weight: var(--font-medium);
+    font-weight: var(--font-semibold);
     line-height: 1.5;
-    border-radius: var(--radius-md);
+    border-radius: 6px;
     border: 1px solid transparent;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all 0.2s ease;
     text-decoration: none;
-    user-select: none; /* Prevent text selection on buttons */
-    -webkit-user-select: none; /* Safari */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE/Edge */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
 }
 
 .btn-primary {
-    background-color: var(--primary-500);
+    background-color: var(--primary-800);
     color: white;
-    border-color: var(--primary-500);
+    border-color: var(--primary-800);
 }
 
 .btn-primary:hover {
-    background-color: var(--primary-600);
-    border-color: var(--primary-600);
+    background-color: var(--primary-900);
+    border-color: var(--primary-900);
     text-decoration: none;
 }
 
+.btn-primary:focus {
+    box-shadow: 0 0 0 3px rgba(87, 230, 117, 0.2);
+}
+
 .btn-secondary {
-    background-color: transparent;
+    background-color: var(--bg-primary);
     color: var(--text-primary);
-    border-color: var(--border-primary);
+    border-color: var(--border-secondary);
 }
 
 .btn-secondary:hover {
-    background-color: var(--bg-tertiary);
+    background-color: var(--bg-secondary);
+    border-color: var(--border-primary);
     text-decoration: none;
 }
 
@@ -308,6 +319,45 @@ pre code {
     font-size: var(--text-lg);
 }
 
+/* Dark Mode Button Styles */
+html.dark .btn:focus {
+    box-shadow: 0 0 0 3px rgba(87, 230, 117, 0.2);
+}
+
+html.dark .btn-primary {
+    background-color: var(--primary-700);
+    border-color: var(--primary-700);
+}
+
+html.dark .btn-primary:hover {
+    background-color: var(--primary-800);
+    border-color: var(--primary-800);
+}
+
+html.dark .btn-primary:focus {
+    box-shadow: 0 0 0 3px rgba(87, 230, 117, 0.3);
+}
+
+html.dark .btn-secondary {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-primary);
+    color: var(--text-primary);
+}
+
+html.dark .btn-secondary:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-secondary);
+}
+
+/* Dark Mode Link Styles */
+html.dark a {
+    color: var(--primary-400);
+}
+
+html.dark a:hover {
+    color: var(--primary-300);
+}
+
 /* Cards */
 .card {
     background-color: var(--bg-primary);
@@ -316,6 +366,7 @@ pre code {
     padding: var(--space-6);
     box-shadow: var(--shadow-sm);
     transition: all var(--transition-base);
+    text-align: left;
 }
 
 .card:hover {
@@ -326,6 +377,7 @@ pre code {
     margin-bottom: var(--space-4);
     padding-bottom: var(--space-4);
     border-bottom: 1px solid var(--border-primary);
+    text-align: left;
 }
 
 .card-title {
@@ -333,11 +385,13 @@ pre code {
     font-weight: var(--font-semibold);
     color: var(--text-primary);
     margin-bottom: var(--space-2);
+    text-align: left;
 }
 
 .card-subtitle {
     font-size: var(--text-sm);
     color: var(--text-tertiary);
+    text-align: left;
 }
 
 /* Collapsible Cards */
@@ -360,11 +414,17 @@ pre code {
     transform: rotate(-90deg);
 }
 
+/* Card content */
+.card-content {
+    text-align: left;
+}
+
 /* Only apply max-height and overflow to collapsible cards */
 .card-collapsible .card-content {
     max-height: 2000px;
     overflow: hidden;
     transition: max-height var(--transition-slow);
+    text-align: left;
 }
 
 .card-collapsible.collapsed .card-content {
@@ -373,12 +433,13 @@ pre code {
 
 /* Stats Cards */
 .stat-card {
-    background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+    background: linear-gradient(135deg, var(--primary-800) 0%, var(--primary-900) 100%);
     color: white;
     padding: var(--space-6);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     transition: all var(--transition-base);
+    text-align: left;
 }
 
 .stat-card:hover {
@@ -391,6 +452,7 @@ pre code {
     font-weight: var(--font-medium);
     color: rgba(255, 255, 255, 0.9);
     margin-bottom: var(--space-2);
+    text-align: left;
 }
 
 .stat-value {
@@ -398,11 +460,13 @@ pre code {
     font-weight: var(--font-bold);
     color: white;
     margin-bottom: var(--space-1);
+    text-align: left;
 }
 
 .stat-label {
     font-size: var(--text-sm);
     color: rgba(255, 255, 255, 0.8);
+    text-align: left;
 }
 
 /* Badges */
@@ -418,7 +482,7 @@ pre code {
 
 .badge-primary {
     background-color: var(--primary-100);
-    color: var(--primary-700);
+    color: var(--primary-900);
 }
 
 .badge-success {
@@ -442,8 +506,8 @@ pre code {
 }
 
 html.dark .badge-primary {
-    background-color: var(--primary-950);
-    color: var(--primary-400);
+    background-color: var(--primary-900);
+    color: var(--primary-100);
 }
 
 html.dark .badge-success {

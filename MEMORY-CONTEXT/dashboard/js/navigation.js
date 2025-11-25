@@ -19,7 +19,6 @@ class NavigationController {
             'overview': { title: 'Overview', icon: '📊' },
             'timeline': { title: 'Timeline', icon: '📅' },
             'topics': { title: 'Topics', icon: '🏷️' },
-            'files': { title: 'Files', icon: '📁' },
             'checkpoints': { title: 'Sessions', icon: '💬' },
             'commands': { title: 'Commands', icon: '⚡' },
             'search': { title: 'Search Results', icon: '🔍' },
@@ -197,9 +196,6 @@ class NavigationController {
             case 'topics':
                 this.renderTopics(filter);
                 break;
-            case 'files':
-                this.renderFiles(filter);
-                break;
             case 'checkpoints':
                 this.renderCheckpoints(id);
                 break;
@@ -227,33 +223,11 @@ class NavigationController {
         mainContent.innerHTML = '<div class="loading">Loading overview data...</div>';
 
         try {
-            // Load overview data using data loader
+            // Load overview data
             const data = await window.dashboardData.loadOverviewData();
 
             mainContent.innerHTML = `
                 <div class="dashboard-overview">
-                    <section class="quick-stats">
-                        <div class="stat-card clickable" onclick="window.location.hash='#checkpoints'">
-                            <h3>Total Messages</h3>
-                            <p class="stat-value">${data.stats.totalMessages.toLocaleString()}</p>
-                            <p class="stat-label">Click to view all sessions</p>
-                        </div>
-                        <div class="stat-card clickable" onclick="window.location.hash='#checkpoints'">
-                            <h3>Checkpoints</h3>
-                            <p class="stat-value">${data.stats.totalCheckpoints.toLocaleString()}</p>
-                            <p class="stat-label">Conversation sessions</p>
-                        </div>
-                        <div class="stat-card clickable" onclick="window.location.hash='#files'">
-                            <h3>Files Referenced</h3>
-                            <p class="stat-value">${data.stats.totalFiles.toLocaleString()}</p>
-                            <p class="stat-label">Click to browse files</p>
-                        </div>
-                        <div class="stat-card clickable" onclick="window.location.hash='#commands'">
-                            <h3>Commands Executed</h3>
-                            <p class="stat-value">${data.stats.totalCommands.toLocaleString()}</p>
-                            <p class="stat-label">Click to view history</p>
-                        </div>
-                    </section>
 
                     <section class="section">
                         <div class="card">
@@ -262,23 +236,23 @@ class NavigationController {
                                 <p class="card-subtitle">Interactive dashboard for exploring ${data.stats.totalMessages.toLocaleString()} conversation messages</p>
                             </div>
                             <div class="card-content">
-                                <p>
+                                <p style="text-align: left;">
                                     This dashboard provides comprehensive access to your entire CODITECT conversation history.
                                     Navigate using the sidebar or search above to find specific conversations, topics, files, or commands.
                                 </p>
 
-                                <div class="flex gap-2" style="margin-top: var(--space-4); flex-wrap: wrap;">
-                                    <button onclick="window.location.hash='#timeline'" class="btn btn-primary">
-                                        📅 View Timeline
+                                <div class="flex gap-2" style="margin-top: var(--space-3); flex-wrap: wrap; gap: 6px;">
+                                    <button onclick="window.location.hash='#timeline'" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px; min-width: auto; white-space: nowrap;">
+                                        📅 Timeline
                                     </button>
-                                    <button onclick="window.location.hash='#topics'" class="btn btn-secondary">
-                                        🏷️ Browse Topics
+                                    <button onclick="window.location.hash='#topics'" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; min-width: auto; white-space: nowrap;">
+                                        🏷️ Topics
                                     </button>
-                                    <button onclick="window.location.hash='#checkpoints'" class="btn btn-secondary">
-                                        💬 All Sessions
+                                    <button onclick="window.location.hash='#checkpoints'" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; min-width: auto; white-space: nowrap;">
+                                        💬 Sessions
                                     </button>
-                                    <button onclick="window.location.hash='#about'" class="btn btn-secondary">
-                                        ℹ️ What is MEMORY-CONTEXT?
+                                    <button onclick="window.location.hash='#about'" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; min-width: auto; white-space: nowrap;">
+                                        ℹ️ About
                                     </button>
                                 </div>
                             </div>
@@ -297,10 +271,10 @@ class NavigationController {
                                         </div>
                                         <span class="card-collapse-icon">▼</span>
                                     </div>
-                                    <div class="card-content">
-                                        <p><strong>Topics:</strong> ${session.top_topics.slice(0, 3).join(', ') || 'None'}</p>
-                                        <p><strong>Files:</strong> ${session.files_modified || 0} modified</p>
-                                        <p><strong>Commands:</strong> ${session.commands_executed || 0} executed</p>
+                                    <div class="card-content" style="text-align: left;">
+                                        <p style="text-align: left;"><strong>Topics:</strong> ${session.top_topics.slice(0, 3).join(', ') || 'None'}</p>
+                                        <p style="text-align: left;"><strong>Files:</strong> ${session.files_modified || 0} modified</p>
+                                        <p style="text-align: left;"><strong>Commands:</strong> ${session.commands_executed || 0} executed</p>
                                         <a href="#checkpoints/${encodeURIComponent(session.id)}" class="btn btn-sm btn-primary" style="margin-top: var(--space-2);">
                                             View Full Session →
                                         </a>
@@ -316,7 +290,7 @@ class NavigationController {
                             ${data.topTopics.map(topic => `
                                 <div class="card clickable" onclick="window.location.hash='#topics/${encodeURIComponent(topic.name)}'">
                                     <h3 class="card-title">${this.escapeHtml(topic.display_name || topic.name)}</h3>
-                                    <p style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--primary-500); margin: var(--space-2) 0;">
+                                    <p style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--text-primary); margin: var(--space-2) 0;">
                                         ${topic.message_count.toLocaleString()}
                                     </p>
                                     <p class="text-sm" style="color: var(--text-tertiary);">
@@ -471,7 +445,7 @@ class NavigationController {
                                     </div>
                                 </div>
                             </div>
-                            <div id="timeline-period-info" style="padding: var(--space-2); background: var(--primary-100); border-radius: var(--radius-sm); font-size: var(--text-sm); margin-bottom: var(--space-4); font-weight: 600; color: var(--primary-900);"></div>
+                            <div id="timeline-period-info" style="padding: var(--space-2); background: var(--primary-100); border-radius: var(--radius-sm); font-size: var(--text-sm); margin-bottom: var(--space-4); font-weight: 600; color: var(--text-primary);"></div>
                             <div style="padding: var(--space-2); background: var(--bg-tertiary); border-radius: var(--radius-sm); font-size: var(--text-sm);">
                                 <strong>💡 Tips:</strong> Click sessions for full details • Use "📅 Custom Range" for specific dates • Hold CMD/Ctrl and drag to pan timeline • Use arrows to navigate periods
                             </div>
@@ -692,7 +666,7 @@ class NavigationController {
                                 <div style="margin-bottom: 4px;"><strong>Date:</strong> ${d.date.toLocaleDateString()}</div>
                                 <div style="margin-bottom: 4px;"><strong>Messages:</strong> ${d.messageCount.toLocaleString()}</div>
                                 <div style="margin-bottom: 4px;"><strong>Topics:</strong> ${(d.top_topics || []).slice(0, 3).join(', ') || 'None'}</div>
-                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-primary); font-size: 12px; color: var(--primary-500);">
+                                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-primary); font-size: 12px; color: var(--text-primary);">
                                     Click to view session details →
                                 </div>
                             </div>
@@ -831,7 +805,7 @@ class NavigationController {
                                     </div>
                                 ` : ''}
 
-                                <h3 style="margin-top: var(--space-6); margin-bottom: var(--space-4);">Messages (${messages.length})</h3>
+                                <h3 style="margin-top: var(--space-6); margin-bottom: var(--space-4); text-align: left;">Messages (${messages.length})</h3>
                                 <div class="grid grid-cols-1" style="gap: var(--space-4);">
                                     ${messages.slice(0, 50).map(msg => `
                                         <div class="card" style="background: var(--bg-tertiary);">
@@ -848,13 +822,13 @@ class NavigationController {
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div class="card-content">
-                                                <p style="font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-secondary); white-space: pre-wrap;">
+                                            <div class="card-content" style="text-align: left;">
+                                                <p style="font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-secondary); white-space: pre-wrap; text-align: left;">
                                                     ${this.escapeHtml(msg.content_preview)}
                                                 </p>
                                                 <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-primary); display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-tertiary);">
-                                                    <span>Words: ${msg.word_count}</span>
-                                                    <span>Session: ${this.escapeHtml(msg.checkpoint_id.substring(0, 40))}...</span>
+                                                    <span style="text-align: left;">Words: ${msg.word_count}</span>
+                                                    <span style="text-align: left;">Session: ${this.escapeHtml(msg.checkpoint_id.substring(0, 40))}...</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -910,18 +884,18 @@ class NavigationController {
                                             ${topic.category}
                                         </div>
                                     </div>
-                                    <div class="card-content">
-                                        <p style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--primary-500); text-align: center; margin: var(--space-4) 0;">
+                                    <div class="card-content" style="text-align: left;">
+                                        <p style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--text-primary); text-align: left; margin: var(--space-4) 0;">
                                             ${topic.message_count.toLocaleString()}
                                         </p>
-                                        <p style="text-align: center; color: var(--text-tertiary);">
+                                        <p style="text-align: left; color: var(--text-tertiary);">
                                             ${topic.percentage}% of all messages
                                         </p>
                                         ${topic.top_files && topic.top_files.length > 0 ? `
-                                            <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-primary);">
-                                                <p style="font-size: var(--text-sm); font-weight: var(--font-semibold); margin-bottom: var(--space-2);">Top Files:</p>
+                                            <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-primary); text-align: left;">
+                                                <p style="font-size: var(--text-sm); font-weight: var(--font-semibold); margin-bottom: var(--space-2); text-align: left;">Top Files:</p>
                                                 ${topic.top_files.slice(0, 3).map(f => `
-                                                    <div style="font-size: var(--text-xs); color: var(--text-secondary); font-family: monospace; margin: var(--space-1) 0;">
+                                                    <div style="font-size: var(--text-xs); color: var(--text-secondary); font-family: monospace; margin: var(--space-1) 0; text-align: left;">
                                                         ${this.escapeHtml(f.file)} (${f.count})
                                                     </div>
                                                 `).join('')}
@@ -1036,7 +1010,7 @@ class NavigationController {
                     </div>
 
                     <div class="card">
-                        <h3 style="margin-bottom: var(--space-4);">Top Referenced Files</h3>
+                        <h3 style="margin-bottom: var(--space-4); text-align: left;">Top Referenced Files</h3>
                         <div style="display: grid; gap: var(--space-2);">
                             ${topFiles.slice(0, 10).map(file => `
                                 <a href="#files/${encodeURIComponent(file.path)}" class="file-item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); background: var(--bg-secondary); border-radius: var(--radius-md); transition: all var(--transition-fast); text-decoration: none; color: inherit;">
@@ -1055,7 +1029,7 @@ class NavigationController {
                     </div>
 
                     <div class="card" style="margin-top: var(--space-6);">
-                        <h3 style="margin-bottom: var(--space-4);">File Tree Browser</h3>
+                        <h3 style="margin-bottom: var(--space-4); text-align: left;">File Tree Browser</h3>
                         <div class="file-tree">
                             ${this.renderFileTree(tree, '')}
                         </div>
@@ -1320,17 +1294,17 @@ class NavigationController {
 
                     ${fileContent ? `
                         <div class="card" style="margin-top: var(--space-6);">
-                            <h3 style="margin-bottom: var(--space-4);">📄 File Content</h3>
-                            <div style="background: var(--bg-tertiary); border-radius: var(--radius-md); padding: var(--space-4); overflow-x: auto;">
-                                <pre style="margin: 0; font-family: 'Monaco', 'Menlo', 'Courier New', monospace; font-size: var(--text-sm); line-height: 1.6;"><code>${this.escapeHtml(fileContent)}</code></pre>
+                            <h3 style="margin-bottom: var(--space-4); text-align: left;">📄 File Content</h3>
+                            <div style="background: var(--bg-tertiary); border-radius: var(--radius-md); padding: var(--space-4); overflow-x: auto; text-align: left;">
+                                <pre style="margin: 0; font-family: 'Monaco', 'Menlo', 'Courier New', monospace; font-size: var(--text-sm); line-height: 1.6; text-align: left;"><code>${this.escapeHtml(fileContent)}</code></pre>
                             </div>
-                            <p class="text-xs text-tertiary" style="margin-top: var(--space-2);">
+                            <p class="text-xs text-tertiary" style="margin-top: var(--space-2); text-align: left;">
                                 ${fileContent.split('\n').length} lines • ${(fileContent.length / 1024).toFixed(1)} KB
                             </p>
                         </div>
                     ` : `
-                        <div class="card" style="margin-top: var(--space-6); background: var(--bg-tertiary);">
-                            <p class="text-center text-tertiary">
+                        <div class="card" style="margin-top: var(--space-6); background: var(--bg-tertiary); text-align: left;">
+                            <p class="text-tertiary" style="text-align: left;">
                                 <strong>Note:</strong> File content not available in this dashboard.
                                 This view shows metadata about files referenced in the conversation history.
                             </p>
@@ -1338,10 +1312,10 @@ class NavigationController {
                     `}
 
                     <div class="card" style="margin-top: var(--space-6);">
-                        <h3 style="margin-bottom: var(--space-4);">💬 References in Conversations</h3>
+                        <h3 style="margin-bottom: var(--space-4); text-align: left;">💬 References in Conversations</h3>
 
                         ${references.messages.length === 0 ? `
-                            <p class="text-tertiary">No message references found.</p>
+                            <p class="text-tertiary" style="text-align: left;">No message references found.</p>
                         ` : `
                             <p class="text-secondary" style="margin-bottom: var(--space-4);">
                                 This file was referenced in ${references.messages.length} message${references.messages.length !== 1 ? 's' : ''}
@@ -1526,39 +1500,39 @@ class NavigationController {
                                 <h2 class="card-title">${this.escapeHtml(checkpoint.title)}</h2>
                                 <p class="card-subtitle">${checkpoint.summary}</p>
                             </div>
-                            <div class="card-content">
+                            <div class="card-content" style="text-align: left;">
                                 <!-- Session Metadata -->
-                                <div style="background: var(--primary-100); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6);">
-                                    <h3 style="margin-bottom: var(--space-3); color: var(--primary-900);">📋 Session Context</h3>
+                                <div style="background: var(--primary-100); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6); text-align: left;">
+                                    <h3 style="margin-bottom: var(--space-3); color: var(--text-primary); text-align: left;">📋 Session Context</h3>
                                     <div class="grid grid-cols-2" style="gap: var(--space-3);">
                                         <div>
-                                            <strong style="color: var(--primary-900);">📅 Date & Time:</strong>
-                                            <div style="color: var(--primary-700); font-weight: 600; margin-top: var(--space-1);">
+                                            <strong style="color: var(--text-primary);">📅 Date & Time:</strong>
+                                            <div style="color: var(--text-primary); font-weight: 600; margin-top: var(--space-1);">
                                                 ${dateExtracted.toLocaleDateString()} ${dateExtracted.toLocaleTimeString()}
                                             </div>
                                         </div>
                                         ${project ? `
                                             <div>
-                                                <strong style="color: var(--primary-900);">📦 Project:</strong>
-                                                <div style="color: var(--primary-700); font-weight: 600; margin-top: var(--space-1);">
+                                                <strong style="color: var(--text-primary);">📦 Project:</strong>
+                                                <div style="color: var(--text-primary); font-weight: 600; margin-top: var(--space-1);">
                                                     ${this.escapeHtml(project)}
                                                 </div>
                                             </div>
                                         ` : ''}
                                         ${submodule ? `
                                             <div>
-                                                <strong style="color: var(--primary-900);">📂 Submodule:</strong>
-                                                <div style="color: var(--primary-700); font-weight: 600; margin-top: var(--space-1);">
+                                                <strong style="color: var(--text-primary);">📂 Submodule:</strong>
+                                                <div style="color: var(--text-primary); font-weight: 600; margin-top: var(--space-1);">
                                                     ${this.escapeHtml(submodule)}
                                                 </div>
                                             </div>
                                         ` : ''}
                                         ${modules.length > 0 ? `
                                             <div style="grid-column: 1 / -1;">
-                                                <strong style="color: var(--primary-900);">🔧 Modules Worked On (${modules.length}):</strong>
+                                                <strong style="color: var(--text-primary);">🔧 Modules Worked On (${modules.length}):</strong>
                                                 <div style="margin-top: var(--space-2); display: flex; flex-wrap: wrap; gap: var(--space-2);">
                                                     ${modules.map(mod => `
-                                                        <span class="badge" style="background: var(--primary-200); color: var(--primary-900);">
+                                                        <span class="badge" style="background: var(--primary-200); color: var(--text-primary);">
                                                             ${this.escapeHtml(mod)}
                                                         </span>
                                                     `).join('')}
@@ -1570,46 +1544,46 @@ class NavigationController {
 
                                 <!-- Git Commits Section -->
                                 ${gitData && gitData.commits && gitData.commits.length > 0 ? `
-                                    <div style="background: var(--bg-tertiary); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6);">
-                                        <h3 style="margin-bottom: var(--space-3); color: var(--text-primary);">🔀 Git Commits (${gitData.commits.length})</h3>
+                                    <div style="background: var(--bg-tertiary); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6); text-align: left;">
+                                        <h3 style="margin-bottom: var(--space-3); color: var(--text-primary); text-align: left;">🔀 Git Commits (${gitData.commits.length})</h3>
 
                                         ${gitData.branch ? `
-                                            <div style="margin-bottom: var(--space-3); padding: var(--space-2); background: var(--primary-100); border-radius: var(--radius-sm);">
-                                                <strong style="color: var(--primary-900);">Branch:</strong>
-                                                <code style="color: var(--primary-700); font-weight: 600;">${gitData.branch}</code>
+                                            <div style="margin-bottom: var(--space-3); padding: var(--space-2); background: var(--primary-100); border-radius: var(--radius-sm); text-align: left;">
+                                                <strong style="color: var(--text-primary);">Branch:</strong>
+                                                <code style="color: var(--text-primary); font-weight: 600;">${gitData.branch}</code>
                                             </div>
                                         ` : ''}
 
                                         ${gitData.file_modified_time || gitData.file_created_time ? `
-                                            <div style="margin-bottom: var(--space-3); padding: var(--space-3); background: var(--success-100); border-radius: var(--radius-sm); border: 1px solid var(--success-300);">
-                                                <div style="font-size: var(--text-sm); color: var(--text-primary);">
+                                            <div style="margin-bottom: var(--space-3); padding: var(--space-3); background: var(--success-100); border-radius: var(--radius-sm); border: 1px solid var(--success-300); text-align: left;">
+                                                <div style="font-size: var(--text-sm); color: var(--text-primary); text-align: left;">
                                                     <strong>📁 File System Timestamps (Accurate)</strong>
                                                 </div>
                                                 ${gitData.file_modified_time ? `
-                                                    <div style="margin-top: var(--space-2); font-size: var(--text-sm); color: var(--text-secondary);">
+                                                    <div style="margin-top: var(--space-2); font-size: var(--text-sm); color: var(--text-secondary); text-align: left;">
                                                         <strong>Modified:</strong> ${new Date(gitData.file_modified_time).toLocaleString()}
                                                     </div>
                                                 ` : ''}
                                                 ${gitData.file_created_time ? `
-                                                    <div style="margin-top: var(--space-1); font-size: var(--text-sm); color: var(--text-secondary);">
+                                                    <div style="margin-top: var(--space-1); font-size: var(--text-sm); color: var(--text-secondary); text-align: left;">
                                                         <strong>Created:</strong> ${new Date(gitData.file_created_time).toLocaleString()}
                                                     </div>
                                                 ` : ''}
                                             </div>
                                         ` : ''}
 
-                                        <div style="max-height: 400px; overflow-y: auto;">
+                                        <div style="max-height: 400px; overflow-y: auto; text-align: left;">
                                             ${gitData.commits.map(commit => `
-                                                <div style="padding: var(--space-3); margin-bottom: var(--space-2); background: var(--bg-primary); border-left: 3px solid var(--primary-500); border-radius: var(--radius-sm);">
-                                                    <div style="font-family: monospace; font-size: var(--text-sm);">
+                                                <div style="padding: var(--space-3); margin-bottom: var(--space-2); background: var(--bg-primary); border-left: 3px solid var(--primary-500); border-radius: var(--radius-sm); text-align: left;">
+                                                    <div style="font-family: monospace; font-size: var(--text-sm); text-align: left;">
                                                         <a href="${githubBaseUrl}/commit/${commit.hash}"
                                                            target="_blank"
                                                            rel="noopener noreferrer"
-                                                           style="color: var(--primary-600); text-decoration: none; font-weight: 600; font-family: monospace;"
+                                                           style="color: var(--text-primary); text-decoration: none; font-weight: 600; font-family: monospace;"
                                                            title="View commit on GitHub">
                                                             📝 ${commit.hash}
                                                         </a>
-                                                        <div style="color: var(--text-secondary); margin-top: var(--space-1); word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word;">
+                                                        <div style="color: var(--text-secondary); margin-top: var(--space-1); word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word; text-align: left;">
                                                             ${this.escapeHtml(commit.message)}
                                                         </div>
                                                     </div>
@@ -1618,30 +1592,30 @@ class NavigationController {
                                         </div>
 
                                         ${gitData.working_dir_status ? `
-                                            <div style="margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border-primary);">
+                                            <div style="margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border-primary); text-align: left;">
                                                 <strong>Working Directory Status:</strong>
-                                                <div style="margin-top: var(--space-2); padding: var(--space-2); background: var(--bg-primary); border-radius: var(--radius-sm); font-family: monospace; font-size: var(--text-xs); white-space: pre-wrap; overflow-wrap: break-word;">
+                                                <div style="margin-top: var(--space-2); padding: var(--space-2); background: var(--bg-primary); border-radius: var(--radius-sm); font-family: monospace; font-size: var(--text-xs); white-space: pre-wrap; overflow-wrap: break-word; text-align: left;">
                                                     ${this.escapeHtml(gitData.working_dir_status)}
                                                 </div>
                                             </div>
                                         ` : ''}
 
                                         ${gitData.submodules && gitData.submodules.length > 0 ? `
-                                            <div style="margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border-primary);">
+                                            <div style="margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border-primary); text-align: left;">
                                                 <strong>Submodule Updates (${gitData.submodules.length}):</strong>
-                                                <div style="margin-top: var(--space-2);">
+                                                <div style="margin-top: var(--space-2); text-align: left;">
                                                     ${gitData.submodules.map(sub => `
-                                                        <div style="padding: var(--space-2); margin-bottom: var(--space-2); background: var(--bg-primary); border-radius: var(--radius-sm); font-size: var(--text-sm);">
-                                                            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-1);">
+                                                        <div style="padding: var(--space-2); margin-bottom: var(--space-2); background: var(--bg-primary); border-radius: var(--radius-sm); font-size: var(--text-sm); text-align: left;">
+                                                            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-1); text-align: left;">
                                                                 📦 ${this.escapeHtml(sub.name)}
                                                             </div>
                                                             ${sub.commit ? `
-                                                                <div style="font-family: monospace; font-size: var(--text-xs); color: var(--text-tertiary);">
+                                                                <div style="font-family: monospace; font-size: var(--text-xs); color: var(--text-tertiary); text-align: left;">
                                                                     Commit: <code>${sub.commit}</code>
                                                                 </div>
                                                             ` : ''}
                                                             ${sub.latest_hash && sub.latest_message ? `
-                                                                <div style="font-family: monospace; font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-1);">
+                                                                <div style="font-family: monospace; font-size: var(--text-xs); color: var(--text-secondary); margin-top: var(--space-1); text-align: left;">
                                                                     Latest: ${sub.latest_hash} ${this.escapeHtml(sub.latest_message)}
                                                                 </div>
                                                             ` : ''}
@@ -1672,17 +1646,17 @@ class NavigationController {
                                     </div>
                                 </div>
 
-                                <h3 style="margin-top: var(--space-6);">Top Topics</h3>
-                                <div class="grid grid-cols-3">
+                                <h3 style="margin-top: var(--space-6); text-align: left;">Top Topics</h3>
+                                <div class="grid grid-cols-3" style="text-align: left;">
                                     ${checkpoint.top_topics.map(topic => `
-                                        <div class="badge badge-primary" style="margin: var(--space-2);">
+                                        <div class="badge badge-primary" style="margin: var(--space-2); text-align: left;">
                                             ${this.escapeHtml(topic)}
                                         </div>
                                     `).join('')}
                                 </div>
 
                                 ${checkpoint.files_modified && checkpoint.files_modified.length > 0 ? `
-                                    <h3 style="margin-top: var(--space-6);">Files Modified (click to view)</h3>
+                                    <h3 style="margin-top: var(--space-6); text-align: left;">Files Modified (click to view)</h3>
                                     <div class="grid grid-cols-1" style="gap: var(--space-2);">
                                         ${checkpoint.files_modified.slice(0, 20).map(file => `
                                             <button
@@ -1707,8 +1681,8 @@ class NavigationController {
                                                 onmouseover="this.style.background='var(--bg-elevated)'; this.style.borderColor='var(--primary-500)'; this.style.transform='translateX(4px)';"
                                                 onmouseout="this.style.background='var(--bg-tertiary)'; this.style.borderColor='var(--border-primary)'; this.style.transform='translateX(0)';"
                                             >
-                                                <span style="color: var(--primary-500);">📄</span>
-                                                <span style="flex: 1; word-break: break-all;">${this.escapeHtml(file)}</span>
+                                                <span style="color: var(--text-primary);">📄</span>
+                                                <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left;">${this.escapeHtml(file)}</span>
                                                 <span style="color: var(--text-tertiary); font-size: 0.9em;">→</span>
                                             </button>
                                         `).join('')}
@@ -1779,11 +1753,11 @@ class NavigationController {
                                             </div>
                                             <span class="card-collapse-icon">▼</span>
                                         </div>
-                                        <div class="card-content">
-                                            <p><strong>Summary:</strong> ${checkpoint.summary}</p>
-                                            <p style="margin-top: var(--space-2);"><strong>Topics:</strong> ${checkpoint.top_topics.slice(0, 3).join(', ')}</p>
+                                        <div class="card-content" style="text-align: left;">
+                                            <p style="text-align: left;"><strong>Summary:</strong> ${checkpoint.summary}</p>
+                                            <p style="margin-top: var(--space-2); text-align: left;"><strong>Topics:</strong> ${checkpoint.top_topics.slice(0, 3).join(', ')}</p>
                                             ${modules.length > 0 ? `
-                                                <p style="margin-top: var(--space-2);">
+                                                <p style="margin-top: var(--space-2); text-align: left;">
                                                     <strong>Modules (${modules.length}):</strong>
                                                     ${modules.slice(0, 3).map(m => `<span class="badge" style="margin-left: var(--space-1);">${this.escapeHtml(m)}</span>`).join('')}
                                                     ${modules.length > 3 ? `<span class="text-tertiary"> +${modules.length - 3} more</span>` : ''}
@@ -1848,20 +1822,20 @@ class NavigationController {
                                 <div class="card-content">
                                     <div style="max-height: 600px; overflow-y: auto;">
                                         ${cmds.slice(0, 50).map(cmd => `
-                                            <div style="padding: var(--space-3); margin: var(--space-2) 0; background: var(--bg-tertiary); border-radius: var(--radius-md); font-family: monospace; font-size: var(--text-sm); border-left: 3px solid var(--primary-500);">
-                                                <div style="color: var(--primary-600); font-weight: var(--font-semibold); margin-bottom: var(--space-2); word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word;">
+                                            <div style="padding: var(--space-3); margin: var(--space-2) 0; background: var(--bg-tertiary); border-radius: var(--radius-md); font-family: monospace; font-size: var(--text-sm); border-left: 3px solid var(--primary-500); text-align: left;">
+                                                <div style="color: var(--text-primary); font-weight: var(--font-semibold); margin-bottom: var(--space-2); word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word; text-align: left;">
                                                     ${this.escapeHtml(cmd.command_text)}
                                                 </div>
-                                                <div style="color: var(--text-tertiary); font-size: var(--text-xs); word-wrap: break-word; overflow-wrap: break-word;">
+                                                <div style="color: var(--text-tertiary); font-size: var(--text-xs); word-wrap: break-word; overflow-wrap: break-word; text-align: left;">
                                                     📅 ${new Date(cmd.timestamp).toLocaleString()}
                                                 </div>
-                                                <div style="color: var(--text-tertiary); font-size: var(--text-xs); margin-top: var(--space-1); word-wrap: break-word; overflow-wrap: break-word;">
+                                                <div style="color: var(--text-tertiary); font-size: var(--text-xs); margin-top: var(--space-1); word-wrap: break-word; overflow-wrap: break-word; text-align: left;">
                                                     📂 Session: ${this.escapeHtml(cmd.checkpoint_id)}
                                                 </div>
                                             </div>
                                         `).join('')}
                                         ${cmds.length > 50 ? `
-                                            <p class="text-sm text-tertiary" style="text-align: center; margin-top: var(--space-4);">
+                                            <p class="text-sm text-tertiary" style="text-align: left; margin-top: var(--space-4);">
                                                 ... and ${cmds.length - 50} more ${type} commands
                                             </p>
                                         ` : ''}
@@ -2293,7 +2267,7 @@ class NavigationController {
             // Escape special regex characters
             const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const regex = new RegExp(`(${escapedWord})`, 'gi');
-            highlighted = highlighted.replace(regex, '<mark style="background-color: var(--primary-100); color: var(--primary-900); padding: 2px 4px; border-radius: 2px;">$1</mark>');
+            highlighted = highlighted.replace(regex, '<mark style="background-color: var(--primary-100); color: var(--text-primary); padding: 2px 4px; border-radius: 2px;">$1</mark>');
         });
 
         return highlighted;
@@ -2331,21 +2305,19 @@ class NavigationController {
                 // Check if this is an external file indicator
                 if (typeof content === 'object' && content.external) {
                     contentEl.innerHTML = `
-                        <div style="padding: var(--space-8); text-align: center;">
-                            <div style="font-size: 3em; margin-bottom: var(--space-4);">📍</div>
-                            <h3 style="color: var(--text-primary); margin-bottom: var(--space-4);">External File</h3>
-                            <p style="color: var(--text-secondary); margin-bottom: var(--space-6); max-width: 600px; margin-left: auto; margin-right: auto;">
+                        <div style="padding: var(--space-8); text-align: left;">
+                            <div style="font-size: 3em; margin-bottom: var(--space-4); text-align: left;">📍</div>
+                            <h3 style="color: var(--text-primary); margin-bottom: var(--space-4); text-align: left;">External File</h3>
+                            <p style="color: var(--text-secondary); margin-bottom: var(--space-6); text-align: left;">
                                 ${this.escapeHtml(content.message)}
                             </p>
-                            <div style="background: var(--bg-tertiary); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-6);">
-                                <div style="color: var(--text-tertiary); font-size: var(--text-sm); margin-bottom: var(--space-2);">File Location:</div>
-                                <code style="color: var(--primary-500); font-size: var(--text-base); word-break: break-all; display: block; text-align: left;">
-                                    ${this.escapeHtml(content.path)}
-                                </code>
+                            <div style="background: var(--bg-tertiary); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-6); text-align: left;">
+                                <div style="color: var(--text-tertiary); font-size: var(--text-sm); margin-bottom: var(--space-2); text-align: left;">File Location:</div>
+                                <code style="color: var(--text-primary); font-size: var(--text-base); word-break: break-all; display: block; text-align: left;">${this.escapeHtml(content.path)}</code>
                             </div>
-                            <div style="color: var(--text-tertiary); font-size: var(--text-sm);">
-                                <p>This file is from a different project or directory outside the MEMORY-CONTEXT folder.</p>
-                                <p style="margin-top: var(--space-2);">To view it, please open the file directly in your editor or file manager.</p>
+                            <div style="color: var(--text-tertiary); font-size: var(--text-sm); text-align: left;">
+                                <p style="text-align: left;">This file is from a different project or directory outside the MEMORY-CONTEXT folder.</p>
+                                <p style="margin-top: var(--space-2); text-align: left;">To view it, please open the file directly in your editor or file manager.</p>
                             </div>
                         </div>
                     `;
@@ -2356,9 +2328,9 @@ class NavigationController {
                 }
             } else {
                 contentEl.innerHTML = `
-                    <div style="text-align: center; padding: var(--space-8); color: var(--text-tertiary);">
-                        <p>Could not load file content.</p>
-                        <p class="text-sm" style="margin-top: var(--space-4);">
+                    <div style="text-align: left; padding: var(--space-8); color: var(--text-tertiary);">
+                        <p style="text-align: left;">Could not load file content.</p>
+                        <p class="text-sm" style="margin-top: var(--space-4); text-align: left;">
                             File path: <code>${this.escapeHtml(filePath)}</code>
                         </p>
                     </div>
@@ -2509,56 +2481,56 @@ class NavigationController {
                                 permanent memory - every decision, implementation detail, and problem-solving session preserved and accessible.
                             </p>
 
-                            <h3 style="margin-top: var(--space-6);">Key Features</h3>
+                            <h3 style="margin-top: var(--space-6); text-align: left;">Key Features</h3>
                             <div class="grid grid-cols-2" style="margin-top: var(--space-4);">
                                 <div class="card" style="background-color: var(--bg-tertiary);">
-                                    <h4>📊 Complete History</h4>
-                                    <p class="text-sm">
+                                    <h4 style="text-align: left;">📊 Complete History</h4>
+                                    <p class="text-sm" style="text-align: left;">
                                         ${(10206).toLocaleString()} conversation messages from ${(124).toLocaleString()} sessions,
                                         giving you complete visibility into your project's evolution.
                                     </p>
                                 </div>
                                 <div class="card" style="background-color: var(--bg-tertiary);">
-                                    <h4>🔍 Smart Search</h4>
-                                    <p class="text-sm">
+                                    <h4 style="text-align: left;">🔍 Smart Search</h4>
+                                    <p class="text-sm" style="text-align: left;">
                                         Find any conversation, decision, or code snippet instantly with full-text search
                                         powered by SQLite FTS5.
                                     </p>
                                 </div>
                                 <div class="card" style="background-color: var(--bg-tertiary);">
-                                    <h4>🏷️ Topic Organization</h4>
-                                    <p class="text-sm">
+                                    <h4 style="text-align: left;">🏷️ Topic Organization</h4>
+                                    <p class="text-sm" style="text-align: left;">
                                         Conversations automatically categorized into 14 topics including Documentation,
                                         Testing, Agents, and more.
                                     </p>
                                 </div>
                                 <div class="card" style="background-color: var(--bg-tertiary);">
-                                    <h4>📁 File Tracking</h4>
-                                    <p class="text-sm">
+                                    <h4 style="text-align: left;">📁 File Tracking</h4>
+                                    <p class="text-sm" style="text-align: left;">
                                         ${(4060).toLocaleString()} file references tracked across all sessions, showing
                                         what was read, written, or edited.
                                     </p>
                                 </div>
                             </div>
 
-                            <h3 style="margin-top: var(--space-6);">How It Works</h3>
-                            <ol style="margin-left: var(--space-6); margin-top: var(--space-2);">
-                                <li><strong>Automatic Export</strong> - After each Claude Code session, conversations are automatically exported to JSON format.</li>
-                                <li><strong>Intelligent Deduplication</strong> - Content-based hashing removes duplicate messages while preserving unique context.</li>
-                                <li><strong>Database Indexing</strong> - Messages are indexed into SQLite with full-text search capabilities.</li>
-                                <li><strong>Dashboard Generation</strong> - This web dashboard is generated from the indexed data for easy browsing.</li>
+                            <h3 style="margin-top: var(--space-6); text-align: left;">How It Works</h3>
+                            <ol style="margin-left: var(--space-6); margin-top: var(--space-2); text-align: left;">
+                                <li style="text-align: left;"><strong>Automatic Export</strong> - After each Claude Code session, conversations are automatically exported to JSON format.</li>
+                                <li style="text-align: left;"><strong>Intelligent Deduplication</strong> - Content-based hashing removes duplicate messages while preserving unique context.</li>
+                                <li style="text-align: left;"><strong>Database Indexing</strong> - Messages are indexed into SQLite with full-text search capabilities.</li>
+                                <li style="text-align: left;"><strong>Dashboard Generation</strong> - This web dashboard is generated from the indexed data for easy browsing.</li>
                             </ol>
 
-                            <h3 style="margin-top: var(--space-6);">Use Cases</h3>
-                            <ul style="margin-left: var(--space-6); margin-top: var(--space-2);">
-                                <li><strong>Onboarding</strong> - New team members can review the complete project history to get up to speed.</li>
-                                <li><strong>Decision Auditing</strong> - Review why certain architectural choices were made and when.</li>
-                                <li><strong>Knowledge Retrieval</strong> - Find solutions to problems you've already solved in past sessions.</li>
-                                <li><strong>Progress Tracking</strong> - See the evolution of your project over time with timeline visualizations.</li>
-                                <li><strong>Documentation</strong> - Generate project documentation from actual implementation conversations.</li>
+                            <h3 style="margin-top: var(--space-6); text-align: left;">Use Cases</h3>
+                            <ul style="margin-left: var(--space-6); margin-top: var(--space-2); text-align: left;">
+                                <li style="text-align: left;"><strong>Onboarding</strong> - New team members can review the complete project history to get up to speed.</li>
+                                <li style="text-align: left;"><strong>Decision Auditing</strong> - Review why certain architectural choices were made and when.</li>
+                                <li style="text-align: left;"><strong>Knowledge Retrieval</strong> - Find solutions to problems you've already solved in past sessions.</li>
+                                <li style="text-align: left;"><strong>Progress Tracking</strong> - See the evolution of your project over time with timeline visualizations.</li>
+                                <li style="text-align: left;"><strong>Documentation</strong> - Generate project documentation from actual implementation conversations.</li>
                             </ul>
 
-                            <h3 style="margin-top: var(--space-6);">Technical Stack</h3>
+                            <h3 style="margin-top: var(--space-6); text-align: left;">Technical Stack</h3>
                             <div class="grid grid-cols-3" style="margin-top: var(--space-4);">
                                 <div>
                                     <h4 class="text-sm font-semibold">Backend</h4>
@@ -2587,12 +2559,12 @@ class NavigationController {
                             </div>
 
                             <div style="margin-top: var(--space-8); padding: var(--space-4); background-color: var(--primary-50); border-left: 4px solid var(--primary-500); border-radius: var(--radius-md);">
-                                <p class="font-semibold" style="color: var(--primary-700);">
+                                <p class="font-semibold" style="color: var(--text-primary);">
                                     💡 Pro Tip
                                 </p>
                                 <p class="text-sm" style="margin-top: var(--space-2); color: var(--text-secondary);">
-                                    Use the <a href="#checkpoints" style="color: var(--primary-600);">Sessions view</a> to browse all conversations,
-                                    or try the <a href="#topics" style="color: var(--primary-600);">Topics view</a> to find conversations by category.
+                                    Use the <a href="#checkpoints" style="color: var(--text-primary);">Sessions view</a> to browse all conversations,
+                                    or try the <a href="#topics" style="color: var(--text-primary);">Topics view</a> to find conversations by category.
                                     The search bar above works across all ${(10206).toLocaleString()} messages!
                                 </p>
                             </div>
@@ -2627,15 +2599,15 @@ python3 -m http.server 8080</pre>
                                 </p>
                             </div>
 
-                            <h3 style="margin-top: var(--space-6);">Navigation</h3>
+                            <h3 style="margin-top: var(--space-6); text-align: left;">Navigation</h3>
                             <div class="grid" style="margin-top: var(--space-4);">
                                 <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')">
                                     <div class="card-header">
                                         <h4 class="card-title">📊 Overview</h4>
                                         <span class="card-collapse-icon">▼</span>
                                     </div>
-                                    <div class="card-content">
-                                        <p class="text-sm">
+                                    <div class="card-content" style="text-align: left;">
+                                        <p class="text-sm" style="text-align: left;">
                                             Dashboard home with quick stats, recent sessions, and top topics.
                                             Click stat cards to jump to detailed views.
                                         </p>
@@ -2647,8 +2619,8 @@ python3 -m http.server 8080</pre>
                                         <h4 class="card-title">📅 Timeline</h4>
                                         <span class="card-collapse-icon">▼</span>
                                     </div>
-                                    <div class="card-content">
-                                        <p class="text-sm">
+                                    <div class="card-content" style="text-align: left;">
+                                        <p class="text-sm" style="text-align: left;">
                                             Chronological view of all conversation sessions with D3.js visualization
                                             (coming in Week 2 implementation).
                                         </p>
@@ -2660,8 +2632,8 @@ python3 -m http.server 8080</pre>
                                         <h4 class="card-title">🏷️ Topics</h4>
                                         <span class="card-collapse-icon">▼</span>
                                     </div>
-                                    <div class="card-content">
-                                        <p class="text-sm">
+                                    <div class="card-content" style="text-align: left;">
+                                        <p class="text-sm" style="text-align: left;">
                                             Browse all 14 conversation topics. Click a topic to see all messages in that category.
                                             Topics include Documentation, Testing, Agents, Python-Code, and more.
                                         </p>
@@ -2673,8 +2645,8 @@ python3 -m http.server 8080</pre>
                                         <h4 class="card-title">📁 Files</h4>
                                         <span class="card-collapse-icon">▼</span>
                                     </div>
-                                    <div class="card-content">
-                                        <p class="text-sm">
+                                    <div class="card-content" style="text-align: left;">
+                                        <p class="text-sm" style="text-align: left;">
                                             Hierarchical file browser showing all ${(4060).toLocaleString()} referenced files.
                                             See which files were read, written, or edited across all sessions.
                                         </p>
@@ -2686,8 +2658,8 @@ python3 -m http.server 8080</pre>
                                         <h4 class="card-title">💬 Sessions</h4>
                                         <span class="card-collapse-icon">▼</span>
                                     </div>
-                                    <div class="card-content">
-                                        <p class="text-sm">
+                                    <div class="card-content" style="text-align: left;">
+                                        <p class="text-sm" style="text-align: left;">
                                             Browse all ${(124).toLocaleString()} conversation sessions. Search by title, filter by date,
                                             sort by message count. Click a session to see full details, topics, files, and commands.
                                         </p>
@@ -2699,8 +2671,8 @@ python3 -m http.server 8080</pre>
                                         <h4 class="card-title">⚡ Commands</h4>
                                         <span class="card-collapse-icon">▼</span>
                                     </div>
-                                    <div class="card-content">
-                                        <p class="text-sm">
+                                    <div class="card-content" style="text-align: left;">
+                                        <p class="text-sm" style="text-align: left;">
                                             View all ${(1732).toLocaleString()} executed commands. Filter by type (git, bash, python, docker, gcloud).
                                             See command history with timestamps and session context.
                                         </p>
@@ -2708,39 +2680,39 @@ python3 -m http.server 8080</pre>
                                 </div>
                             </div>
 
-                            <h3 style="margin-top: var(--space-6);">Features</h3>
+                            <h3 style="margin-top: var(--space-6); text-align: left;">Features</h3>
                             <div class="grid grid-cols-2" style="margin-top: var(--space-4);">
-                                <div>
-                                    <h4>🔍 Global Search</h4>
-                                    <p class="text-sm" style="color: var(--text-secondary);">
+                                <div style="text-align: left;">
+                                    <h4 style="text-align: left;">🔍 Global Search</h4>
+                                    <p class="text-sm" style="color: var(--text-secondary); text-align: left;">
                                         Use the search bar at the top to search across all ${(10206).toLocaleString()} messages.
                                         Results show matching messages with context and links to full sessions.
                                     </p>
                                 </div>
-                                <div>
-                                    <h4>🌙 Dark Mode</h4>
-                                    <p class="text-sm" style="color: var(--text-secondary);">
+                                <div style="text-align: left;">
+                                    <h4 style="text-align: left;">🌙 Dark Mode</h4>
+                                    <p class="text-sm" style="color: var(--text-secondary); text-align: left;">
                                         Click the moon/sun icon in the header to toggle between light and dark themes.
                                         Your preference is saved to localStorage.
                                     </p>
                                 </div>
-                                <div>
-                                    <h4>📋 Collapsible Cards</h4>
-                                    <p class="text-sm" style="color: var(--text-secondary);">
+                                <div style="text-align: left;">
+                                    <h4 style="text-align: left;">📋 Collapsible Cards</h4>
+                                    <p class="text-sm" style="color: var(--text-secondary); text-align: left;">
                                         Click card headers to expand/collapse content. Keeps the interface compact
                                         while giving you access to detailed information when needed.
                                     </p>
                                 </div>
-                                <div>
-                                    <h4>🔗 Deep Linking</h4>
-                                    <p class="text-sm" style="color: var(--text-secondary);">
+                                <div style="text-align: left;">
+                                    <h4 style="text-align: left;">🔗 Deep Linking</h4>
+                                    <p class="text-sm" style="color: var(--text-secondary); text-align: left;">
                                         URLs update as you navigate. Share direct links to sessions, topics, or specific views.
                                         Browser back/forward buttons work as expected.
                                     </p>
                                 </div>
                             </div>
 
-                            <h3 style="margin-top: var(--space-6);">Keyboard Shortcuts</h3>
+                            <h3 style="margin-top: var(--space-6); text-align: left;">Keyboard Shortcuts</h3>
                             <div style="margin-top: var(--space-4);">
                                 <table style="width: 100%; border-collapse: collapse;">
                                     <thead>
@@ -2766,36 +2738,36 @@ python3 -m http.server 8080</pre>
                                 </table>
                             </div>
 
-                            <h3 style="margin-top: var(--space-6);">Troubleshooting</h3>
+                            <h3 style="margin-top: var(--space-6); text-align: left;">Troubleshooting</h3>
                             <div class="grid" style="margin-top: var(--space-4);">
                                 <div class="card" style="background-color: var(--bg-tertiary);">
-                                    <h4 class="text-sm font-semibold">Data not loading?</h4>
-                                    <p class="text-xs" style="margin-top: var(--space-2); color: var(--text-secondary);">
+                                    <h4 class="text-sm font-semibold" style="text-align: left;">Data not loading?</h4>
+                                    <p class="text-xs" style="margin-top: var(--space-2); color: var(--text-secondary); text-align: left;">
                                         Make sure you're running an HTTP server (<code>python3 -m http.server 8080</code>).
                                         The dashboard won't work with the file:// protocol due to browser security.
                                     </p>
                                 </div>
                                 <div class="card" style="background-color: var(--bg-tertiary);">
-                                    <h4 class="text-sm font-semibold">Search not working?</h4>
-                                    <p class="text-xs" style="margin-top: var(--space-2); color: var(--text-secondary);">
+                                    <h4 class="text-sm font-semibold" style="text-align: left;">Search not working?</h4>
+                                    <p class="text-xs" style="margin-top: var(--space-2); color: var(--text-secondary); text-align: left;">
                                         Full-text search requires the SQLite FTS5 extension. Make sure you've run the indexing
                                         script: <code>python3 scripts/index-messages.py</code>
                                     </p>
                                 </div>
                                 <div class="card" style="background-color: var(--bg-tertiary);">
-                                    <h4 class="text-sm font-semibold">Outdated data?</h4>
-                                    <p class="text-xs" style="margin-top: var(--space-2); color: var(--text-secondary);">
+                                    <h4 class="text-sm font-semibold" style="text-align: left;">Outdated data?</h4>
+                                    <p class="text-xs" style="margin-top: var(--space-2); color: var(--text-secondary); text-align: left;">
                                         Regenerate the dashboard after new sessions: <code>python3 scripts/generate-dashboard.py</code>.
                                         This updates all JSON files with the latest conversation data.
                                     </p>
                                 </div>
                             </div>
 
-                            <div style="margin-top: var(--space-8); padding: var(--space-4); background-color: var(--info-50); border-left: 4px solid var(--info-500); border-radius: var(--radius-md);">
-                                <p class="font-semibold" style="color: var(--info-700);">
+                            <div style="margin-top: var(--space-8); padding: var(--space-4); background-color: var(--info-50); border-left: 4px solid var(--info-500); border-radius: var(--radius-md); text-align: left;">
+                                <p class="font-semibold" style="color: var(--info-700); text-align: left;">
                                     📚 Need More Help?
                                 </p>
-                                <p class="text-sm" style="margin-top: var(--space-2); color: var(--text-secondary);">
+                                <p class="text-sm" style="margin-top: var(--space-2); color: var(--text-secondary); text-align: left;">
                                     Check the <a href="#about" style="color: var(--info-600);">About MEMORY-CONTEXT</a> page to understand
                                     how the system works, or visit the
                                     <a href="https://github.com/coditect-ai" target="_blank" rel="noopener" style="color: var(--info-600);">
