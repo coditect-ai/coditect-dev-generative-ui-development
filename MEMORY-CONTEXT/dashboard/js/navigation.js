@@ -1959,7 +1959,7 @@ class NavigationController {
                                             ${result.message.has_code ? '<span class="badge">📝 Code</span>' : ''}
                                             ${isCheckpointResult ? '<span class="badge" style="background: var(--primary-800); color: white;">Click to View →</span>' : ''}
                                         </div>
-                                        <span class="text-xs text-tertiary">${this.formatDate(result.message.first_seen || result.message.timestamp)}</span>
+                                        <span class="text-xs text-tertiary">${this.formatDate(result.message.first_seen || result.message.timestamp, result.message.checkpoint_id)}</span>
                                     </div>
 
                                     <div class="search-match-preview" style="margin: var(--space-3) 0; white-space: pre-wrap;">
@@ -2782,20 +2782,54 @@ python3 -m http.server 8080</pre>
         `;
     }
 
-    formatDate(dateStr) {
+    formatDate(dateStr, fallbackId) {
         // Date formatting helper for Task 1.4
-        if (!dateStr) return 'Unknown date';
+        if (!dateStr) {
+            // Try to extract from fallback ID if provided
+            if (fallbackId) {
+                const extractedDate = this.extractDateFromId(fallbackId);
+                if (extractedDate) {
+                    dateStr = extractedDate;
+                } else {
+                    return 'Unknown date';
+                }
+            } else {
+                return 'Unknown date';
+            }
+        }
 
         try {
             const date = new Date(dateStr);
 
             // Check if date is valid
             if (isNaN(date.getTime())) {
-                // Try to extract date from common formats
-                if (typeof dateStr === 'string' && dateStr.includes('T')) {
-                    // ISO format, just use the date part
-                    return dateStr.split('T')[0];
+                // Try to extract date from ID format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)
+                if (typeof dateStr === 'string') {
+                    // Check for ISO format with T separator
+                    if (dateStr.includes('T')) {
+                        const datePart = dateStr.split('T')[0];
+                        const retryDate = new Date(datePart);
+                        if (!isNaN(retryDate.getTime())) {
+                            dateStr = datePart;
+                            return this.formatDate(datePart);
+                        }
+                    }
+
+                    // Try to extract YYYY-MM-DD pattern from string
+                    const dateMatch = dateStr.match(/\d{4}-\d{2}-\d{2}/);
+                    if (dateMatch) {
+                        return this.formatDate(dateMatch[0]);
+                    }
                 }
+
+                // If still invalid, try fallback ID
+                if (fallbackId) {
+                    const extractedDate = this.extractDateFromId(fallbackId);
+                    if (extractedDate) {
+                        return this.formatDate(extractedDate);
+                    }
+                }
+
                 return 'Unknown date';
             }
 
@@ -2814,12 +2848,39 @@ python3 -m http.server 8080</pre>
                 day: 'numeric'
             });
         } catch (error) {
-            // Fallback: return just the string or extract date portion
+            // Fallback: try to extract date from fallback ID
+            if (fallbackId) {
+                const extractedDate = this.extractDateFromId(fallbackId);
+                if (extractedDate) {
+                    return this.formatDate(extractedDate);
+                }
+            }
+
+            // Last resort: return just the string or extract date portion
             if (typeof dateStr === 'string' && dateStr.includes('T')) {
                 return dateStr.split('T')[0];
             }
             return 'Unknown date';
         }
+    }
+
+    extractDateFromId(idStr) {
+        // Extract date from checkpoint IDs like "MEMORY-CONTEXT-test-dataset-exports--2025-11-17-EXPORT..."
+        if (!idStr || typeof idStr !== 'string') return null;
+
+        // Match YYYY-MM-DD pattern
+        const dateMatch = idStr.match(/\d{4}-\d{2}-\d{2}/);
+        if (dateMatch) {
+            return dateMatch[0];
+        }
+
+        // Match YYYY-MM-DDTHH:mm:ss pattern
+        const isoMatch = idStr.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+        if (isoMatch) {
+            return isoMatch[0];
+        }
+
+        return null;
     }
 }
 
