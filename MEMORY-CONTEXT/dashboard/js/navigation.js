@@ -1481,7 +1481,8 @@ class NavigationController {
                 const gitData = await window.dashboardData.loadGitCommitsForCheckpoint(id);
 
                 // Extract metadata
-                const dateExtracted = this.extractDateFromId(checkpoint.id);
+                const dateExtractedStr = this.extractDateFromId(checkpoint.id);
+                const dateExtracted = dateExtractedStr ? new Date(dateExtractedStr) : new Date(checkpoint.date || checkpoint.id);
                 const project = this.extractProject(checkpoint.id);
                 const submodule = this.extractSubmodule(checkpoint.id);
                 const modules = this.extractModulesFromFiles(checkpoint.files_modified || []);
@@ -1508,7 +1509,7 @@ class NavigationController {
                                         <div>
                                             <strong style="color: white;">📅 Date & Time:</strong>
                                             <div style="color: white; font-weight: 600; margin-top: var(--space-1);">
-                                                ${dateExtracted.toLocaleDateString()} ${dateExtracted.toLocaleTimeString()}
+                                                ${!isNaN(dateExtracted.getTime()) ? `${dateExtracted.toLocaleDateString()} ${dateExtracted.toLocaleTimeString()}` : 'Unknown date'}
                                             </div>
                                         </div>
                                         ${project ? `
