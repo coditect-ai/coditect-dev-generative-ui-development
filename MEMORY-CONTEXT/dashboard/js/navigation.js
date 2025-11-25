@@ -1722,15 +1722,25 @@ class NavigationController {
                     </div>
                 `;
             } catch (error) {
+                console.error('❌ Error rendering checkpoint:', error);
+                console.error('Error stack:', error.stack);
+                console.error('Error message:', error.message);
+                console.error('Checkpoint ID:', id);
+
                 mainContent.innerHTML = `
                     <div class="card">
                         <div class="card-header">
-                            <h2 class="card-title" style="color: var(--error-500);">Checkpoint Not Found</h2>
+                            <h2 class="card-title" style="color: var(--error-500);">Error Loading Checkpoint</h2>
                         </div>
                         <div class="card-content">
-                            <p>Could not find checkpoint: ${this.escapeHtml(id)}</p>
+                            <p><strong>ID:</strong> ${this.escapeHtml(id)}</p>
+                            <p><strong>Error:</strong> ${this.escapeHtml(error.message)}</p>
+                            <details style="margin-top: var(--space-4); padding: var(--space-3); background: var(--bg-tertiary); border-radius: var(--radius-sm);">
+                                <summary style="cursor: pointer; font-weight: 600;">Technical Details</summary>
+                                <pre style="margin-top: var(--space-2); font-size: 12px; overflow-x: auto;">${this.escapeHtml(error.stack || error.toString())}</pre>
+                            </details>
                             <button onclick="window.location.hash='#checkpoints'" class="btn-primary" style="margin-top: var(--space-4);">
-                                View All Sessions
+                                ← Back to All Sessions
                             </button>
                         </div>
                     </div>
