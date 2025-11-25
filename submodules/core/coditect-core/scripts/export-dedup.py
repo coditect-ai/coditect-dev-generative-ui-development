@@ -54,6 +54,7 @@ import signal
 sys.path.insert(0, str(Path(__file__).parent / "core"))
 
 from message_deduplicator import MessageDeduplicator, parse_claude_export_file
+from unified_logger import setup_unified_logger
 
 
 # ============================================================================
@@ -101,35 +102,29 @@ class DataIntegrityError(ExportDedupError):
 
 def setup_logging(log_dir: Path) -> logging.Logger:
     """
-    Configure dual logging (file + stdout) with step tracking.
+    Configure dual logging (rolling file + stdout) with step tracking.
+
+    Uses UnifiedLogger with automatic environment detection (local vs GCP).
+    - Local: RollingLineFileHandler with 5000-line limit
+    - GCP: Cloud Logging with structured logs
 
     Args:
         log_dir: Directory for log files
 
     Returns:
-        Configured logger instance
+        Configured UnifiedLogger instance (compatible with logging.Logger)
     """
     log_dir.mkdir(parents=True, exist_ok=True)
-    log_file = log_dir / f"export-dedup-{datetime.now().strftime('%Y%m%d-%H%M%S')}.log"
+    log_file = log_dir / "export-dedup.log"
 
-    logger = logging.getLogger("export_dedup")
-    logger.setLevel(logging.DEBUG)
-
-    # File handler - detailed logs
-    file_handler = logging.FileHandler(log_file, encoding="utf-8")
-    file_handler.setLevel(logging.DEBUG)
-    file_formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    # Use unified logger with automatic environment detection
+    logger = setup_unified_logger(
+        component="export-dedup",
+        log_file=log_file,
+        max_lines=5000,
+        console_level=logging.INFO,
+        file_level=logging.DEBUG
     )
-    file_handler.setFormatter(file_formatter)
-    logger.addHandler(file_handler)
-
-    # Console handler - user-friendly output
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.INFO)
-    console_formatter = logging.Formatter("%(message)s")
-    console_handler.setFormatter(console_formatter)
-    logger.addHandler(console_handler)
 
     return logger
 
@@ -138,45 +133,94 @@ def setup_logging(log_dir: Path) -> logging.Logger:
 # CENTRALIZED LOGGING HELPERS
 # ============================================================================
 
-def log_step_start(step_num: int, step_name: str, logger: logging.Logger) -> datetime:
-    """Log the start of a major workflow step with timestamp."""
-    start_time = datetime.now()
-    logger.info(f"\n{'='*60}")
-    logger.info(f"Step {step_num}: {step_name}")
-    logger.info(f"{'='*60}")
-    logger.debug(f"Step {step_num} started at: {start_time.isoformat()}")
-    return start_time
+def log_step_start(step_num: int, step_name: str, logger) -> datetime:
+    """
+    Log the start of a major workflow step with timestamp.
+
+    Uses UnifiedLogger's structured logging if available, falls back to standard logging.
+    """
+    # Check if logger has UnifiedLogger's log_step_start method
+    if hasattr(logger, 'log_step_start'):
+        return logger.log_step_start(step_num, step_name)
+    else:
+        # Fallback to standard logging
+        start_time = datetime.now()
+        logger.info(f"\n{'='*60}")
+        logger.info(f"Step {step_num}: {step_name}")
+        logger.info(f"{'='*60}")
+        logger.debug(f"Step {step_num} started at: {start_time.isoformat()}")
+        return start_time
 
 
-def log_step_success(step_num: int, step_name: str, start_time: datetime, logger: logging.Logger) -> None:
-    """Log successful completion of a step with duration."""
-    duration = (datetime.now() - start_time).total_seconds()
-    logger.info(f"✅ Step {step_num} complete: {step_name} ({duration:.2f}s)")
-    logger.debug(f"Step {step_num} completed at: {datetime.now().isoformat()}")
+def log_step_success(step_num: int, step_name: str, start_time: datetime, logger) -> None:
+    """
+    Log successful completion of a step with duration.
+
+    Uses UnifiedLogger's structured logging if available, falls back to standard logging.
+    """
+    if hasattr(logger, 'log_step_success'):
+        logger.log_step_success(step_num, step_name, start_time)
+    else:
+        # Fallback to standard logging
+        duration = (datetime.now() - start_time).total_seconds()
+        logger.info(f"✅ Step {step_num} complete: {step_name} ({duration:.2f}s)")
+        logger.debug(f"Step {step_num} completed at: {datetime.now().isoformat()}")
 
 
-def log_step_error(step_num: int, step_name: str, error: Exception, logger: logging.Logger) -> None:
-    """Log step failure with error details."""
-    logger.error(f"❌ Step {step_num} failed: {step_name}")
-    logger.error(f"   Error: {str(error)}")
-    logger.debug(f"   Error type: {type(error).__name__}", exc_info=True)
+def log_step_error(step_num: int, step_name: str, error: Exception, logger) -> None:
+    """
+    Log step failure with error details.
+
+    Uses UnifiedLogger's structured logging if available, falls back to standard logging.
+    """
+    if hasattr(logger, 'log_step_error'):
+        logger.log_step_error(step_num, step_name, error)
+    else:
+        # Fallback to standard logging
+        logger.error(f"❌ Step {step_num} failed: {step_name}")
+        logger.error(f"   Error: {str(error)}")
+        logger.debug(f"   Error type: {type(error).__name__}", exc_info=True)
 
 
-def log_checkpoint(message: str, logger: logging.Logger) -> None:
-    """Log a verification checkpoint with timestamp."""
-    logger.debug(f"✓ CHECKPOINT: {message}")
+def log_checkpoint(message: str, logger) -> None:
+    """
+    Log a verification checkpoint with timestamp.
+
+    Uses UnifiedLogger's structured logging if available, falls back to standard logging.
+    """
+    if hasattr(logger, 'log_checkpoint'):
+        logger.log_checkpoint(message)
+    else:
+        # Fallback to standard logging
+        logger.debug(f"✓ CHECKPOINT: {message}")
 
 
-def log_verification_success(what: str, details: str, logger: logging.Logger) -> None:
-    """Log successful verification with details."""
-    logger.info(f"  ✓ Verified: {what}")
-    logger.debug(f"     Details: {details}")
+def log_verification_success(what: str, details: str, logger) -> None:
+    """
+    Log successful verification with details.
+
+    Uses UnifiedLogger's structured logging if available, falls back to standard logging.
+    """
+    if hasattr(logger, 'log_verification_success'):
+        logger.log_verification_success(what, details)
+    else:
+        # Fallback to standard logging
+        logger.info(f"  ✓ Verified: {what}")
+        logger.debug(f"     Details: {details}")
 
 
-def log_verification_failure(what: str, details: str, logger: logging.Logger) -> None:
-    """Log verification failure."""
-    logger.error(f"  ✗ Verification failed: {what}")
-    logger.error(f"     Details: {details}")
+def log_verification_failure(what: str, details: str, logger) -> None:
+    """
+    Log verification failure.
+
+    Uses UnifiedLogger's structured logging if available, falls back to standard logging.
+    """
+    if hasattr(logger, 'log_verification_failure'):
+        logger.log_verification_failure(what, details)
+    else:
+        # Fallback to standard logging
+        logger.error(f"  ✗ Verification failed: {what}")
+        logger.error(f"     Details: {details}")
 
 
 # ============================================================================
@@ -679,6 +723,9 @@ def run_export_dedup(
             logger.info("")
 
             all_exports = find_all_exports(repo_root, memory_context_dir, logger)
+        except ExportDedupError as e:
+            log_step_error(1, "Finding Export Files", e, logger)
+            raise
 
         if not all_exports:
             logger.warning("\n⚠️  No export files found!")
