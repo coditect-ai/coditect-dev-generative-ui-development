@@ -290,7 +290,7 @@ class NavigationController {
                                         <p><strong>Topics:</strong> ${session.top_topics.slice(0, 3).join(', ') || 'None'}</p>
                                         <p><strong>Files:</strong> ${session.files_modified || 0} modified</p>
                                         <p><strong>Commands:</strong> ${session.commands_executed || 0} executed</p>
-                                        <a href="#checkpoints/${session.id}" class="btn btn-sm btn-primary" style="margin-top: var(--space-2);">
+                                        <a href="#checkpoints/${encodeURIComponent(session.id)}" class="btn btn-sm btn-primary" style="margin-top: var(--space-2);">
                                             View Full Session →
                                         </a>
                                     </div>
@@ -303,7 +303,7 @@ class NavigationController {
                         <h2 class="section-title">Top Topics</h2>
                         <div class="grid grid-cols-2">
                             ${data.topTopics.map(topic => `
-                                <div class="card clickable" onclick="window.location.hash='#topics/${topic.name}'">
+                                <div class="card clickable" onclick="window.location.hash='#topics/${encodeURIComponent(topic.name)}'">
                                     <h3 class="card-title">${this.escapeHtml(topic.display_name || topic.name)}</h3>
                                     <p style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--primary-500); margin: var(--space-2) 0;">
                                         ${topic.message_count.toLocaleString()}
@@ -471,6 +471,9 @@ class NavigationController {
                         <div id="timeline-chart"></div>
                     </div>
 
+                    <!-- REMOVED: Duplicate panel - using the one defined in index.html instead -->
+                    <!-- This duplicate panel with class="card" and z-index: 2000 was conflicting with the HTML panel -->
+                    <!--
                     <div id="timeline-detail-panel" class="card" style="position: fixed; display: none; z-index: 2000; max-width: 800px; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-2xl);">
                         <div class="card-header drag-handle" style="display: flex; justify-content: space-between; align-items: center; cursor: move; user-select: none;">
                             <h3 class="card-title" id="timeline-detail-title" style="cursor: move;">📋 Session Details (drag to move)</h3>
@@ -478,6 +481,7 @@ class NavigationController {
                         </div>
                         <div class="card-content" id="timeline-detail-content"></div>
                     </div>
+                    -->
 
                     <div id="timeline-legend" class="card" style="margin-top: var(--space-4);">
                         <div class="card-header">
@@ -699,7 +703,7 @@ class NavigationController {
                 tooltip.style('visibility', 'hidden');
             })
             .on('click', function(event, d) {
-                window.location.hash = `#checkpoints/${d.id}`;
+                window.location.hash = `#checkpoints/${encodeURIComponent(d.id)}`;
             });
 
         // Zoom behavior
@@ -2187,10 +2191,40 @@ class NavigationController {
     }
 
     async loadAllMessages() {
-        // For now, just load from the overview data
-        // In a real implementation, we'd load all message pages
-        const messagesData = await window.dashboardData.loader.load('data/messages.json');
-        return messagesData.messages || [];
+        // Load messages with full content from unique_messages.jsonl
+        if (!window._fullMessagesForSearch) {
+            console.log('Loading full messages for search...');
+            try {
+                const response = await fetch('data/unique_messages.jsonl');
+                const text = await response.text();
+
+                window._fullMessagesForSearch = [];
+                text.split('\n').filter(line => line.trim()).forEach(line => {
+                    try {
+                        const entry = JSON.parse(line);
+                        window._fullMessagesForSearch.push({
+                            hash: entry.hash,
+                            role: entry.message.role,
+                            content: entry.message.content,
+                            content_preview: entry.message.content.substring(0, 200),
+                            checkpoint_id: entry.checkpoint,
+                            first_seen: entry.first_seen,
+                            word_count: entry.message.content.split(/\s+/).length,
+                            has_code: /```|function |class |const |let |var /.test(entry.message.content)
+                        });
+                    } catch (e) {
+                        console.warn('Failed to parse message line:', e);
+                    }
+                });
+                console.log(`Loaded ${window._fullMessagesForSearch.length} full messages for search`);
+            } catch (error) {
+                console.error('Error loading full messages:', error);
+                // Fallback to messages.json with content_preview only
+                const messagesData = await window.dashboardData.loader.load('data/messages.json');
+                window._fullMessagesForSearch = messagesData.messages || [];
+            }
+        }
+        return window._fullMessagesForSearch;
     }
 
     extractSearchPreview(content, originalQuery, queryWords) {
