@@ -2311,8 +2311,13 @@ class NavigationController {
 
         console.log('📄 Opening file modal:', filePath);
 
+        if (!modal) {
+            console.error('❌ File modal element not found!');
+            return;
+        }
+
         // Show modal
-        modal.classList.add('active');
+        modal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; // Prevent background scroll
 
         // Set title
@@ -2365,7 +2370,7 @@ class NavigationController {
     closeModal() {
         const modal = document.getElementById('file-modal');
         if (modal) {
-            modal.classList.remove('active');
+            modal.style.display = 'none';
             document.body.style.overflow = ''; // Restore scroll
         }
     }
