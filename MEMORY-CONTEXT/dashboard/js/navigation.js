@@ -2788,6 +2788,17 @@ python3 -m http.server 8080</pre>
 
         try {
             const date = new Date(dateStr);
+
+            // Check if date is valid
+            if (isNaN(date.getTime())) {
+                // Try to extract date from common formats
+                if (typeof dateStr === 'string' && dateStr.includes('T')) {
+                    // ISO format, just use the date part
+                    return dateStr.split('T')[0];
+                }
+                return 'Unknown date';
+            }
+
             const now = new Date();
             const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
 
@@ -2803,7 +2814,11 @@ python3 -m http.server 8080</pre>
                 day: 'numeric'
             });
         } catch (error) {
-            return dateStr;
+            // Fallback: return just the string or extract date portion
+            if (typeof dateStr === 'string' && dateStr.includes('T')) {
+                return dateStr.split('T')[0];
+            }
+            return 'Unknown date';
         }
     }
 }
