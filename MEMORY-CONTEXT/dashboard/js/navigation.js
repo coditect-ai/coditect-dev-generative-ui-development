@@ -263,9 +263,9 @@ class NavigationController {
                         <h2 class="section-title">Recent Sessions</h2>
                         <div class="grid">
                             ${data.recentSessions.map(session => `
-                                <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')">
-                                    <div class="card-header">
-                                        <div>
+                                <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')" style="text-align: left;">
+                                    <div class="card-header" style="text-align: left;">
+                                        <div style="text-align: left;">
                                             <h3 class="card-title">${this.escapeHtml(session.title || session.id)}</h3>
                                             <p class="card-subtitle">${session.message_count} messages • ${this.formatDate(session.timestamp)}</p>
                                         </div>
@@ -288,12 +288,12 @@ class NavigationController {
                         <h2 class="section-title">Top Topics</h2>
                         <div class="grid grid-cols-2">
                             ${data.topTopics.map(topic => `
-                                <div class="card clickable" onclick="window.location.hash='#topics/${encodeURIComponent(topic.name)}'">
-                                    <h3 class="card-title">${this.escapeHtml(topic.display_name || topic.name)}</h3>
-                                    <p style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--text-primary); margin: var(--space-2) 0;">
+                                <div class="card clickable" onclick="window.location.hash='#topics/${encodeURIComponent(topic.name)}'" style="text-align: left;">
+                                    <h3 class="card-title" style="text-align: left;">${this.escapeHtml(topic.display_name || topic.name)}</h3>
+                                    <p style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--text-primary); margin: var(--space-2) 0; text-align: left;">
                                         ${topic.message_count.toLocaleString()}
                                     </p>
-                                    <p class="text-sm" style="color: var(--text-tertiary);">
+                                    <p class="text-sm" style="color: var(--text-tertiary); text-align: left;">
                                         ${topic.percentage}% of all messages
                                     </p>
                                 </div>
@@ -808,10 +808,10 @@ class NavigationController {
                                 <h3 style="margin-top: var(--space-6); margin-bottom: var(--space-4); text-align: left;">Messages (${messages.length})</h3>
                                 <div class="grid grid-cols-1" style="gap: var(--space-4);">
                                     ${messages.slice(0, 50).map(msg => `
-                                        <div class="card" style="background: var(--bg-tertiary);">
-                                            <div class="card-header">
-                                                <div style="display: flex; justify-content: space-between; align-items: start;">
-                                                    <div>
+                                        <div class="card" style="background: var(--bg-tertiary); text-align: left;">
+                                            <div class="card-header" style="text-align: left;">
+                                                <div style="display: flex; justify-content: space-between; align-items: start; text-align: left;">
+                                                    <div style="text-align: left;">
                                                         <span class="badge badge-${msg.role === 'user' ? 'primary' : 'secondary'}" style="margin-right: var(--space-2);">
                                                             ${msg.role}
                                                         </span>
@@ -826,7 +826,7 @@ class NavigationController {
                                                 <p style="font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-secondary); white-space: pre-wrap; text-align: left;">
                                                     ${this.escapeHtml(msg.content_preview)}
                                                 </p>
-                                                <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-primary); display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-tertiary);">
+                                                <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-primary); display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-tertiary); text-align: left;">
                                                     <span style="text-align: left;">Words: ${msg.word_count}</span>
                                                     <span style="text-align: left;">Session: ${this.escapeHtml(msg.checkpoint_id.substring(0, 40))}...</span>
                                                 </div>
@@ -877,8 +877,8 @@ class NavigationController {
 
                         <div class="grid grid-cols-3" style="gap: var(--space-4); margin-top: var(--space-6);">
                             ${topics.map(topic => `
-                                <div class="card clickable" onclick="window.location.hash='#topics/${encodeURIComponent(topic.name)}'" style="cursor: pointer;">
-                                    <div class="card-header">
+                                <div class="card clickable" onclick="window.location.hash='#topics/${encodeURIComponent(topic.name)}'" style="cursor: pointer; text-align: left;">
+                                    <div class="card-header" style="text-align: left;">
                                         <h3 class="card-title">${this.escapeHtml(topic.display_name || topic.name)}</h3>
                                         <div class="badge" style="background-color: ${topic.color}; color: white;">
                                             ${topic.category}
@@ -1324,15 +1324,15 @@ class NavigationController {
 
                             <div style="display: grid; gap: var(--space-3);">
                                 ${references.messages.slice(0, 20).map(ref => `
-                                    <div class="card" style="background: var(--bg-secondary); padding: var(--space-3);">
-                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-2);">
+                                    <div class="card" style="background: var(--bg-secondary); padding: var(--space-3); text-align: left;">
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-2); text-align: left;">
                                             <span class="badge badge-${ref.role}">${ref.role}</span>
                                             <span class="text-xs text-tertiary">${this.formatDate(ref.timestamp)}</span>
                                         </div>
-                                        <p style="font-size: var(--text-sm); margin: var(--space-2) 0; line-height: 1.6;">
+                                        <p style="font-size: var(--text-sm); margin: var(--space-2) 0; line-height: 1.6; text-align: left;">
                                             ${this.escapeHtml(ref.content_preview.substring(0, 500))}${ref.content_preview.length > 500 ? '...' : ''}
                                         </p>
-                                        <div style="font-size: var(--text-xs); color: var(--text-tertiary);">
+                                        <div style="font-size: var(--text-xs); color: var(--text-tertiary); text-align: left;">
                                             Session: ${this.escapeHtml(ref.checkpoint_id)}
                                         </div>
                                     </div>
@@ -1954,9 +1954,9 @@ class NavigationController {
                                 const checkpointLink = isCheckpointResult ? `#checkpoints/${encodeURIComponent(result.message.checkpoint_id)}` : '';
 
                                 return `
-                                <${isCheckpointResult ? 'a href="' + checkpointLink + '" style="text-decoration: none; color: inherit;"' : 'div'} class="card message-result" style="margin-bottom: var(--space-4); ${isCheckpointResult ? 'cursor: pointer; transition: all var(--transition-fast);' : ''}" ${isCheckpointResult ? 'onmouseover="this.style.transform=\'translateX(4px)\'; this.style.boxShadow=\'var(--shadow-lg)\';" onmouseout="this.style.transform=\'\'; this.style.boxShadow=\'var(--shadow-md)\';"' : ''}>
-                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-2);">
-                                        <div style="display: flex; gap: var(--space-2); align-items: center;">
+                                <${isCheckpointResult ? 'a href="' + checkpointLink + '" style="text-decoration: none; color: inherit; text-align: left;"' : 'div'} class="card message-result" style="margin-bottom: var(--space-4); text-align: left; ${isCheckpointResult ? 'cursor: pointer; transition: all var(--transition-fast);' : ''}" ${isCheckpointResult ? 'onmouseover="this.style.transform=\'translateX(4px)\'; this.style.boxShadow=\'var(--shadow-lg)\';" onmouseout="this.style.transform=\'\'; this.style.boxShadow=\'var(--shadow-md)\';"' : ''}>
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-2); text-align: left;">
+                                        <div style="display: flex; gap: var(--space-2); align-items: center; text-align: left;">
                                             <span class="badge badge-${result.message.role}">${result.message.role}</span>
                                             ${result.message.has_code ? '<span class="badge">📝 Code</span>' : ''}
                                             ${isCheckpointResult ? '<span class="badge" style="background: var(--primary-800); color: white;">Click to View →</span>' : ''}
@@ -1964,11 +1964,11 @@ class NavigationController {
                                         <span class="text-xs text-tertiary">${this.formatDate(result.message.first_seen || result.message.timestamp, result.message.checkpoint_id)}</span>
                                     </div>
 
-                                    <div class="search-match-preview" style="margin: var(--space-3) 0; white-space: pre-wrap;">
+                                    <div class="search-match-preview" style="margin: var(--space-3) 0; white-space: pre-wrap; text-align: left;">
                                         ${this.highlightSearchTerms(result.preview, query)}
                                     </div>
 
-                                    <div style="display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--text-tertiary); flex-wrap: wrap;">
+                                    <div style="display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--text-tertiary); flex-wrap: wrap; text-align: left;">
                                         <span>${isCheckpointResult ? 'Messages' : 'Words'}: ${result.message.word_count}</span>
                                         <span style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Session: ${this.escapeHtml(result.message.checkpoint_id)}</span>
                                         <span>Match score: ${result.score.toFixed(2)}</span>
