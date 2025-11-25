@@ -105,7 +105,15 @@ class NavigationController {
 
     handleRoute() {
         // Parse URL hash
-        const hash = window.location.hash.slice(1); // Remove '#'
+        let hash = window.location.hash.slice(1); // Remove '#'
+
+        // Remove text fragments (:~:text=...) added by Chrome's "Copy link to highlight"
+        // These are not part of the navigation route
+        const textFragmentIndex = hash.indexOf(':~:');
+        if (textFragmentIndex !== -1) {
+            hash = hash.substring(0, textFragmentIndex);
+            console.log('⚠️  Stripped text fragment, clean hash:', hash);
+        }
 
         if (!hash) {
             // Default to overview
@@ -123,10 +131,13 @@ class NavigationController {
 
         if (view === 'checkpoints' && parts[1]) {
             id = decodeURIComponent(parts[1]);
+            console.log('🎯 Checkpoint ID from URL:', id);
         } else {
             filter = parts[1] ? decodeURIComponent(parts[1]) : null;
             id = parts[2] ? decodeURIComponent(parts[2]) : null;
         }
+
+        console.log('📍 Route parsed - View:', view, 'Filter:', filter, 'ID:', id);
 
         // Validate view
         if (this.views[view]) {
@@ -1476,12 +1487,16 @@ class NavigationController {
     async renderCheckpoints(id) {
         const mainContent = document.querySelector('.main-content');
 
+        console.log('🔍 renderCheckpoints called with id:', id);
+
         if (id) {
             // Show specific checkpoint
             mainContent.innerHTML = '<div class="loading">Loading checkpoint details...</div>';
 
             try {
+                console.log('📥 Loading checkpoint:', id);
                 const checkpoint = await window.dashboardData.loadCheckpoint(id);
+                console.log('📦 Checkpoint loaded:', checkpoint ? 'Found' : 'Not found');
 
                 // Check if checkpoint exists
                 if (!checkpoint) {
