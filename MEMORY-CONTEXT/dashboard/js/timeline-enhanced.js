@@ -588,6 +588,92 @@ async function initD3TimelineEnhanced(data, nav) {
         }
     });
 
+    // Add SVG filters for glassy 3D effect
+    const defs = svg.append('defs');
+
+    // Create drop shadow filter for depth
+    const dropShadow = defs.append('filter')
+        .attr('id', 'drop-shadow')
+        .attr('height', '200%')
+        .attr('width', '200%');
+
+    dropShadow.append('feGaussianBlur')
+        .attr('in', 'SourceAlpha')
+        .attr('stdDeviation', 4);
+
+    dropShadow.append('feOffset')
+        .attr('dx', 2)
+        .attr('dy', 4)
+        .attr('result', 'offsetblur');
+
+    const feMerge = dropShadow.append('feMerge');
+    feMerge.append('feMergeNode');
+    feMerge.append('feMergeNode')
+        .attr('in', 'SourceGraphic');
+
+    // Create glassy shine gradient for session bubbles
+    const glassGradient = defs.append('radialGradient')
+        .attr('id', 'glass-gradient')
+        .attr('cx', '35%')
+        .attr('cy', '35%');
+
+    glassGradient.append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', '#ffffff')
+        .attr('stop-opacity', 0.6);
+
+    glassGradient.append('stop')
+        .attr('offset', '50%')
+        .attr('stop-color', '#06b6d4')
+        .attr('stop-opacity', 0.8);
+
+    glassGradient.append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', '#0e7490')
+        .attr('stop-opacity', 1);
+
+    // Create glassy gradient for orange commits
+    const glassGradientOrange = defs.append('radialGradient')
+        .attr('id', 'glass-gradient-orange')
+        .attr('cx', '30%')
+        .attr('cy', '30%');
+
+    glassGradientOrange.append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', '#ffffff')
+        .attr('stop-opacity', 0.7);
+
+    glassGradientOrange.append('stop')
+        .attr('offset', '60%')
+        .attr('stop-color', '#fb923c')
+        .attr('stop-opacity', 0.9);
+
+    glassGradientOrange.append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', '#f97316')
+        .attr('stop-opacity', 1);
+
+    // Create glassy gradient for magenta commits
+    const glassGradientMagenta = defs.append('radialGradient')
+        .attr('id', 'glass-gradient-magenta')
+        .attr('cx', '30%')
+        .attr('cy', '30%');
+
+    glassGradientMagenta.append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', '#ffffff')
+        .attr('stop-opacity', 0.7);
+
+    glassGradientMagenta.append('stop')
+        .attr('offset', '60%')
+        .attr('stop-color', '#e879f9')
+        .attr('stop-opacity', 0.9);
+
+    glassGradientMagenta.append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', '#d946ef')
+        .attr('stop-opacity', 1);
+
     // Plot sessions as circles
     svg.selectAll('.session-dot')
         .data(periodData)
@@ -603,14 +689,19 @@ async function initD3TimelineEnhanced(data, nav) {
         .style('stroke-width', '2.5px')
         .style('cursor', 'pointer')
         .on('mouseover', function(event, d) {
-            d3.select(this)
+            // Bring to foreground by re-appending (SVG has paint order, not z-index)
+            const node = this.parentNode.appendChild(this);
+
+            d3.select(node)
                 .transition()
-                .duration(150)
+                .duration(200)
+                .ease(d3.easeCubicOut)
                 .style('opacity', 1)
-                .style('fill', '#06b6d4') // Bright cyan for high contrast
-                .style('stroke', '#0e7490') // Dark cyan stroke
-                .style('stroke-width', '3.5px')
-                .attr('r', sizeScale(d.messageCount) * 1.3);
+                .style('fill', 'url(#glass-gradient)') // Apply glassy gradient
+                .style('stroke', '#ffffff')
+                .style('stroke-width', '4px')
+                .style('filter', 'url(#drop-shadow)') // Apply 3D shadow
+                .attr('r', sizeScale(d.messageCount) * 1.4);
 
             const project = extractProject(d.id);
             const submodule = extractSubmodule(d.id);
@@ -657,11 +748,13 @@ async function initD3TimelineEnhanced(data, nav) {
         .on('mouseout', function(event, d) {
             d3.select(this)
                 .transition()
-                .duration(150)
+                .duration(200)
+                .ease(d3.easeCubicIn)
                 .style('opacity', 0.75)
                 .style('fill', 'var(--primary-500)')
                 .style('stroke', 'var(--primary-700)')
                 .style('stroke-width', '2.5px')
+                .style('filter', null) // Remove shadow filter
                 .attr('r', sizeScale(d.messageCount));
 
             tooltip
@@ -714,20 +807,25 @@ async function initD3TimelineEnhanced(data, nav) {
         .style('cursor', 'pointer')
         .attr('data-commit-index', (d, i) => i)
         .on('mouseover', function(event, d) {
-            const currentColor = d3.select(this).style('fill');
-            // If blue, make it orange; if green, make it magenta
-            const hoverColor = currentColor.includes('59, 130, 246') || currentColor.includes('3b82f6')
-                ? '#f97316' // Orange for blue commits
-                : '#d946ef'; // Magenta for green commits
+            // Bring to foreground by re-appending
+            const node = this.parentNode.appendChild(this);
 
-            d3.select(this)
+            const currentColor = d3.select(this).style('fill');
+            // If blue, use orange gradient; if green, use magenta gradient
+            const hoverGradient = currentColor.includes('59, 130, 246') || currentColor.includes('3b82f6')
+                ? 'url(#glass-gradient-orange)' // Orange gradient for blue commits
+                : 'url(#glass-gradient-magenta)'; // Magenta gradient for green commits
+
+            d3.select(node)
                 .transition()
-                .duration(150)
+                .duration(200)
+                .ease(d3.easeCubicOut)
                 .style('opacity', 1)
-                .style('fill', hoverColor)
-                .style('stroke', '#fff')
-                .style('stroke-width', '4px')
-                .attr('d', d3.symbol().type(d3.symbolSquare).size(1600)); // Increased to 1600 (40x40 pixels on hover)
+                .style('fill', hoverGradient)
+                .style('stroke', '#ffffff')
+                .style('stroke-width', '5px')
+                .style('filter', 'url(#drop-shadow)') // Apply 3D shadow
+                .attr('d', d3.symbol().type(d3.symbolSquare).size(1800)); // Increased to 1800 (42x42 pixels on hover)
 
             tooltip
                 .html(`
@@ -774,11 +872,13 @@ async function initD3TimelineEnhanced(data, nav) {
 
             d3.select(this)
                 .transition()
-                .duration(150)
+                .duration(200)
+                .ease(d3.easeCubicIn)
                 .style('opacity', 0.85)
                 .style('fill', originalColor)
                 .style('stroke', '#fff')
                 .style('stroke-width', '3px')
+                .style('filter', null) // Remove shadow filter
                 .attr('d', d3.symbol().type(d3.symbolSquare).size(1024)); // Restore to 32x32 default size
 
             tooltip
