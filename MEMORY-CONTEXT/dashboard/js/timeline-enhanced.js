@@ -1387,7 +1387,7 @@ async function showDetailPanel(sessionData, nav) {
                                      onmouseout="this.style.background='var(--bg-secondary)'">
                                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-1);">
                                         <span style="font-weight: 600; color: var(--text-primary); font-size: 13px;">Message ${idx + 1}</span>
-                                        <span style="font-size: 12px; color: var(--text-tertiary); background: ${msg.role === 'user' ? 'var(--primary-100)' : 'var(--success-100)'}; padding: 2px 8px; border-radius: var(--radius-sm);">${msg.role}</span>
+                                        <span style="font-size: 12px; color: var(--text-primary); background: ${msg.role === 'user' ? 'var(--primary-100)' : 'var(--success-100)'}; padding: 2px 8px; border-radius: var(--radius-sm); font-weight: 600;">${msg.role}</span>
                                     </div>
                                     <div style="font-size: 14px; color: var(--text-primary); line-height: 1.4;">${msg.content_preview}</div>
                                     <div style="font-size: 12px; color: var(--text-tertiary); margin-top: var(--space-1);">

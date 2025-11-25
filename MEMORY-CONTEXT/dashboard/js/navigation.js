@@ -815,7 +815,7 @@ class NavigationController {
                                                         <span class="badge badge-${msg.role === 'user' ? 'primary' : 'secondary'}" style="margin-right: var(--space-2);">
                                                             ${msg.role}
                                                         </span>
-                                                        ${msg.has_code ? '<span class="badge" style="background: var(--success-500); color: white;">📝 Code</span>' : ''}
+                                                        ${msg.has_code ? '<span class="badge" style="background: var(--success-700); color: white;">📝 Code</span>' : ''}
                                                     </div>
                                                     <span style="color: var(--text-tertiary); font-size: var(--text-xs);">
                                                         ${new Date(msg.first_seen).toLocaleDateString()}
@@ -1502,37 +1502,37 @@ class NavigationController {
                             </div>
                             <div class="card-content" style="text-align: left;">
                                 <!-- Session Metadata -->
-                                <div style="background: var(--primary-100); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6); text-align: left;">
-                                    <h3 style="margin-bottom: var(--space-3); color: var(--text-primary); text-align: left;">📋 Session Context</h3>
+                                <div style="background: var(--primary-800); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6); text-align: left;">
+                                    <h3 style="margin-bottom: var(--space-3); color: white; text-align: left;">📋 Session Context</h3>
                                     <div class="grid grid-cols-2" style="gap: var(--space-3);">
                                         <div>
-                                            <strong style="color: var(--text-primary);">📅 Date & Time:</strong>
-                                            <div style="color: var(--text-primary); font-weight: 600; margin-top: var(--space-1);">
+                                            <strong style="color: white;">📅 Date & Time:</strong>
+                                            <div style="color: white; font-weight: 600; margin-top: var(--space-1);">
                                                 ${dateExtracted.toLocaleDateString()} ${dateExtracted.toLocaleTimeString()}
                                             </div>
                                         </div>
                                         ${project ? `
                                             <div>
-                                                <strong style="color: var(--text-primary);">📦 Project:</strong>
-                                                <div style="color: var(--text-primary); font-weight: 600; margin-top: var(--space-1);">
+                                                <strong style="color: white;">📦 Project:</strong>
+                                                <div style="color: white; font-weight: 600; margin-top: var(--space-1);">
                                                     ${this.escapeHtml(project)}
                                                 </div>
                                             </div>
                                         ` : ''}
                                         ${submodule ? `
                                             <div>
-                                                <strong style="color: var(--text-primary);">📂 Submodule:</strong>
-                                                <div style="color: var(--text-primary); font-weight: 600; margin-top: var(--space-1);">
+                                                <strong style="color: white;">📂 Submodule:</strong>
+                                                <div style="color: white; font-weight: 600; margin-top: var(--space-1);">
                                                     ${this.escapeHtml(submodule)}
                                                 </div>
                                             </div>
                                         ` : ''}
                                         ${modules.length > 0 ? `
                                             <div style="grid-column: 1 / -1;">
-                                                <strong style="color: var(--text-primary);">🔧 Modules Worked On (${modules.length}):</strong>
+                                                <strong style="color: white;">🔧 Modules Worked On (${modules.length}):</strong>
                                                 <div style="margin-top: var(--space-2); display: flex; flex-wrap: wrap; gap: var(--space-2);">
                                                     ${modules.map(mod => `
-                                                        <span class="badge" style="background: var(--primary-200); color: var(--text-primary);">
+                                                        <span class="badge" style="background: var(--primary-900); color: white; border: 1px solid rgba(255,255,255,0.2);">
                                                             ${this.escapeHtml(mod)}
                                                         </span>
                                                     `).join('')}
@@ -1548,9 +1548,9 @@ class NavigationController {
                                         <h3 style="margin-bottom: var(--space-3); color: var(--text-primary); text-align: left;">🔀 Git Commits (${gitData.commits.length})</h3>
 
                                         ${gitData.branch ? `
-                                            <div style="margin-bottom: var(--space-3); padding: var(--space-2); background: var(--primary-100); border-radius: var(--radius-sm); text-align: left;">
-                                                <strong style="color: var(--text-primary);">Branch:</strong>
-                                                <code style="color: var(--text-primary); font-weight: 600;">${gitData.branch}</code>
+                                            <div style="margin-bottom: var(--space-3); padding: var(--space-2); background: var(--primary-800); border-radius: var(--radius-sm); text-align: left;">
+                                                <strong style="color: white;">Branch:</strong>
+                                                <code style="color: white; font-weight: 600;">${gitData.branch}</code>
                                             </div>
                                         ` : ''}
 
@@ -1957,7 +1957,7 @@ class NavigationController {
                                         <div style="display: flex; gap: var(--space-2); align-items: center;">
                                             <span class="badge badge-${result.message.role}">${result.message.role}</span>
                                             ${result.message.has_code ? '<span class="badge">📝 Code</span>' : ''}
-                                            ${isCheckpointResult ? '<span class="badge" style="background: var(--primary-500); color: white;">Click to View →</span>' : ''}
+                                            ${isCheckpointResult ? '<span class="badge" style="background: var(--primary-800); color: white;">Click to View →</span>' : ''}
                                         </div>
                                         <span class="text-xs text-tertiary">${this.formatDate(result.message.first_seen || result.message.timestamp)}</span>
                                     </div>
