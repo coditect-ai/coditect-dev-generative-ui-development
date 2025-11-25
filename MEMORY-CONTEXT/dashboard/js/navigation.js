@@ -1813,31 +1813,31 @@ class NavigationController {
 
                     <div class="grid grid-cols-1" style="gap: var(--space-4); margin-top: var(--space-6);">
                         ${Object.entries(grouped).map(([type, cmds]) => `
-                            <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')" style="text-align: left;">
-                                <div class="card-header" style="cursor: pointer; text-align: left;">
-                                    <div style="text-align: left;">
-                                        <h3 class="card-title" style="text-align: left;">${type.toUpperCase()} Commands</h3>
-                                        <p class="card-subtitle" style="text-align: left;">${cmds.length} commands executed</p>
+                            <div class="card card-collapsible collapsed" onclick="this.classList.toggle('collapsed')" style="text-align: left !important;">
+                                <div class="card-header" style="cursor: pointer; text-align: left !important;">
+                                    <div style="text-align: left !important;">
+                                        <h3 class="card-title" style="text-align: left !important;">${type.toUpperCase()} Commands</h3>
+                                        <p class="card-subtitle" style="text-align: left !important;">${cmds.length} commands executed</p>
                                     </div>
                                     <span class="card-collapse-icon">▼</span>
                                 </div>
-                                <div class="card-content" style="text-align: left;">
-                                    <div style="max-height: 600px; overflow-y: auto; text-align: left;">
+                                <div class="card-content" style="text-align: left !important;">
+                                    <div style="max-height: 600px; overflow-y: auto; text-align: left !important;">
                                         ${cmds.slice(0, 50).map(cmd => `
-                                            <div style="padding: var(--space-3); margin: var(--space-2) 0; background: var(--bg-tertiary); border-radius: var(--radius-md); font-family: monospace; font-size: var(--text-sm); border-left: 3px solid var(--primary-500); text-align: left;">
-                                                <div style="color: var(--text-primary); font-weight: var(--font-semibold); margin-bottom: var(--space-2); word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word; text-align: left;">
+                                            <div style="padding: var(--space-3); margin: var(--space-2) 0; background: var(--bg-tertiary); border-radius: var(--radius-md); font-family: monospace; font-size: var(--text-sm); border-left: 3px solid var(--primary-500); text-align: left !important;">
+                                                <div style="color: var(--text-primary); font-weight: var(--font-semibold); margin-bottom: var(--space-2); word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word; text-align: left !important;">
                                                     ${this.escapeHtml(cmd.command_text)}
                                                 </div>
-                                                <div style="color: var(--text-tertiary); font-size: var(--text-xs); word-wrap: break-word; overflow-wrap: break-word; text-align: left;">
+                                                <div style="color: var(--text-tertiary); font-size: var(--text-xs); word-wrap: break-word; overflow-wrap: break-word; text-align: left !important;">
                                                     📅 ${new Date(cmd.timestamp).toLocaleString()}
                                                 </div>
-                                                <div style="color: var(--text-tertiary); font-size: var(--text-xs); margin-top: var(--space-1); word-wrap: break-word; overflow-wrap: break-word; text-align: left;">
+                                                <div style="color: var(--text-tertiary); font-size: var(--text-xs); margin-top: var(--space-1); word-wrap: break-word; overflow-wrap: break-word; text-align: left !important;">
                                                     📂 Session: ${this.escapeHtml(cmd.checkpoint_id)}
                                                 </div>
                                             </div>
                                         `).join('')}
                                         ${cmds.length > 50 ? `
-                                            <p class="text-sm text-tertiary" style="text-align: left; margin-top: var(--space-4);">
+                                            <p class="text-sm text-tertiary" style="text-align: left !important; margin-top: var(--space-4);">
                                                 ... and ${cmds.length - 50} more ${type} commands
                                             </p>
                                         ` : ''}
