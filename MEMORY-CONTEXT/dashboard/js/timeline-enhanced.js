@@ -390,10 +390,14 @@ async function initD3TimelineEnhanced(data, nav) {
     // Update period info
     updatePeriodInfo();
 
-    // Chart dimensions
+    // Chart dimensions - fully responsive
+    const container = document.getElementById('timeline-chart');
     const margin = { top: 40, right: 40, bottom: 80, left: 70 };
-    const width = Math.min(1400, document.getElementById('timeline-chart').clientWidth) - margin.left - margin.right;
-    const height = 600 - margin.top - margin.bottom;
+    const width = container.clientWidth - margin.left - margin.right;
+    // Responsive height: 60vh on mobile, 600px on desktop, but scale with window
+    const viewportHeight = window.innerHeight;
+    const responsiveHeight = Math.max(400, Math.min(600, viewportHeight * 0.6));
+    const height = responsiveHeight - margin.top - margin.bottom;
 
     // Clear any existing chart and tooltips
     d3.select('#timeline-chart').selectAll('*').remove();
@@ -603,6 +607,9 @@ async function initD3TimelineEnhanced(data, nav) {
                 .transition()
                 .duration(150)
                 .style('opacity', 1)
+                .style('fill', '#06b6d4') // Bright cyan for high contrast
+                .style('stroke', '#0e7490') // Dark cyan stroke
+                .style('stroke-width', '3.5px')
                 .attr('r', sizeScale(d.messageCount) * 1.3);
 
             const project = extractProject(d.id);
@@ -652,6 +659,9 @@ async function initD3TimelineEnhanced(data, nav) {
                 .transition()
                 .duration(150)
                 .style('opacity', 0.75)
+                .style('fill', 'var(--primary-500)')
+                .style('stroke', 'var(--primary-700)')
+                .style('stroke-width', '2.5px')
                 .attr('r', sizeScale(d.messageCount));
 
             tooltip
@@ -704,10 +714,19 @@ async function initD3TimelineEnhanced(data, nav) {
         .style('cursor', 'pointer')
         .attr('data-commit-index', (d, i) => i)
         .on('mouseover', function(event, d) {
+            const currentColor = d3.select(this).style('fill');
+            // If blue, make it orange; if green, make it magenta
+            const hoverColor = currentColor.includes('59, 130, 246') || currentColor.includes('3b82f6')
+                ? '#f97316' // Orange for blue commits
+                : '#d946ef'; // Magenta for green commits
+
             d3.select(this)
                 .transition()
                 .duration(150)
                 .style('opacity', 1)
+                .style('fill', hoverColor)
+                .style('stroke', '#fff')
+                .style('stroke-width', '4px')
                 .attr('d', d3.symbol().type(d3.symbolSquare).size(1600)); // Increased to 1600 (40x40 pixels on hover)
 
             tooltip
@@ -750,10 +769,16 @@ async function initD3TimelineEnhanced(data, nav) {
             // Tooltip position is set once on mouseover
         })
         .on('mouseout', function(event, d) {
+            const index = parseInt(d3.select(this).attr('data-commit-index'));
+            const originalColor = index % 2 === 0 ? '#3b82f6' : '#22c55e';
+
             d3.select(this)
                 .transition()
                 .duration(150)
                 .style('opacity', 0.85)
+                .style('fill', originalColor)
+                .style('stroke', '#fff')
+                .style('stroke-width', '3px')
                 .attr('d', d3.symbol().type(d3.symbolSquare).size(1024)); // Restore to 32x32 default size
 
             tooltip
@@ -868,6 +893,24 @@ async function initD3TimelineEnhanced(data, nav) {
             }
         }
     });
+
+    // Add responsive resize listener - debounced for performance (only once)
+    if (!window._timelineResizeListenerAdded) {
+        window._timelineResizeListenerAdded = true;
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                console.log('Window resized, re-rendering timeline');
+                // Re-fetch latest data and re-render
+                const currentData = timelineState.allData;
+                if (currentData && currentData.length > 0) {
+                    initD3TimelineEnhanced(currentData, nav);
+                }
+            }, 250); // 250ms debounce
+        });
+        console.log('Timeline resize listener added');
+    }
 }
 
 function calculatePeriodStart(endDate, zoomLevel) {
@@ -1137,6 +1180,7 @@ function showDetailPanel(checkpoint, nav) {
 
     const project = extractProject(checkpoint.id);
     const submodule = extractSubmodule(checkpoint.id);
+    const encodedId = encodeURIComponent(checkpoint.id);
 
     title.textContent = checkpoint.title || checkpoint.id;
 
@@ -1198,7 +1242,7 @@ function showDetailPanel(checkpoint, nav) {
         ` : ''}
 
         <div style="margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--border-primary); text-align: center;">
-            <a href="#checkpoints/${checkpoint.id}" class="btn btn-primary" style="padding: var(--space-2) var(--space-4); font-size: 13px; text-decoration: none;">
+            <a href="#checkpoints/${encodedId}" class="btn btn-primary" style="padding: var(--space-2) var(--space-4); font-size: 13px; text-decoration: none;">
                 View Details →
             </a>
         </div>
@@ -1224,7 +1268,7 @@ function showDetailPanel(checkpoint, nav) {
 }
 
 // Show detailed session information panel
-function showDetailPanel(sessionData, nav) {
+async function showDetailPanel(sessionData, nav) {
     console.log('showDetailPanel called with:', sessionData);
     const panel = document.getElementById('timeline-detail-panel');
     const content = document.getElementById('detail-panel-content');
@@ -1237,75 +1281,126 @@ function showDetailPanel(sessionData, nav) {
         return;
     }
 
-    // Format the session details
+    // Show loading state
     content.innerHTML = `
-        <div style="margin-bottom: var(--space-6);">
-            <h2 style="margin: 0 0 var(--space-4) 0; color: var(--primary-500); font-size: 24px;">
-                Session Details
-            </h2>
-            <button onclick="document.getElementById('timeline-detail-panel').style.display='none'"
-                    style="position: absolute; top: var(--space-4); right: var(--space-4); background: #ffffff; color: #24292f; font-weight: 600; font-size: 14px; padding: 10px 20px; border-radius: 6px; border: 2px solid #d0d7de; min-height: 44px; min-width: 44px; cursor: pointer; transition: all 0.2s ease;"
-                    onmouseover="this.style.background='#f6f8fa'; this.style.borderColor='#d0d7de';"
-                    onmouseout="this.style.background='#ffffff'; this.style.borderColor='#d0d7de';"
-                    onfocus="this.style.outline='3px solid #0969da'; this.style.outlineOffset='2px';"
-                    onblur="this.style.outline='none';">
-                Close
-            </button>
-        </div>
-
-        <div style="display: grid; gap: var(--space-4);">
-            <div>
-                <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Title</div>
-                <div style="font-size: 18px; color: var(--text-primary);">${sessionData.title || 'Untitled Session'}</div>
-            </div>
-
-            <div>
-                <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Date</div>
-                <div style="color: var(--text-primary);">${sessionData.date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
-            </div>
-
-            <div>
-                <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Messages</div>
-                <div style="color: var(--text-primary); font-size: 20px; font-weight: 600;">${sessionData.messageCount.toLocaleString()}</div>
-            </div>
-
-            ${sessionData.filename ? `
-                <div>
-                    <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Filename</div>
-                    <div style="color: var(--text-primary); font-family: monospace; background: var(--bg-secondary); padding: var(--space-2); border-radius: var(--radius-sm);">${sessionData.filename}</div>
-                </div>
-            ` : ''}
-
-            ${sessionData.topics && sessionData.topics.length > 0 ? `
-                <div>
-                    <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Topics</div>
-                    <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
-                        ${sessionData.topics.map(topic => `
-                            <span style="background: var(--primary-100); color: var(--primary-700); padding: 4px 12px; border-radius: var(--radius-full); font-size: 13px; font-weight: 500;">
-                                ${topic}
-                            </span>
-                        `).join('')}
-                    </div>
-                </div>
-            ` : ''}
-
-            ${sessionData.summary ? `
-                <div>
-                    <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Summary</div>
-                    <div style="color: var(--text-primary); line-height: 1.6;">${sessionData.summary}</div>
-                </div>
-            ` : ''}
+        <div style="text-align: center; padding: var(--space-8);">
+            <div style="font-size: 24px; color: var(--primary-500);">Loading messages...</div>
         </div>
     `;
+    panel.style.setProperty('display', 'block', 'important');
+
+    // Fetch messages for this session
+    try {
+        const messagesResponse = await fetch('data/messages.json');
+        const messagesData = await messagesResponse.json();
+
+        // Filter messages by checkpoint_id
+        const sessionMessages = messagesData.messages.filter(msg => msg.checkpoint_id === sessionData.id);
+        console.log(`Found ${sessionMessages.length} messages for session ${sessionData.id}`);
+
+        // Store current checkpoint ID and messages for navigation
+        window._currentCheckpointId = sessionData.id;
+        window._currentSessionMessages = messagesData.messages;
+
+        // Format the session details with message list
+        content.innerHTML = `
+            <div style="margin-bottom: var(--space-6);">
+                <h2 style="margin: 0 0 var(--space-4) 0; color: var(--primary-500); font-size: 24px;">
+                    Session Details
+                </h2>
+                <button onclick="document.getElementById('timeline-detail-panel').style.display='none'"
+                        style="position: absolute; top: var(--space-4); right: var(--space-4); background: #ffffff; color: #24292f; font-weight: 600; font-size: 14px; padding: 10px 20px; border-radius: 6px; border: 2px solid #d0d7de; min-height: 44px; min-width: 44px; cursor: pointer; transition: all 0.2s ease;"
+                        onmouseover="this.style.background='#f6f8fa'; this.style.borderColor='#d0d7de';"
+                        onmouseout="this.style.background='#ffffff'; this.style.borderColor='#d0d7de';"
+                        onfocus="this.style.outline='3px solid #0969da'; this.style.outlineOffset='2px';"
+                        onblur="this.style.outline='none';">
+                    Close
+                </button>
+            </div>
+
+            <div style="display: grid; gap: var(--space-4);">
+                <div>
+                    <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Title</div>
+                    <div style="font-size: 18px; color: var(--text-primary);">${sessionData.title || 'Untitled Session'}</div>
+                </div>
+
+                <div>
+                    <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Date</div>
+                    <div style="color: var(--text-primary);">${sessionData.date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                </div>
+
+                <div>
+                    <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Messages</div>
+                    <div style="color: var(--text-primary); font-size: 20px; font-weight: 600;">${sessionMessages.length.toLocaleString()}</div>
+                </div>
+
+                ${sessionData.filename ? `
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Filename</div>
+                        <div style="color: var(--text-primary); font-family: monospace; background: var(--bg-secondary); padding: var(--space-2); border-radius: var(--radius-sm);">${sessionData.filename}</div>
+                    </div>
+                ` : ''}
+
+                ${sessionData.topics && sessionData.topics.length > 0 ? `
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Topics</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+                            ${sessionData.topics.map(topic => `
+                                <span style="background: var(--primary-100); color: var(--primary-700); padding: 4px 12px; border-radius: var(--radius-full); font-size: 13px; font-weight: 500;">
+                                    ${topic}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${sessionData.summary ? `
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Summary</div>
+                        <div style="color: var(--text-primary); line-height: 1.6;">${sessionData.summary}</div>
+                    </div>
+                ` : ''}
+
+                ${sessionMessages.length > 0 ? `
+                    <div>
+                        <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">
+                            Messages (${sessionMessages.length})
+                            <span style="font-weight: 400; font-size: 12px; color: var(--text-tertiary);"> - Click to expand</span>
+                        </div>
+                        <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-primary); border-radius: var(--radius-md); background: var(--bg-secondary);">
+                            ${sessionMessages.map((msg, idx) => `
+                                <div class="message-item" onclick="window.showMessageDetail('${msg.hash}', ${idx + 1}, ${sessionMessages.length})"
+                                     style="padding: var(--space-3); border-bottom: 1px solid var(--border-primary); cursor: pointer; transition: background 0.2s ease;"
+                                     onmouseover="this.style.background='var(--bg-tertiary)'"
+                                     onmouseout="this.style.background='var(--bg-secondary)'">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-1);">
+                                        <span style="font-weight: 600; color: var(--primary-600); font-size: 13px;">Message ${idx + 1}</span>
+                                        <span style="font-size: 12px; color: var(--text-tertiary); background: ${msg.role === 'user' ? 'var(--primary-100)' : 'var(--success-100)'}; padding: 2px 8px; border-radius: var(--radius-sm);">${msg.role}</span>
+                                    </div>
+                                    <div style="font-size: 14px; color: var(--text-primary); line-height: 1.4;">${msg.content_preview}</div>
+                                    <div style="font-size: 12px; color: var(--text-tertiary); margin-top: var(--space-1);">
+                                        ${msg.word_count} words${msg.has_code ? ' • Contains code' : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+
+    } catch (error) {
+        console.error('Error loading messages:', error);
+        content.innerHTML = `
+            <div style="text-align: center; padding: var(--space-8);">
+                <div style="font-size: 20px; color: var(--danger-500);">Error loading messages</div>
+                <div style="font-size: 14px; color: var(--text-secondary); margin-top: var(--space-2);">${error.message}</div>
+            </div>
+        `;
+    }
 
     console.log('Setting session panel display to block');
     panel.style.setProperty('display', 'block', 'important');
-    console.log('Session panel display is now:', panel.style.display);
-    console.log('Session panel computed display:', window.getComputedStyle(panel).display);
-    console.log('Session panel position:', window.getComputedStyle(panel).position);
-    console.log('Session panel top:', window.getComputedStyle(panel).top);
-    console.log('Session panel left:', window.getComputedStyle(panel).left);
-    console.log('Session panel z-index:', window.getComputedStyle(panel).zIndex);
 }
 
 // Show detailed commit information panel
@@ -1357,12 +1452,19 @@ function showCommitDetailPanel(commitData, nav) {
 
             <div>
                 <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Commit Message</div>
-                <div style="font-size: 16px; color: var(--text-primary); line-height: 1.6;">${commitData.message || 'No message'}</div>
+                <div style="font-size: 16px; color: var(--text-primary); line-height: 1.6;">${commitData.subject || commitData.message || 'No message'}</div>
             </div>
+
+            ${commitData.body ? `
+                <div>
+                    <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Full Description</div>
+                    <div style="font-size: 14px; color: var(--text-primary); line-height: 1.6; white-space: pre-wrap; background: var(--bg-secondary); padding: var(--space-3); border-radius: var(--radius-sm); border-left: 3px solid var(--primary-500);">${commitData.body}</div>
+                </div>
+            ` : ''}
 
             <div>
                 <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Date</div>
-                <div style="color: var(--text-primary);">${commitData.date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                <div style="color: var(--text-primary);">${typeof commitData.date === 'object' ? commitData.date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : new Date(commitData.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
             </div>
 
             ${commitData.author ? `
@@ -1397,6 +1499,166 @@ function showCommitDetailPanel(commitData, nav) {
     console.log('Commit panel left:', window.getComputedStyle(panel).left);
     console.log('Commit panel z-index:', window.getComputedStyle(panel).zIndex);
 }
+
+// Helper to show message by index (for navigation buttons)
+window.showMessageDetailByIndex = function(index, totalMessages) {
+    const sessionMessages = window._currentSessionMessages.filter(m => m.checkpoint_id === window._currentCheckpointId);
+    if (sessionMessages[index]) {
+        window.showMessageDetail(sessionMessages[index].hash, index + 1, totalMessages);
+    }
+};
+
+// Show individual message detail
+window.showMessageDetail = async function(messageHash, messageNumber, totalMessages) {
+    console.log('showMessageDetail called with:', messageHash);
+
+    const panel = document.getElementById('timeline-detail-panel');
+    const content = document.getElementById('detail-panel-content');
+
+    if (!window._currentSessionMessages) {
+        console.error('No messages loaded');
+        return;
+    }
+
+    const message = window._currentSessionMessages.find(m => m.hash === messageHash);
+    if (!message) {
+        console.error('Message not found:', messageHash);
+        return;
+    }
+
+    // Show loading while we fetch full content
+    content.innerHTML = `
+        <div style="text-align: center; padding: var(--space-8);">
+            <div style="font-size: 24px; color: var(--primary-500);">Loading full message...</div>
+        </div>
+    `;
+
+    // Fetch full message content from unique_messages.jsonl
+    let fullContent = message.content_preview;
+    try {
+        if (!window._fullMessagesCache) {
+            console.log('Loading full messages from unique_messages.jsonl...');
+            const response = await fetch('data/unique_messages.jsonl');
+            const text = await response.text();
+
+            // Parse JSONL (one JSON object per line)
+            window._fullMessagesCache = {};
+            text.split('\n').filter(line => line.trim()).forEach(line => {
+                try {
+                    const entry = JSON.parse(line);
+                    window._fullMessagesCache[entry.hash] = entry.message.content;
+                } catch (e) {
+                    console.warn('Failed to parse message line:', e);
+                }
+            });
+            console.log(`Loaded ${Object.keys(window._fullMessagesCache).length} full messages`);
+        }
+
+        // Get full content from cache
+        if (window._fullMessagesCache[messageHash]) {
+            fullContent = window._fullMessagesCache[messageHash];
+            console.log('Found full content for message:', messageHash.substring(0, 16) + '...');
+        } else {
+            console.warn('No full content found for message:', messageHash.substring(0, 16) + '...');
+        }
+    } catch (error) {
+        console.error('Error loading full messages:', error);
+    }
+
+    // Display the message with full content
+    content.innerHTML = `
+        <div style="margin-bottom: var(--space-6);">
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                <button onclick="history.back()"
+                        style="background: #ffffff; color: #24292f; font-weight: 600; font-size: 14px; padding: 8px 16px; border-radius: 6px; border: 2px solid #d0d7de; cursor: pointer; transition: all 0.2s ease;"
+                        onmouseover="this.style.background='#f6f8fa';"
+                        onmouseout="this.style.background='#ffffff';">
+                    ← Back
+                </button>
+                <h2 style="margin: 0; color: var(--primary-500); font-size: 24px;">
+                    Message ${messageNumber} of ${totalMessages}
+                </h2>
+            </div>
+            <button onclick="document.getElementById('timeline-detail-panel').style.display='none'"
+                    style="position: absolute; top: var(--space-4); right: var(--space-4); background: #ffffff; color: #24292f; font-weight: 600; font-size: 14px; padding: 10px 20px; border-radius: 6px; border: 2px solid #d0d7de; min-height: 44px; min-width: 44px; cursor: pointer; transition: all 0.2s ease;"
+                    onmouseover="this.style.background='#f6f8fa'; this.style.borderColor='#d0d7de';"
+                    onmouseout="this.style.background='#ffffff'; this.style.borderColor='#d0d7de';">
+                Close
+            </button>
+        </div>
+
+        <div style="display: grid; gap: var(--space-4);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); background: ${message.role === 'user' ? 'var(--primary-50)' : 'var(--success-50)'}; border-radius: var(--radius-md); border-left: 4px solid ${message.role === 'user' ? 'var(--primary-500)' : 'var(--success-500)'};">
+                <div>
+                    <div style="font-weight: 600; color: var(--text-primary); font-size: 16px;">${message.role === 'user' ? '👤 User' : '🤖 Assistant'}</div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                        ${message.word_count} words${message.has_code ? ' • Contains code' : ''}
+                    </div>
+                </div>
+                ${message.tags && message.tags.length > 0 ? `
+                    <div style="display: flex; gap: var(--space-1);">
+                        ${message.tags.slice(0, 3).map(tag => `
+                            <span style="background: var(--primary-100); color: var(--primary-700); padding: 2px 8px; border-radius: var(--radius-sm); font-size: 11px;">${tag}</span>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+
+            <div>
+                <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">
+                    Content
+                    ${fullContent.length > message.content_preview.length ? `
+                        <span style="font-weight: 400; font-size: 12px; color: var(--success-600);"> ✓ Full content loaded</span>
+                    ` : ''}
+                </div>
+                <div style="background: var(--bg-secondary); padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border-primary); line-height: 1.6; white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; color: var(--text-primary); max-height: 500px; overflow-y: auto;">
+${fullContent}
+                </div>
+            </div>
+
+            <div>
+                <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">Message Hash</div>
+                <div style="font-family: monospace; font-size: 12px; color: var(--text-primary); background: var(--bg-secondary); padding: var(--space-2); border-radius: var(--radius-sm); word-break: break-all;">
+                    ${message.hash}
+                </div>
+            </div>
+
+            <div>
+                <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-2);">First Seen</div>
+                <div style="color: var(--text-primary);">
+                    ${new Date(message.first_seen).toLocaleString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}
+                </div>
+            </div>
+
+            <div style="display: flex; gap: var(--space-3); justify-content: space-between; padding-top: var(--space-4); border-top: 1px solid var(--border-primary);">
+                ${messageNumber > 1 ? `
+                    <button onclick="window.showMessageDetailByIndex(${messageNumber - 2}, ${totalMessages})"
+                            style="flex: 1; background: #0969da; color: #ffffff; font-weight: 600; font-size: 14px; padding: 10px 16px; border-radius: 6px; border: none; cursor: pointer; transition: all 0.2s ease;"
+                            onmouseover="this.style.background='#0550ae';"
+                            onmouseout="this.style.background='#0969da';">
+                        ← Previous Message
+                    </button>
+                ` : '<div style="flex: 1;"></div>'}
+
+                ${messageNumber < totalMessages ? `
+                    <button onclick="window.showMessageDetailByIndex(${messageNumber}, ${totalMessages})"
+                            style="flex: 1; background: #0969da; color: #ffffff; font-weight: 600; font-size: 14px; padding: 10px 16px; border-radius: 6px; border: none; cursor: pointer; transition: all 0.2s ease;"
+                            onmouseover="this.style.background='#0550ae';"
+                            onmouseout="this.style.background='#0969da';">
+                        Next Message →
+                    </button>
+                ` : '<div style="flex: 1;"></div>'}
+            </div>
+        </div>
+    `;
+};
 
 // Export for use in navigation.js
 if (typeof window !== 'undefined') {
