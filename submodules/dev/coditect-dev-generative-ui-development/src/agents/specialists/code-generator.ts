@@ -46,7 +46,7 @@ export class CodeGenerator extends BaseAgent<CodeGenerationInput, GeneratedCode[
    */
   async execute(
     input: CodeGenerationInput,
-    context: AgentContext
+    _context: AgentContext
   ): Promise<AgentResult<GeneratedCode[]>> {
     this.log('info', 'Starting code generation', { input });
 
@@ -68,12 +68,18 @@ export class CodeGenerator extends BaseAgent<CodeGenerationInput, GeneratedCode[
         fileCount: generatedFiles.length,
       });
 
+      // Calculate completion tokens from generated file sizes
+      const completionTokens = generatedFiles.reduce(
+        (sum, file) => sum + Math.ceil(file.content.length / 4),
+        0
+      );
+
       return {
         success: true,
         data: generatedFiles,
         tokens: {
           prompt: this.estimateTokens(input),
-          completion: this.estimateTokens(generatedFiles),
+          completion: completionTokens,
         },
       };
     } catch (error) {
@@ -138,7 +144,7 @@ export class CodeGenerator extends BaseAgent<CodeGenerationInput, GeneratedCode[
   private generateReactComponent(
     component: UIArchitecture['components'][0],
     styling: string,
-    strictTypes: boolean
+    _strictTypes: boolean
   ): string {
     const propsInterface = this.generatePropsInterface(component);
     const componentBody = this.generateComponentBody(component, styling);
@@ -236,7 +242,7 @@ describe('${component.name}', () => {
   /**
    * Generate types file
    */
-  private generateTypesFile(architecture: UIArchitecture): string {
+  private generateTypesFile(_architecture: UIArchitecture): string {
     return `/**
  * Generated type definitions
  */

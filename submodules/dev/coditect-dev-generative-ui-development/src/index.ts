@@ -22,8 +22,29 @@ export {
   type CodeGenerationInput,
 } from './agents/specialists/code-generator';
 
-// Export orchestrator (to be implemented)
-// export { Orchestrator } from './agents/core/orchestrator';
+// Export core libraries
+export {
+  UISynthesisEngine,
+  type SynthesisEngineConfig,
+  type PipelineResult,
+} from './lib/ui-synthesis-engine';
+export {
+  TokenOptimizer,
+  type OptimizationStrategy,
+  type OptimizationRecommendation,
+  type CostParameters,
+  type GenerationCostProfile,
+  type TokenStatistics,
+} from './lib/token-optimizer';
+export {
+  QualityGatesValidator,
+  type WCAGLevel,
+  type AccessibilityValidation,
+  type AccessibilityViolation,
+  type TypeScriptValidation,
+  type PerformanceValidation,
+  type CodeQualityValidation,
+} from './lib/quality-gates';
 
 /**
  * Library version
@@ -87,9 +108,8 @@ export async function generateUI(description: string) {
     (architectResult.tokens.prompt + architectResult.tokens.completion) +
     (codeResult.tokens.prompt + codeResult.tokens.completion);
 
-  context.metadata.endTime = new Date();
-  context.metadata.duration =
-    context.metadata.endTime.getTime() - context.metadata.startTime.getTime();
+  const endTime = new Date();
+  const duration = endTime.getTime() - context.metadata.startTime.getTime();
 
   return {
     spec: intentResult.data,
@@ -97,7 +117,7 @@ export async function generateUI(description: string) {
     files: codeResult.data,
     metadata: {
       tokens: context.tokens,
-      duration: context.metadata.duration,
+      duration,
     },
   };
 }

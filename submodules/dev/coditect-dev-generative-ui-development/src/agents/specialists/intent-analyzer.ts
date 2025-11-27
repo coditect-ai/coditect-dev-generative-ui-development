@@ -45,7 +45,7 @@ export class IntentAnalyzer extends BaseAgent<IntentAnalysisInput, UISpec> {
    */
   async execute(
     input: IntentAnalysisInput,
-    context: AgentContext
+    _context: AgentContext
   ): Promise<AgentResult<UISpec>> {
     this.log('info', 'Starting intent analysis', { input });
 

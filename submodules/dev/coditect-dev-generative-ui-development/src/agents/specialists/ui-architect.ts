@@ -95,7 +95,7 @@ export class UIArchitect extends BaseAgent<UISpec, UIArchitecture> {
    */
   async execute(
     input: UISpec,
-    context: AgentContext
+    _context: AgentContext
   ): Promise<AgentResult<UIArchitecture>> {
     this.log('info', 'Starting UI architecture design', { spec: input });
 
@@ -115,12 +115,15 @@ export class UIArchitect extends BaseAgent<UISpec, UIArchitecture> {
 
       this.log('info', 'UI architecture design complete', { architecture });
 
+      // Calculate completion tokens from architecture size
+      const completionTokens = Math.ceil(JSON.stringify(architecture).length / 4);
+
       return {
         success: true,
         data: architecture,
         tokens: {
           prompt: this.estimateTokens(input),
-          completion: this.estimateTokens(architecture),
+          completion: completionTokens,
         },
       };
     } catch (error) {
@@ -195,7 +198,6 @@ export class UIArchitect extends BaseAgent<UISpec, UIArchitecture> {
    * Design layout architecture
    */
   private designLayout(spec: UISpec): UIArchitecture {
-    const pattern = spec.layoutOptions?.pattern || 'dashboard';
     const sections = spec.layoutOptions?.sections || ['header', 'main'];
 
     const layoutStructure: LayoutStructure = {
@@ -262,7 +264,7 @@ export class UIArchitect extends BaseAgent<UISpec, UIArchitecture> {
   private extractComponentName(description: string): string {
     // Simple extraction - look for "Button", "Input", etc.
     const match = description.match(/\b([A-Z][a-z]+(?:[A-Z][a-z]+)*)\b/);
-    return match ? match[1] : 'Component';
+    return match?.[1] ?? 'Component';
   }
 
   /**
