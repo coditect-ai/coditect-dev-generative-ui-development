@@ -11,10 +11,11 @@ All CODITECT components are **directly accessible** in this `.claude` directory.
 ## 📋 CODITECT Framework Components
 
 This directory structure provides comprehensive agentic development framework with:
-- **52 Specialized Agents** (⭐ 2 new project creation agents Nov 22)
+- **57 Specialized Agents** (⭐ 5 new generative UI agents Nov 27, 2 project creation agents Nov 22)
   - Project discovery, structure optimization, and lifecycle management
   - Research, analysis, and competitive intelligence
   - Full-stack development and infrastructure specialists
+  - **Generative UI specialists** (intent analysis, architecture, code generation, accessibility, quality review)
   - Quality assurance, security, and compliance
 - **81 Slash Commands** (⭐ 4 new commands Nov 22)
   - `/new-project` - Complete project creation workflow
@@ -133,6 +134,61 @@ See: **[commands/new-project.md](commands/new-project.md)** for detailed workflo
 - Seamlessly integrates with existing workflows
 
 See: **[commands/analyze-hooks.md](commands/analyze-hooks.md)**, **[commands/web-search-hooks.md](commands/web-search-hooks.md)**, **[commands/generate-project-plan-hooks.md](commands/generate-project-plan-hooks.md)**, **[docs/HOOKS-COMPREHENSIVE-ANALYSIS.md](docs/HOOKS-COMPREHENSIVE-ANALYSIS.md)** for detailed workflows
+
+### 🎨 Generative UI System (⭐ NEW Nov 27)
+
+**AI-powered user interface generation with production-ready React + TypeScript components.**
+
+Located in: `lib/generative-ui/` | Documentation: `docs/generative-ui/`
+
+**Complete multi-agent workflow for UI generation:**
+
+```bash
+# Generate UI components
+/ui component button with primary, secondary variants and sm, md, lg sizes
+
+# Generate layouts
+/ui layout dashboard with sidebar, topbar, and main content
+
+# Generate complete applications
+/ui application task manager with list, detail, and create views
+```
+
+**5 Specialized Agents:**
+1. **generative-ui-intent-analyzer** - Parses natural language → structured UI specifications
+2. **generative-ui-architect** - Designs component hierarchies and layout structures
+3. **generative-ui-code-generator** - Generates production-ready TypeScript/React code
+4. **generative-ui-accessibility-auditor** - Validates WCAG 2.1 AA/AAA compliance
+5. **generative-ui-quality-reviewer** - Comprehensive code quality and security review
+
+**Key Features:**
+- **TypeScript Strict Mode** - Zero `any` types, full type safety
+- **WCAG 2.1 Compliance** - AA minimum (90+ accessibility score)
+- **Tailwind CSS Styling** - Utility-first with responsive design
+- **Comprehensive Testing** - Jest + React Testing Library + accessibility tests
+- **Quality Gates** - Automated approval/rejection with bundle size analysis
+
+**Output Deliverables:**
+- Component.tsx (implementation)
+- Component.test.tsx (comprehensive tests)
+- Component.stories.tsx (Storybook documentation)
+- types.ts (TypeScript interfaces)
+- index.ts (barrel exports)
+
+**Quality Standards:**
+- Bundle size: < 50KB per component
+- Test coverage: ≥ 80%
+- Accessibility score: ≥ 90 (WCAG AA)
+- Quality score: ≥ 80 (production approval)
+- Component complexity: < 8
+
+**Token Economy:**
+- Simple component: ~1,000-2,000 tokens (~$0.002-$0.004)
+- Complex component: ~3,000-6,000 tokens (~$0.006-$0.012)
+- Layout: ~5,000-10,000 tokens (~$0.010-$0.020)
+- Full application: ~15,000-30,000 tokens (~$0.030-$0.060)
+
+See: **[commands/ui.md](commands/ui.md)**, **[lib/generative-ui/CLAUDE.md](lib/generative-ui/CLAUDE.md)** for detailed workflows
 
 ### 🤖 AI Command Router (Easiest Way!)
 
