@@ -1,4 +1,9 @@
-# /ui - Generate UI Component
+---
+name: ui
+description: Generate production-ready React + TypeScript UI components with WCAG compliance
+---
+
+# Generate UI Component
 
 You are using the CODITECT Generative UI system to create a production-ready React + TypeScript component.
 

@@ -1,4 +1,9 @@
-# /motion - Add Animations and Motion
+---
+name: motion
+description: Add production-ready Framer Motion animations to React components with accessibility support
+---
+
+# Add Animations and Motion
 
 You are enhancing UI components with production-ready animations using Framer Motion.
 

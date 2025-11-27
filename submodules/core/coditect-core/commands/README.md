@@ -1,6 +1,6 @@
 # CODITECT Commands Directory
 
-This directory contains 72+ custom slash commands for the CODITECT framework, providing comprehensive automation for AI-first development workflows.
+This directory contains 75+ custom slash commands for the CODITECT framework, providing comprehensive automation for AI-first development workflows.
 
 ## 🤖 AI Command Router (Easiest Way!)
 
@@ -149,6 +149,52 @@ Pure planning mode - analysis and task decomposition without code execution
 #### `/document`
 Generate comprehensive API docs, architecture diagrams, runbooks, and user guides
 
+### UI Development (NEW!)
+
+#### `/ui`
+**AI-powered UI component generation with production-ready React + TypeScript**
+
+- **Purpose**: Generate complete React + TypeScript components with WCAG compliance
+- **Tech Stack**: React 18+, TypeScript strict mode, Tailwind CSS, Framer Motion
+- **Quality**: WCAG AA minimum (90+ score), bundle size < 50KB, 80%+ test coverage
+- **Agents**: generative-ui-intent-analyzer, generative-ui-architect, generative-ui-code-generator, generative-ui-accessibility-auditor, generative-ui-quality-reviewer
+
+**Usage**:
+```bash
+/ui component button with primary, secondary variants
+/ui layout dashboard with sidebar and header
+/ui application task manager with CRUD operations
+```
+
+#### `/motion`
+**Add Framer Motion animations to components**
+
+- **Purpose**: Enhance components with production-ready animations
+- **Features**: Entrance/exit, hover, tap, scroll, loading animations
+- **Accessibility**: Respects prefers-reduced-motion
+- **Performance**: 60fps optimized animations
+
+**Usage**:
+```bash
+/motion add slide-in animation to sidebar
+/motion create loading skeleton for card
+/motion add hover effects to button
+```
+
+#### `/a11y`
+**Comprehensive WCAG 2.1 accessibility auditing**
+
+- **Purpose**: Audit components for AA/AAA compliance
+- **Checks**: Semantic HTML, ARIA, keyboard nav, color contrast, focus, screen readers
+- **Output**: Violation report with severity levels, remediation steps, before/after examples
+
+**Usage**:
+```bash
+/a11y audit the dashboard layout
+/a11y check navbar for WCAG AAA compliance
+/a11y review form accessibility
+```
+
 ### Agent Coordination
 
 #### `/suggest-agent`
@@ -189,7 +235,7 @@ Decision trees and workflow guidance for command selection
 - **Infrastructure** (8 commands)
   - `/build-monitor`, `/deploy-mvp`, `/start-theia`
 
-**Total**: 72+ slash commands
+**Total**: 75+ slash commands
 
 ## Quick Reference
 
