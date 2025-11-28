@@ -21,6 +21,18 @@ export {
   CodeGenerator,
   type CodeGenerationInput,
 } from './agents/specialists/code-generator';
+export {
+  AccessibilityAuditor,
+  type AccessibilityAuditInput,
+  type AccessibilityViolation as AccessibilityAuditorViolation,
+  type AccessibilityReport,
+} from './agents/specialists/accessibility-auditor';
+export {
+  QualityReviewer,
+  type QualityReviewInput,
+  type QualityIssue,
+  type QualityReport,
+} from './agents/specialists/quality-reviewer';
 
 // Export core libraries
 export {
